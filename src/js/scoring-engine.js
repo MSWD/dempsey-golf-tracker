@@ -1,0 +1,118 @@
+// Single source of truth for all scoring math. Pure functions only — no localStorage, no DOM —
+// so both the live app and the static report viewer can run the exact same logic against
+// different data sources (live localStorage vs. a fetched snapshot JSON).
+
+// Minimum holes a player must actually complete for a round/match score to count at all — per
+// local OHSAA rule. Coach is confirming the exact number (5 vs 6); change this one constant once
+// confirmed rather than hunting for the number elsewhere.
+const MIN_HOLES_FOR_VALID_ROUND = 5;
+
+function holesPlayedCount(holeScores) {
+  return holeScores.filter((s) => s != null).length;
+}
+
+// A round/match score with fewer holes played than the minimum doesn't count toward rolling
+// average or team score — distinct from the double-par cap, which caps a single hole's value but
+// doesn't invalidate the round.
+function isValidRound(holeScores) {
+  return holesPlayedCount(holeScores) >= MIN_HOLES_FOR_VALID_ROUND;
+}
+
+function roundTotalPar(holePars) {
+  return holePars.reduce((sum, par) => sum + par, 0);
+}
+
+// A hole score can never exceed 2x that hole's par. Returns the capped value and whether capping
+// actually changed anything, so callers can warn on entry without silently losing the raw input.
+function capHoleScore(score, par) {
+  const max = par * 2;
+  return {
+    value: Math.min(score, max),
+    wasCapped: score > max,
+  };
+}
+
+function capAllHoleScores(holeScores, holePars) {
+  return holeScores.map((score, i) =>
+    score == null ? { value: null, wasCapped: false } : capHoleScore(score, holePars[i])
+  );
+}
+
+function hasAnyHoleScore(holeScores) {
+  return holeScores.some((score) => score != null);
+}
+
+// Raw score = sum of entered hole scores. Holes with no score recorded are excluded, not treated
+// as zero — a round with zero holes entered has no raw score at all (see rawScoreOrNull).
+function rawScoreOrNull(holeScores) {
+  if (!hasAnyHoleScore(holeScores)) return null;
+  return holeScores.reduce((sum, score) => sum + (score ?? 0), 0);
+}
+
+// adjusted_score = raw_score + (36 - round_total_par). Normalizes any 9-hole par card to a
+// par-36 baseline so rounds on different courses (e.g. a par-28 executive course) compare fairly.
+function adjustedScore(holeScores, holePars) {
+  const raw = rawScoreOrNull(holeScores);
+  if (raw == null) return null;
+  return raw + (36 - roundTotalPar(holePars));
+}
+
+// Resolves the hole pars that apply to a round, given a course lookup function.
+function resolveHolePars(round, getCourseById) {
+  if (round.inlineHolePars) return round.inlineHolePars;
+  const course = getCourseById(round.courseId);
+  return course ? course.holePars : null;
+}
+
+// Best 4 of the player's last 6 rounds (chronologically, tryouts count as the earliest entries),
+// using adjusted scores. Fewer than 6 rounds → average whatever exists, no drops.
+function rollingAverage(chronologicalAdjustedScores) {
+  const scored = chronologicalAdjustedScores.filter((s) => s != null);
+  if (scored.length === 0) return null;
+
+  const lastSix = scored.slice(-6);
+  if (lastSix.length < 6) {
+    return lastSix.reduce((sum, s) => sum + s, 0) / lastSix.length;
+  }
+
+  const best4 = [...lastSix].sort((a, b) => a - b).slice(0, 4);
+  return best4.reduce((sum, s) => sum + s, 0) / best4.length;
+}
+
+// Ascending sort on rolling average (lower is better). Reference/suggestion only — the coach
+// always manually sets the lineup order for a match; this is never auto-applied.
+function rankPlayers(playersWithAverage) {
+  const ranked = [...playersWithAverage].filter((p) => p.rollingAverage != null);
+  const unranked = [...playersWithAverage].filter((p) => p.rollingAverage == null);
+  ranked.sort((a, b) => a.rollingAverage - b.rollingAverage);
+  return [
+    ...ranked.map((p, i) => ({ ...p, rank: i + 1 })),
+    ...unranked.map((p) => ({ ...p, rank: null })),
+  ];
+}
+
+// Team score = sum of the 4 lowest raw scores among the 6 starters who actually posted a score
+// that day. Fewer than 4 posted → explicitly incomplete, never a partial/padded sum.
+function teamScore(starterRawScores) {
+  const posted = starterRawScores.filter((s) => s != null);
+  if (posted.length < 4) {
+    return { complete: false, total: null, scoresUsed: posted.length };
+  }
+  const lowest4 = [...posted].sort((a, b) => a - b).slice(0, 4);
+  return { complete: true, total: lowest4.reduce((sum, s) => sum + s, 0), scoresUsed: 4 };
+}
+
+// Front-3 / mid-3 / back-3 splits for a 9-hole round.
+function holeSplits(holeScores) {
+  const sum = (slice) => (slice.some((s) => s != null) ? slice.reduce((s, v) => s + (v ?? 0), 0) : null);
+  return {
+    front3: sum(holeScores.slice(0, 3)),
+    mid3: sum(holeScores.slice(3, 6)),
+    back3: sum(holeScores.slice(6, 9)),
+  };
+}
+
+function toPar(rawScore, totalPar) {
+  if (rawScore == null) return null;
+  return rawScore - totalPar;
+}

@@ -1,0 +1,263 @@
+{
+  "players": [
+    {
+      "id": "grahambaker",
+      "firstName": "Graham",
+      "lastName": "Baker",
+      "grade": 7,
+      "active": true
+    },
+    {
+      "id": "jensenbanik",
+      "firstName": "Jensen",
+      "lastName": "Banik",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "liamcashion",
+      "firstName": "Liam",
+      "lastName": "Cashion",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "theoconstantinidis",
+      "firstName": "Theo",
+      "lastName": "Constantinidis",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "myleshursey",
+      "firstName": "Myles",
+      "lastName": "Hursey",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "greysonisch",
+      "firstName": "Greyson",
+      "lastName": "Isch",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "gradyleighty",
+      "firstName": "Grady",
+      "lastName": "Leighty",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "nicholasmadden",
+      "firstName": "Nicholas",
+      "lastName": "Madden",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "gabrielpearson",
+      "firstName": "Gabriel",
+      "lastName": "Pearson",
+      "grade": 7,
+      "active": true
+    },
+    {
+      "id": "deaconrea",
+      "firstName": "Deacon",
+      "lastName": "Rea",
+      "grade": 7,
+      "active": true
+    },
+    {
+      "id": "benjaminshirring",
+      "firstName": "Benjamin",
+      "lastName": "Shirring",
+      "grade": 7,
+      "active": true
+    },
+    {
+      "id": "williamshmidt",
+      "firstName": "William",
+      "lastName": "Shmidt",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "ryansmith",
+      "firstName": "Ryan",
+      "lastName": "Smith",
+      "grade": 7,
+      "active": true
+    }
+  ],
+  "courses": [
+    {
+      "id": "oakhaven",
+      "name": "Oakhaven",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        4,
+        5,
+        4,
+        4,
+        3
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "airportgolfclub",
+      "name": "Airport Golf Club",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        4,
+        5,
+        4,
+        3,
+        4
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "timberview",
+      "name": "Timberview",
+      "holePars": [
+        4,
+        4,
+        5,
+        4,
+        3,
+        4,
+        3,
+        4,
+        5
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "hiddenvalley",
+      "name": "Hidden Valley",
+      "holePars": [
+        3,
+        3,
+        3,
+        4,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 28,
+      "verified": false
+    },
+    {
+      "id": "millcreek",
+      "name": "Mill Creek",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        5,
+        4,
+        3,
+        4,
+        4
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "royalamerican",
+      "name": "Royal American",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        5,
+        4,
+        3,
+        4,
+        4
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "rollingmeadows",
+      "name": "Rolling Meadows",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        5,
+        4,
+        3,
+        4,
+        4
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "delawaregolfclub",
+      "name": "Delaware Golf Club",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        4,
+        5,
+        4,
+        4,
+        3
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    }
+  ],
+  "rounds": [],
+  "matches": [],
+  "tournaments": [],
+  "_meta": {
+    "note": "Seed data generated from 2026_Dempsey_Roster.xlsx and 2026_Boys_Scores.xlsx. Course hole pars were auto-extracted from past match cards and may need verification (marked verified:false) -- especially OAKHAVEN, which had inconsistent pars across different match sheets; the most common pattern was used."
+  }
+}

@@ -1,0 +1,10 @@
+name = "middle-school-golf-tracker-auth"
+main = "cloudflare-device-flow-relay.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+GITHUB_OWNER = "MSWD"
+GITHUB_REPO = "dempsey-golf-tracker"
+GITHUB_BRANCH = "main"
+
+# GITHUB_PAT is a secret, not set here — run: wrangler secret put GITHUB_PAT

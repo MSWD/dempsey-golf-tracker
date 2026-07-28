@@ -17,6 +17,21 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main { flex: 1; }
+
+.app-footer {
+  padding: 16px 20px;
+  text-align: center;
+}
+
+.app-footer p {
+  margin: 2px 0;
+  font-size: 0.85rem;
 }
 
 header.app-header {

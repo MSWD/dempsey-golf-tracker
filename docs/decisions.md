@@ -27,11 +27,51 @@ field. GitHub's device-flow endpoints don't send CORS headers for direct browser
 stateless Worker relays those two requests. No secrets live in the Worker — GitHub Apps' device
 flow doesn't require a client secret, only the public Client ID.
 
-## Why admin/viewer mode is gated on live token validation, not just "a token exists"
+## Why admin/viewer mode is gated on a live check, not just "a token exists"
 
 A stale or revoked token sitting in localStorage should silently fall back to viewer mode, not
-throw errors in the coach's face. `GitHubAuth.isAdmin()` re-checks `GET /user` plus a repo
-push-permission check every time, rather than trusting a cached "logged in" flag.
+throw errors in the coach's face. `GitHubAuth.isAdmin()` re-checks live every time, rather than
+trusting a cached "logged in" flag. What it checks against changed with the move to path-based
+hosting — see the next entry.
+
+## Why path-based multi-team hosting instead of one repo/domain per team
+
+The app was originally built around "fork the repo, each team gets its own custom domain" —
+clean permission model (GitHub's own repo-collaborator list *is* the admin list), but it means
+every new team needs its own DNS record, its own GitHub App, its own Pages setup. That's fine for
+someone comfortable with that infrastructure, but the actual ask was to let a few other coaches
+*try this out* without any technical setup of their own — the coach running this would host and
+administer everything himself. Given that, per-team domains stopped being worth their setup cost:
+GitHub Pages supports exactly one custom domain per repo/Pages site anyway, so "one repo, many
+real vanity domains" was never on the table — the honest choice was between repo-per-team (real
+domains, more setup per team) and path-based (one domain, `/teams/<slug>/`, zero incremental setup
+per team). Path-based wins for "make it easy to try," at the cost of losing GitHub's repo
+permissions as the admin boundary — which is why `teams.json` exists (see below). Onboarding a new
+team is now purely `scripts/add-team.py` + a git commit; no GitHub Pages/DNS/Cloudflare changes.
+
+## Why `teams.json` decides admin rights, not GitHub repo-collaborator status
+
+Follows directly from the above: one shared repo means GitHub's repo-level permissions can't
+scope "admin for team X" — a collaborator has push access to the whole repo, which would let one
+team's admin (even by accident, not maliciously) edit another team's published data. `teams.json`
+(slug → allowed usernames) is the app-level mapping that actually scopes this, enforced in the
+Cloudflare Worker (the one place in the whole architecture that isn't just static/client-side, so
+it's the only place a check like this can't be spoofed). A useful side effect: coaches no longer
+need a GitHub repo invite at all — any GitHub account can log in, `teams.json` alone decides what
+they can do. `teams.json` itself is only ever edited by the platform operator directly via git;
+no code path in the app or Worker writes to it, only reads it.
+
+## Why the Worker holds a secret now, when it didn't before
+
+The device-flow relay never needed secrets — GitHub Apps' device flow doesn't require a client
+secret. Publishing does need a write credential, though, and once the model became "any GitHub
+account, checked against `teams.json`," the caller's *own* token can no longer be the one used to
+write — someone authorized only for team A has a real GitHub token, but it shouldn't be trusted to
+write team B's files, and more fundamentally many teams.json-listed admins won't be repo
+collaborators at all, so their own token wouldn't have write access to begin with. The Worker
+therefore holds one fine-grained PAT (scoped to just this repo) as a Cloudflare secret, and uses
+it to make the actual commit only after checking the caller against `teams.json` — the caller's
+token is used solely to identify who they are (`GET /user`), never to perform the write.
 
 ## Why scoring rules aren't part of the white-label team-config
 
@@ -64,3 +104,5 @@ distinction explicit instead of inferring it from array position.
 - **Scorecard photo scan (stretch).** Auto-fill a Course's hole pars/yardages/slope/rating by
   calling Claude's vision API from the browser, with the coach supplying his own API key stored
   only in localStorage. Not started.
+- **Help page / user's guide.** A dedicated in-app page walking coaches through the tool. Not
+  started — noted for a later iteration.

@@ -1,42 +1,54 @@
-# Deployment: GitHub Pages + custom domain
+# Deployment: GitHub Pages + custom domain (one-time platform setup)
+
+Everything in this doc happens **once ever**, for the whole platform — not per team. Onboarding a
+new team is just `scripts/add-team.py` + a git commit; see `docs/architecture.md`.
+
+Most of this is automated by `scripts/bootstrap-platform.sh` (prompts for a GitHub PAT with repo
+admin rights and a Cloudflare API token). What follows is what that script does, plus the pieces
+it can't automate.
 
 DNS for `mswd.us` is on Cloudflare nameservers (confirmed via `dig NS mswd.us`) — GoDaddy is just
-the registrar. That means the custom domain, the Pages site, and the auth relay Worker all live in
-the same Cloudflare account.
+the registrar.
 
 ## GitHub Pages setup
 
 1. Repo Settings → Pages → Source: deploy from the `main` branch, folder `/src`.
-2. `src/CNAME` (already committed) contains `dempsey-golf-tracker.mswd.us` — GitHub uses this to
-   know the custom domain and to redirect the default `<org>.github.io` URL.
-3. In the same Settings → Pages panel, enter the custom domain and let GitHub verify it. Check
-   "Enforce HTTPS" once the cert issues (can take a few minutes after the DNS record below exists).
+2. `src/CNAME` (committed) contains `middle-school-golf-tracker.mswd.us`.
+3. Set the custom domain in the same Settings → Pages panel (or via the API, as the bootstrap
+   script does) and let GitHub verify it. Check "Enforce HTTPS" once the cert issues — can take a
+   few minutes after the DNS record below exists.
 
 ## Cloudflare DNS record
 
-In the `mswd.us` zone in the Cloudflare dashboard, add:
+In the `mswd.us` zone: `CNAME` record, name `middle-school-golf-tracker`, target
+`<github-org>.github.io`, **DNS only (grey cloud)** — not proxied. GitHub Pages issues and manages
+its own TLS cert for the custom domain; Cloudflare's proxy in front of it commonly breaks GitHub's
+domain verification/cert issuance.
 
-- Type: `CNAME`
-- Name: `dempsey-golf-tracker`
-- Target: `<github-org-or-user>.github.io`
-- Proxy status: **DNS only (grey cloud)** — not proxied. GitHub Pages issues and manages its own
-  TLS cert for the custom domain, and Cloudflare's proxy in front of it commonly breaks GitHub's
-  domain verification/cert issuance. If page-load performance or Cloudflare-side caching is wanted
-  later, that's a deliberate follow-up, not the default.
+## Cloudflare Worker deploy
 
-## Cloudflare Worker (device-flow relay)
+`worker/wrangler.toml` + `worker/cloudflare-device-flow-relay.js`. Deploy with `wrangler deploy`
+from `worker/`. It gets its own `*.workers.dev` URL — no custom domain/DNS record needed, since
+it's only ever called via `fetch()` from the site's JS, never visited directly.
 
-Deploy `worker/cloudflare-device-flow-relay.js` via `wrangler deploy` or the dashboard's Quick
-Edit, under the same Cloudflare account. It gets its own `*.workers.dev` URL by default — no custom
-domain or extra DNS record is needed, since it's only ever called via `fetch()` from
-`src/js/github-auth.js`, never visited directly. Copy that URL into
-`src/js/team-config.js` → `githubApp.deviceFlowWorkerUrl`.
+The Worker needs one secret, **not** set in `wrangler.toml`:
 
-No secrets are stored in the Worker — it only relays the GitHub App's public Client ID and forwards
-request/response bodies for GitHub's two device-flow endpoints, adding CORS headers so a static
-site's browser JS can call them.
+```
+wrangler secret put GITHUB_PAT
+```
 
-## Forking for a new team/domain
+This is a fine-grained personal access token scoped to just this one repo (`contents: read/write`)
+— distinct from the GITHUB_TOKEN used one-time by `bootstrap-platform.sh` to configure Pages. The
+Worker uses this PAT to make the actual commit once it's verified (via `teams.json`) that the
+caller is authorized — see `docs/auth-and-publishing.md`. Fine-grained PATs expire after at most a
+year; set a calendar reminder to rotate it.
 
-If a fork wants a different custom domain: update `src/CNAME`, update `domain` in
-`team-config.js`, and repeat the Cloudflare DNS step above for the new domain/zone.
+`worker/wrangler.toml`'s `[vars]` section (`GITHUB_OWNER`, `GITHUB_REPO`, `GITHUB_BRANCH`) points
+at this one shared repo — update it there if the repo is ever renamed or moved.
+
+## Forking for a different domain entirely
+
+If you want a genuinely separate deployment (different domain, different repo — not just another
+team under this platform), repeat all of the above for the new domain/repo/zone. That's the "one
+repo per site" model this platform deliberately moved away from for individual teams, but it's
+still the right call for a truly independent fork.

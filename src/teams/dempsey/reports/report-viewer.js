@@ -5,11 +5,25 @@
 // a separately-published snapshot per week.
 let _snapshot = null;
 
+function renderFooter() {
+  const footer = document.getElementById('app-footer');
+  if (!footer) return;
+  const year = new Date().getFullYear();
+  footer.innerHTML = `
+    <p><strong>&copy; ${year} MSWD &mdash; Montgomery's Software &amp; Web Development</strong></p>
+    <p class="muted">${TEAM_CONFIG.siteTitle} &middot; Built with Claude (AI-assisted) &middot; v${APP_VERSION}</p>
+  `;
+}
+
 async function main() {
   document.getElementById('team-title').textContent = `${TEAM_CONFIG.siteTitle} — Reports`;
   const logo = document.getElementById('team-logo');
-  logo.src = `../${TEAM_CONFIG.logoPath}`;
-  logo.alt = TEAM_CONFIG.logoAlt;
+  // logoPath is relative to the main app page; this page sits one level deeper, hence the "../"
+  // prefix. Optional per team — falls back to the shared golf-green-flag graphic if unset.
+  const logoPath = TEAM_CONFIG.logoPath ?? TEAM_CONFIG.iconSpritePath.replace('icons.svg', 'favicon.svg');
+  logo.src = `../${logoPath}`;
+  logo.alt = TEAM_CONFIG.logoAlt ?? `${TEAM_CONFIG.siteTitle} logo`;
+  renderFooter();
 
   const res = await fetch('data/latest.json');
   if (!res.ok) {

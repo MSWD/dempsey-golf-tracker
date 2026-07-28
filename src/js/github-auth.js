@@ -1,7 +1,13 @@
-// GitHub device-flow login. Admin mode = holding a token with write access to this repo, stored
-// in localStorage. No token, an unconfigured app, or a token that fails a live permission check
-// all fall back to the safe default: read-only viewer mode.
-const AUTH_STORAGE_KEY = 'dempsey-golf-tracker:github-token';
+// GitHub device-flow login. Any GitHub account can log in — no repo-collaborator invite needed.
+// Admin mode (for the current team) is decided by src/teams.json, checked via the Worker's
+// /whoami endpoint, never by GitHub repo-collaborator status: under path-based multi-team hosting
+// one repo serves every team, so repo permissions are too coarse to mean "admin for team X." No
+// token, an unconfigured app, or a token that fails a live check all fall back to the safe
+// default: read-only viewer mode.
+// Deliberately NOT namespaced by team slug (unlike DataStore's STORAGE_KEY) — a GitHub token
+// identifies the same account regardless of which team path it's used on, so one login covers
+// every team the account happens to administer.
+const AUTH_STORAGE_KEY = 'mstgt:github-token';
 
 const GitHubAuth = {
   isConfigured() {
@@ -17,23 +23,19 @@ const GitHubAuth = {
     localStorage.removeItem(AUTH_STORAGE_KEY);
   },
 
-  // Confirms the token is live and actually has push access to this repo — not just present.
-  async validateToken(token) {
+  // Confirms the token is live and belongs to a teams.json-listed admin for this team.
+  async checkAdmin(token) {
     try {
-      const userRes = await fetch('https://api.github.com/user', {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch(`${TEAM_CONFIG.githubApp.deviceFlowWorkerUrl}/whoami`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ teamSlug: TEAM_CONFIG.teamSlug }),
       });
-      if (!userRes.ok) return false;
-
-      const { owner, repo } = TEAM_CONFIG.github;
-      const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!repoRes.ok) return false;
-      const repoData = await repoRes.json();
-      return Boolean(repoData.permissions && repoData.permissions.push);
+      if (!res.ok) return false;
+      const data = await res.json();
+      return Boolean(data.isAdmin);
     } catch (err) {
-      console.warn('GitHub token validation failed.', err);
+      console.warn('GitHub admin check failed.', err);
       return false;
     }
   },
@@ -42,7 +44,7 @@ const GitHubAuth = {
     if (!this.isConfigured()) return false;
     const token = this.getStoredToken();
     if (!token) return false;
-    return this.validateToken(token);
+    return this.checkAdmin(token);
   },
 
   // Drives the device-flow login through the Cloudflare Worker relay (see
@@ -79,9 +81,11 @@ const GitHubAuth = {
       const tokenData = await tokenRes.json();
 
       if (tokenData.access_token) {
-        const isValid = await this.validateToken(tokenData.access_token);
-        if (!isValid) throw new Error('Logged in, but this account does not have write access to the repo.');
+        // Store the token regardless of admin status — a logged-in-but-not-listed user is a
+        // known visitor, not an error. isAdmin() re-checks against teams.json on every load.
         localStorage.setItem(AUTH_STORAGE_KEY, tokenData.access_token);
+        const isAdmin = await this.checkAdmin(tokenData.access_token);
+        if (!isAdmin) throw new Error('Logged in, but this account is not listed as an admin for this team.');
         return true;
       }
       if (tokenData.error === 'slow_down') pollInterval += 5;

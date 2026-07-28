@@ -1,38 +1,57 @@
 # Architecture
 
+## Multi-team, path-based hosting
+
+One repo, one custom domain (`middle-school-golf-tracker.mswd.us`), one GitHub Pages deployment,
+one Cloudflare Worker — every team lives at its own path (`/teams/<slug>/`) rather than its own
+domain. This was a deliberate choice over "one repo per team, each with its own vanity domain":
+GitHub Pages supports exactly one custom domain per repo/Pages site, so real per-team domains would
+mean real per-team DNS/GitHub-App setup work, which defeats the goal of letting other coaches try
+this with zero technical setup of their own. See `docs/decisions.md` for the full reasoning.
+
+Admin rights are decided by `src/teams.json` (slug → allowed GitHub usernames) — **not** by GitHub
+repo-collaborator status, which is too coarse once one repo serves many teams' data. Any GitHub
+account can complete the device-flow login; whether they're an admin for the team they're viewing
+or just a read-only visitor is checked against `teams.json` via the Cloudflare Worker's `/whoami`
+and `/publish` endpoints. `teams.json` is only ever edited directly by the platform operator via a
+normal git commit — no code path in the app writes to it.
+
 ## File layout
 
 ```
 src/
-  index.html              # main app shell (roster / courses / rounds / rank / charts / matches)
-  reports/
-    index.html            # standalone report viewer (reads the published data file)
-    report-viewer.js
-    data/latest.json      # single always-current published dataset (full rounds/matches history)
-  css/styles.css
-  js/
-    team-config.js        # team name, logo, colors, GitHub repo target, custom domain
-    data-store.js          # localStorage read/write, seed-load-on-first-run, export/import
-    scoring-engine.js       # adjusted score, double-par cap, rolling avg, rank, team score
-    models.js               # constructors for Player/Course/Round/Match
-    ui-roster.js / ui-courses.js / ui-rounds.js / ui-matches.js / ui-charts.js
-    github-auth.js           # device-flow login, admin/viewer gating
-    github-publish.js        # Contents API calls to commit report snapshots
-    app.js                   # bootstrap, nav, auth wiring
-  assets/
-    icons.svg                # <symbol id="icon-golf-green"> golf icon, reused via <use>
-    favicon.svg               # standalone copy of the same icon for the browser tab
-    branding/delaware-pacers-golf-logo.png
-  data/seed_data.json      # runtime copy of prompts/seed_data.json (Pages needs it under src/)
-  CNAME                     # "dempsey-golf-tracker.mswd.us"
+  index.html                 # root landing page: lists active teams from teams.json
+  teams.json                 # slug -> { name, adminUsernames: [...] } — operator-edited only
+  version.js                 # APP_VERSION constant, bumped per release/tag
+  CNAME                      # "middle-school-golf-tracker.mswd.us"
+  teams/
+    dempsey/
+      index.html              # thin entry point; team-config.js is co-located
+      team-config.js           # this team's branding (logoPath optional)
+      seed_data.json           # this team's starter roster/courses (new teams start empty)
+      reports/
+        index.html
+        report-viewer.js
+        data/latest.json       # single always-current published dataset
+  css/, js/, assets/           # shared across every team
 worker/
-  cloudflare-device-flow-relay.js
+  cloudflare-device-flow-relay.js   # device-flow relay + /whoami + /publish (teams.json gatekeeping)
+  wrangler.toml
+scripts/
+  add-team.py                  # scaffolds a new src/teams/<slug>/ + teams.json entry
+  bootstrap-platform.sh         # one-time: Cloudflare DNS/Worker + GitHub Pages config
 ```
 
-`scoring-engine.js` is the single source of truth for all scoring math. It's pure functions only —
-no localStorage, no DOM — so both the live app and `reports/report-viewer.js` run the exact same
-logic against different data sources (live localStorage vs. a fetched snapshot JSON). A published
-report can never drift from the app's own math.
+`scoring-engine.js` is the single source of truth for all scoring math — pure functions, no
+localStorage, no DOM — so both the live app and `report-viewer.js` run the exact same logic
+against different data sources (live localStorage vs. a fetched snapshot JSON).
+
+`localStorage` is namespaced per team: `STORAGE_KEY = mstgt:data:${TEAM_CONFIG.teamSlug}` in
+`data-store.js`. This matters because browsers scope storage by *origin*, not path — without the
+namespace, two teams sharing this one domain would collide on the same key in the same browser.
+The GitHub auth token (`mstgt:github-token`) is deliberately **not** namespaced the same way — one
+login covers every team an account happens to administer, since a token identifies the account,
+not a team.
 
 ## Data model
 
@@ -46,27 +65,39 @@ Match   { id, date, location, courseId|inlineHolePars,
                                                        putts, isStarter }] }] }
 ```
 
-`isStarter` on a match team's player entry is an extension beyond the original brief's model — it
-distinguishes the 6 official starters from alternates/extra players who tee off and post a score
-just to play, but never count toward team score (see rule 5 below).
+`isStarter` on a match team's player entry distinguishes the 6 official starters from
+alternates/extra players who tee off and post a score just to play, but never count toward team
+score (rule below).
 
-## Scoring rules (fixed, not configurable — see decisions.md)
+## Scoring rules (fixed, not per-team configurable — see decisions.md)
 
 - **Adjusted score** = `rawScore + (36 - roundTotalPar)`. Normalizes any 9-hole par card to a
   par-36 baseline. Rolling average and rank always use adjusted scores, never raw.
 - **Double-par cap**: a hole score can never exceed 2x that hole's par. Capped at entry time; the
-  UI warns when this happens. This is the only score cap — there's no whole-round default/filler
-  score for a player with no holes entered (that player simply has no score for that round).
+  UI warns when this happens.
 - **Minimum holes for a valid round**: a round/match score needs at least `MIN_HOLES_FOR_VALID_ROUND`
-  holes actually completed (currently `5`, in `scoring-engine.js` — coach is confirming the exact
-  OHSAA number, may become 6) to count toward rolling average or team score at all. Distinct from
-  the double-par cap, which caps one hole's value without invalidating the round.
+  holes actually completed (currently `5`, in `scoring-engine.js`) to count toward rolling average
+  or team score at all.
 - **Rolling average** = best 4 of the player's last 6 valid rounds (chronologically; tryouts count
-  as the earliest entries), using adjusted scores. Fewer than 6 → average whatever exists, no drops.
+  as the earliest entries), using adjusted scores. Fewer than 6 → average whatever exists.
 - **Rank** = ascending sort on rolling average. Reference/suggestion only — the coach always
-  manually sets the full lineup order; rank is never auto-applied.
+  manually sets the full lineup order.
 - **Team score** = sum of the 4 lowest raw scores among the 6 starters (not alternates) who posted
-  a valid score that day. Fewer than 4 valid starter scores → explicitly "incomplete", never a
-  padded/partial number.
-- **18-hole events** are recorded as two independent 9-hole Match records (front nine, back nine),
-  each scored under the same rules — no special-cased 18-hole path.
+  a valid score that day. Fewer than 4 → explicitly "incomplete."
+- **18-hole events** are two independent 9-hole Match records (front nine, back nine).
+
+## Report publishing
+
+There's one always-current file per team (`reports/data/latest.json`), not a snapshot per publish.
+Every round/match already carries a date, so `report-viewer.js` reconstructs "standings as of any
+past date" dynamically from the full history using the same `scoring-engine.js` the live app uses,
+via a "View as of" date selector — see `docs/decisions.md` for why this replaced the earlier
+dated-snapshot-per-publish design.
+
+## Onboarding a new team
+
+Run `scripts/add-team.py` locally (prompts for slug/name/admin usernames, scaffolds the team
+folder, appends to `teams.json`), review what it generated, then commit and push yourself — the
+script never runs git for you. No GitHub Pages, DNS, or Cloudflare changes are needed per team;
+all of that is one-time platform setup (`scripts/bootstrap-platform.sh`,
+`docs/deployment.md`/`docs/auth-and-publishing.md`).

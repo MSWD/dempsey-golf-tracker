@@ -1,6 +1,8 @@
 // localStorage persistence: seed-on-first-run, CRUD for each entity type, export/import.
-const STORAGE_KEY = 'dempsey-golf-tracker:data';
-const SEED_DATA_PATH = 'data/seed_data.json';
+// Namespaced by team slug — multiple teams share this one domain (path-based hosting), and
+// browsers scope localStorage by origin, not path, so two teams' data would otherwise collide.
+const STORAGE_KEY = `mstgt:data:${TEAM_CONFIG.teamSlug}`;
+const SEED_DATA_PATH = 'seed_data.json';
 
 function emptyData() {
   return { players: [], courses: [], rounds: [], matches: [], tournaments: [] };

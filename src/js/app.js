@@ -7,11 +7,26 @@ function currentView() {
   return active ? active.id.replace('view-', '') : null;
 }
 
+function renderFooter() {
+  const footer = document.getElementById('app-footer');
+  if (!footer) return;
+  const year = new Date().getFullYear();
+  footer.innerHTML = `
+    <p><strong>&copy; ${year} MSWD &mdash; Montgomery's Software &amp; Web Development</strong></p>
+    <p class="muted">${TEAM_CONFIG.siteTitle} &middot; Built with Claude (AI-assisted) &middot; v${APP_VERSION}</p>
+  `;
+}
+
 async function main() {
   document.getElementById('team-title').textContent = TEAM_CONFIG.siteTitle;
   const logo = document.getElementById('team-logo');
-  logo.src = TEAM_CONFIG.logoPath;
-  logo.alt = TEAM_CONFIG.logoAlt;
+  // logoPath is optional per team — fall back to the shared golf-green-flag graphic used for the
+  // favicon so a team isn't blocked from trying the app just because they don't have a logo ready.
+  // Derived from iconSpritePath's directory rather than a hardcoded depth, since it's already
+  // defined relative to this page.
+  logo.src = TEAM_CONFIG.logoPath ?? TEAM_CONFIG.iconSpritePath.replace('icons.svg', 'favicon.svg');
+  logo.alt = TEAM_CONFIG.logoAlt ?? `${TEAM_CONFIG.siteTitle} logo`;
+  renderFooter();
 
   const spriteRes = await fetch(TEAM_CONFIG.iconSpritePath);
   document.getElementById('icon-sprite').innerHTML = await spriteRes.text();

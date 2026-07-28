@@ -3,57 +3,43 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dempsey Golf Tracker</title>
+  <title>Middle School Golf Tracker</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 </head>
 <body>
 
-  <div id="icon-sprite"></div>
-
   <header class="app-header">
-    <img class="logo" id="team-logo" alt="">
-    <h1 id="team-title"></h1>
-    <div class="header-actions">
-      <button id="btn-export">Export data</button>
-      <button id="btn-import">Import data</button>
-      <input type="file" id="file-import" accept="application/json" style="display:none">
-      <button id="btn-publish" class="admin-only">Publish report</button>
-      <button id="btn-login">Login with GitHub</button>
-    </div>
-    <div id="login-status" class="muted" style="width:100%"></div>
+    <img class="logo" src="assets/favicon.svg" alt="">
+    <h1>Middle School Golf Tracker</h1>
   </header>
 
-  <nav class="tabs">
-    <button data-view="roster" class="active">Roster</button>
-    <button data-view="courses">Courses</button>
-    <button data-view="rounds">Rounds</button>
-    <button data-view="rank">Rank</button>
-    <button data-view="charts">Charts</button>
-    <button data-view="matches">Matches</button>
-  </nav>
-
   <main>
-    <section class="view active" id="view-roster"></section>
-    <section class="view" id="view-courses"></section>
-    <section class="view" id="view-rounds"></section>
-    <section class="view" id="view-rank"></section>
-    <section class="view" id="view-charts"></section>
-    <section class="view" id="view-matches"></section>
+    <div class="card">
+      <h2>Teams</h2>
+      <ul id="team-list"></ul>
+    </div>
   </main>
 
-  <script src="js/team-config.js"></script>
-  <script src="js/models.js"></script>
-  <script src="js/scoring-engine.js"></script>
-  <script src="js/data-store.js"></script>
-  <script src="js/ui-roster.js"></script>
-  <script src="js/ui-courses.js"></script>
-  <script src="js/ui-rounds.js"></script>
-  <script src="js/ui-charts.js"></script>
-  <script src="js/ui-matches.js"></script>
-  <script src="js/github-auth.js"></script>
-  <script src="js/github-publish.js"></script>
-  <script src="js/app.js"></script>
+  <footer id="app-footer" class="app-footer"></footer>
+
+  <script src="version.js"></script>
+  <script>
+    async function main() {
+      const res = await fetch('teams.json');
+      const teams = await res.json();
+      const list = document.getElementById('team-list');
+      list.innerHTML = Object.entries(teams).map(([slug, team]) =>
+        `<li><a href="teams/${slug}/index.html">${team.name}</a></li>`
+      ).join('');
+
+      const year = new Date().getFullYear();
+      document.getElementById('app-footer').innerHTML = `
+        <p><strong>&copy; ${year} MSWD &mdash; Montgomery's Software &amp; Web Development</strong></p>
+        <p class="muted">Middle School Golf Tracker &middot; Built with Claude (AI-assisted) &middot; v${APP_VERSION}</p>
+      `;
+    }
+    main();
+  </script>
 </body>
 </html>

@@ -2,13 +2,15 @@
 // editing this file (+ swapping the logo + replacing prompts/seed_data.json) — no other file
 // should hardcode a team name, colors, repo target, or domain.
 const TEAM_CONFIG = {
+  teamSlug: 'dempsey',
   teamName: 'Delaware Dempsey Pacers Golf',
   shortName: 'Dempsey Golf',
   siteTitle: 'Dempsey Golf Tracker',
 
-  logoPath: 'assets/branding/delaware-pacers-golf-logo.png',
+  // Optional — omit to fall back to the shared golf-green-flag icon (see app.js).
+  logoPath: '../../assets/branding/delaware-pacers-golf-logo.png',
   logoAlt: 'Delaware Pacers Golf logo',
-  iconSpritePath: 'assets/icons.svg',
+  iconSpritePath: '../../assets/icons.svg',
   iconSymbolId: 'icon-golf-green',
 
   colors: {
@@ -32,5 +34,5 @@ const TEAM_CONFIG = {
     deviceFlowWorkerUrl: 'https://REPLACE_WITH_WORKER_SUBDOMAIN.workers.dev',
   },
 
-  domain: 'https://dempsey-golf-tracker.mswd.us',
+  domain: 'https://middle-school-golf-tracker.mswd.us/teams/dempsey',
 };

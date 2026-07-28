@@ -1,64 +1,72 @@
-# Admin auth (GitHub device flow) + report publishing setup
+# Admin auth (GitHub device flow) + report publishing
 
-Admin mode = holding a token with write access to this repo, stored in the browser's localStorage.
-No token, an unconfigured GitHub App, or a token that fails a live permission check all fall back
-to the safe default: read-only viewer mode. See `src/js/github-auth.js`.
+Any GitHub account can log in — no repo-collaborator invite needed. Whether that account is an
+**admin** for the team it's currently viewing, or just a read-only **visitor**, is decided by
+`src/teams.json` (slug → allowed GitHub usernames), checked via the Cloudflare Worker — never by
+GitHub repo-collaborator status. That distinction matters here specifically because one shared
+repo now serves every team: repo permissions are all-or-nothing at the repo level, too coarse to
+mean "admin for team X." See `docs/decisions.md` for the reasoning.
 
-## 1. Register the GitHub App
+## 1. Register the GitHub App (one-time, platform-wide)
 
-Settings → Developer settings → GitHub Apps → New GitHub App (personal account or an org you
-admin both work — for the `MSWD/dempsey-golf-tracker` repo, register it under whichever account
-can install apps on that repo).
+Settings → Developer settings → GitHub Apps → New GitHub App, under whichever account/org can
+install apps on `MSWD/dempsey-golf-tracker`.
 
-- Name: anything unique (e.g. "Dempsey Golf Tracker Admin")
-- Homepage URL: the Pages URL (`https://dempsey-golf-tracker.mswd.us`)
-- Webhook: uncheck "Active" — not needed
+- Name: anything unique
+- Homepage URL: `https://middle-school-golf-tracker.mswd.us`
+- Webhook: uncheck "Active"
 - Repository permissions → **Contents: Read & write**
-- Under "General" → check **Enable Device Flow**
-- Create the app, then note the **Client ID** (public, safe to embed in client-side JS — device
-  flow doesn't require a client secret)
-- Install the app on the `dempsey-golf-tracker` repo only
+- Enable **Device Flow**
+- Install the app on the `dempsey-golf-tracker` repo
+- Note the **Client ID** (public, safe to embed) — goes into every team's `team-config.js` →
+  `githubApp.clientId`
 
 ## 2. Deploy the Cloudflare Worker relay
 
-See `docs/deployment.md` → "Cloudflare Worker" section. Deploy `worker/cloudflare-device-flow-relay.js`
-and note its `*.workers.dev` URL.
+See `docs/deployment.md` → "Cloudflare Worker deploy." Note its `*.workers.dev` URL and the
+`GITHUB_PAT` secret it needs (a fine-grained PAT scoped to this repo, distinct from the GitHub
+App above — the App handles *who's logging in*, the PAT is what the Worker uses to *make the
+actual commit* once someone's verified as an admin).
 
 ## 3. Wire the config
 
-In `src/js/team-config.js`, set:
+Every team's `team-config.js` gets the same `githubApp.clientId` and `deviceFlowWorkerUrl` (one
+App + one Worker serve every team). `scripts/add-team.py` fills these in automatically from the
+constants at the top of that script — update those constants once here, not per team, if they
+ever change.
 
-```js
-githubApp: {
-  clientId: '<the Client ID from step 1>',
-  deviceFlowWorkerUrl: '<the Worker URL from step 2>',
-},
-```
+## How login works
 
-Until both are set (they ship as `REPLACE_...` placeholders), `GitHubAuth.isConfigured()` returns
-false and the login button shows a message pointing back at this doc instead of erroring.
-
-## How the flow works
-
-1. Coach clicks "Login with GitHub".
-2. `github-auth.js` calls the Worker's `/device/code` endpoint, which relays to GitHub's
+1. Coach clicks "Login with GitHub" on their team's page.
+2. `github-auth.js` calls the Worker's `/device/code`, which relays to GitHub's
    `/login/device/code`. GitHub returns a short user code and a verification URL.
-3. The app shows that code/URL; the coach opens the URL on any device, enters the code, approves.
+3. The app shows that code/URL; the coach opens it on any device, enters the code, approves.
 4. `github-auth.js` polls the Worker's `/token` endpoint until GitHub issues an access token.
-5. The token is validated against `GET /user` + a repo-permissions check (`push: true`), then
-   stored in localStorage. Admin mode unlocks.
+5. The token is stored in localStorage (shared across every team on this domain, since it
+   identifies the account, not a team). `GitHubAuth.isAdmin()` then calls the Worker's `/whoami`
+   with `{ teamSlug }` to check that account against `teams.json` for the team currently being
+   viewed — re-checked live on every page load, not cached client-side.
 
-## Report publishing
+## How publishing works
 
-Admin-only "Publish report" button (`src/js/github-publish.js`) commits the full current
-players/courses/rounds/matches dataset to a single always-current `reports/data/latest.json`,
-via the GitHub Contents API using the stored token. There's no per-publish snapshot file and no
-manifest — every round/match already carries a date, so `reports/report-viewer.js` reconstructs
-"standings as of any past date" dynamically from the full history, using the same
-`scoring-engine.js` the live app uses. Publishing just needs to happen often enough to stay current
-(e.g. after each match) — it's not a per-week ritual, since past weeks are still browsable from a
-single up-to-date publish.
+`github-publish.js` posts to the Worker's `/publish` with `{ teamSlug, path, content, message }`
+and the caller's own token in `Authorization`. The Worker:
 
-No token/Worker set up yet? There's currently no manual-download fallback wired into the UI — the
-Publish button will show an error pointing back at this doc. If you want to publish before setting
-up the GitHub App, use the Export button and hand-commit the JSON as `reports/data/latest.json`.
+1. Resolves the caller's username via `GET /user` with their token (identification only).
+2. Looks up `teamSlug` in `teams.json` (cached ~5 minutes — edits may take a few minutes to take
+   effect, which is a deliberate tradeoff, not a bug).
+3. Rejects if the username isn't in that team's `adminUsernames`, **or** if the requested `path`
+   isn't under that team's own `src/teams/<slug>/` directory — the second check is defense in
+   depth, so an authorized-for-team-A caller can't redirect a write into team B's files.
+4. If authorized, commits using its own `GITHUB_PAT` — the caller's token is never used to make
+   the write itself.
+
+`reports/index.html`/`report-viewer.js` reads `reports/data/latest.json` and reconstructs
+standings as of any past date dynamically — no per-publish snapshot files, no manifest.
+
+## `teams.json` — who can edit it
+
+Only the platform operator, directly via git. There is intentionally no in-app or Worker code path
+that writes to `teams.json` — the Worker only ever reads it. Adding a team or changing its admins
+means running `scripts/add-team.py` (for a new team) or hand-editing `src/teams.json` (for an
+existing one), then committing.

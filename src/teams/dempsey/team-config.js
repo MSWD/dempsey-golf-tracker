@@ -30,7 +30,7 @@ const TEAM_CONFIG = {
   // docs/auth-and-publishing.md. Until then, admin login/publishing is unavailable and the app
   // stays in viewer mode, which is the safe default.
   githubApp: {
-    clientId: 'REPLACE_WITH_GITHUB_APP_CLIENT_ID',
+    clientId: 'Iv23lihwcQrIGaTeMaO4',
     deviceFlowWorkerUrl: 'https://middle-school-golf-tracker-auth.montgomery-software-and-web-development-account.workers.dev',
   },
 

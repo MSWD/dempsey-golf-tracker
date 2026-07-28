@@ -15,7 +15,7 @@ SRC = Path(__file__).resolve().parent.parent / "src"
 # Shared across every team — keep this in sync with an existing team's team-config.js if these
 # ever change (one GitHub App + one Worker serve every team under this platform).
 PLATFORM_GITHUB = {"owner": "MSWD", "repo": "dempsey-golf-tracker", "defaultBranch": "main"}
-PLATFORM_GITHUB_APP_CLIENT_ID = "REPLACE_WITH_GITHUB_APP_CLIENT_ID"
+PLATFORM_GITHUB_APP_CLIENT_ID = "Iv23lihwcQrIGaTeMaO4"
 PLATFORM_WORKER_URL = "https://middle-school-golf-tracker-auth.montgomery-software-and-web-development-account.workers.dev"
 PLATFORM_DOMAIN = "https://middle-school-golf-tracker.mswd.us"
 

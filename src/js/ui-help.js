@@ -85,6 +85,20 @@ function renderHelpView() {
     </div>
 
     <div class="card">
+      <h2>Privacy — this data can become public</h2>
+      <p>This app's code and published reports live in a public GitHub repository, so anything
+      that gets <strong>published</strong> is visible to anyone on the internet, not just people you
+      share a link with. Roster names are abbreviated automatically when you publish (first name +
+      last initial, e.g. "Graham B" — extended a letter or two only if two players would otherwise
+      look identical), so full last names never end up in a published report even though you can
+      still enter full names in your own roster.</p>
+      <p>The one place this doesn't happen automatically: if you type a player's name in free-text
+      on a match card (for an extra player or an opposing-team player not in your roster), whatever
+      you type is published as-is. Use a first-name-and-initial format there too if that player is a
+      minor.</p>
+    </div>
+
+    <div class="card">
       <h2>Publishing reports (admins only)</h2>
       <p>"Publish report" pushes the current roster/rounds/matches to a shared report page anyone
       can view without logging in (linked from the reports viewer). It always reflects the latest

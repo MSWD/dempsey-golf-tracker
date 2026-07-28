@@ -9,12 +9,36 @@ const GitHubPublish = {
     if (!AppState.isAdmin) throw new Error('Admin login required to publish.');
 
     const publishedAt = new Date().toISOString().slice(0, 10);
+    const players = DataStore.getAll('players');
+    const playersById = new Map(players.map((p) => [p.id, p]));
+
+    // This repo (and everything it publishes) is public, so full last names never leave the
+    // coach's own browser. Roster players get abbreviated here; match entries re-derive their
+    // displayName from the (now-abbreviated) roster record rather than trusting whatever full name
+    // was baked in at entry time. Free-text entries with no playerId (extra/opponent players) are
+    // left as typed — the coach should keep those abbreviated too, see the Help page.
+    const abbreviatedPlayers = players.map((p) => ({
+      ...p,
+      lastName: abbreviatedLastName(p, players),
+    }));
+    const matches = DataStore.getAll('matches').map((match) => ({
+      ...match,
+      teams: match.teams.map((team) => ({
+        ...team,
+        players: team.players.map((entry) => {
+          const rosterPlayer = entry.playerId ? playersById.get(entry.playerId) : null;
+          if (!rosterPlayer) return entry;
+          return { ...entry, displayName: publicDisplayName(rosterPlayer, players) };
+        }),
+      })),
+    }));
+
     const snapshot = {
       publishedAt,
-      players: DataStore.getAll('players'),
+      players: abbreviatedPlayers,
       courses: DataStore.getAll('courses'),
       rounds: DataStore.getAll('rounds'),
-      matches: DataStore.getAll('matches'),
+      matches,
     };
 
     const res = await fetch(`${TEAM_CONFIG.githubApp.deviceFlowWorkerUrl}/publish`, {

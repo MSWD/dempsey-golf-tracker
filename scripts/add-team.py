@@ -16,7 +16,7 @@ SRC = Path(__file__).resolve().parent.parent / "src"
 # ever change (one GitHub App + one Worker serve every team under this platform).
 PLATFORM_GITHUB = {"owner": "MSWD", "repo": "dempsey-golf-tracker", "defaultBranch": "main"}
 PLATFORM_GITHUB_APP_CLIENT_ID = "REPLACE_WITH_GITHUB_APP_CLIENT_ID"
-PLATFORM_WORKER_URL = "https://REPLACE_WITH_WORKER_SUBDOMAIN.workers.dev"
+PLATFORM_WORKER_URL = "https://middle-school-golf-tracker-auth.montgomery-software-and-web-development-account.workers.dev"
 PLATFORM_DOMAIN = "https://middle-school-golf-tracker.mswd.us"
 
 INDEX_HTML_TEMPLATE = """<!doctype html>

@@ -1,5 +1,5 @@
 // Single source of truth for everything team-specific. Forking this app for another team means
-// editing this file (+ swapping the logo + replacing prompts/seed_data.json) — no other file
+// editing this file (+ swapping the logo + replacing seed_data.json) — no other file
 // should hardcode a team name, colors, repo target, or domain.
 const TEAM_CONFIG = {
   teamSlug: 'dempsey',
@@ -31,7 +31,7 @@ const TEAM_CONFIG = {
   // stays in viewer mode, which is the safe default.
   githubApp: {
     clientId: 'REPLACE_WITH_GITHUB_APP_CLIENT_ID',
-    deviceFlowWorkerUrl: 'https://REPLACE_WITH_WORKER_SUBDOMAIN.workers.dev',
+    deviceFlowWorkerUrl: 'https://middle-school-golf-tracker-auth.montgomery-software-and-web-development-account.workers.dev',
   },
 
   domain: 'https://middle-school-golf-tracker.mswd.us/teams/dempsey',

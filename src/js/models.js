@@ -61,3 +61,29 @@ function newMatchTeam({ name, isOwnTeam = false, players = [] }) {
     players,
   };
 }
+
+// This repo (and anything it publishes) is public, so full last names should never leave the
+// coach's own browser. Abbreviates to first name + last initial, extending the initial only as far
+// as needed to disambiguate two players who share both a first name and a last initial.
+function abbreviatedLastName(player, allPlayers) {
+  const last = player.lastName || '';
+  if (!last) return last;
+
+  let len = 1;
+  while (len < last.length) {
+    const candidate = last.slice(0, len).toLowerCase();
+    const conflict = allPlayers.some(p =>
+      p.id !== player.id &&
+      p.firstName === player.firstName &&
+      (p.lastName || '').toLowerCase().startsWith(candidate)
+    );
+    if (!conflict) break;
+    len++;
+  }
+  return last.slice(0, len);
+}
+
+function publicDisplayName(player, allPlayers) {
+  const initial = abbreviatedLastName(player, allPlayers);
+  return initial ? `${player.firstName} ${initial}` : player.firstName;
+}

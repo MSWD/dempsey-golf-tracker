@@ -107,6 +107,32 @@ just to play — those scores should never count toward team score (rule 5) even
 recorded. `isStarter` (default true, toggle-able per player added to a match team) makes that
 distinction explicit instead of inferring it from array position.
 
+## Why player names are abbreviated to first name + last initial before anything public
+
+Making the repo public (required for GitHub Pages on this org's free plan — see the private-repo
+note in `docs/deployment.md`) means `seed_data.json` and published `reports/data/latest.json` are
+both world-readable, and the roster is real middle-schoolers. `abbreviatedLastName`/
+`publicDisplayName` (in `models.js`) reduce a last name to its initial, extending only far enough
+to disambiguate two players who share both a first name and that initial — coaches still enter and
+see full names in their own browser (roster data in `localStorage` never leaves the device unless
+exported or published), but `github-publish.js` rewrites both the roster list and each match
+entry's `displayName` through this helper before sending anything to the Worker. Seed data
+(`src/teams/dempsey/seed_data.json`, `prompts/seed_data.json`) was scrubbed the same way, and its
+player `id` fields — originally the player's full name lowercased, e.g. `grahambaker` — were
+replaced with opaque `player_<random>` ids matching what `models.js`'s `makeId` generates at
+runtime, since the id string itself was an unabbreviated-name leak independent of the `lastName`
+field.
+
+One gap that's a coach responsibility, not a code fix: match entries for a player with no roster
+`playerId` (an opposing-team or extra player) store whatever free-text `displayName` the coach
+typed, and that's published as-is — the Help page now tells coaches to abbreviate those by hand.
+
+This only fixes file *contents* going forward. The original full-name seed data was already
+committed and pushed to `origin/main` (commits `8802b3b`, `2633da0`) before this fix — those commits
+remain in public git history once the repo goes public. Rewriting history to remove them is
+possible but disruptive (force-push, every clone gets invalidated); left as a decision for the
+coach rather than done unilaterally.
+
 ## Backlog / deliberately deferred
 
 - **Tee box / yardage per tee set.** Middle-school golf typically plays forward tees (yellow/red).
@@ -122,5 +148,7 @@ distinction explicit instead of inferring it from array position.
 - **Scorecard photo scan (stretch).** Auto-fill a Course's hole pars/yardages/slope/rating by
   calling Claude's vision API from the browser, with the coach supplying his own API key stored
   only in localStorage. Not started.
-- **Help page / user's guide.** A dedicated in-app page walking coaches through the tool. Not
-  started — noted for a later iteration.
+- **Safari/iPad testing.** Layout has been checked against iPad Air (landscape horizontal-scroll
+  fix applied) and Pixel 10 (portrait/landscape) in Chrome. Safari itself hasn't been tested yet —
+  coach is fine running Chrome on iPad for now, but wants to verify Safari behavior in a later
+  iteration.

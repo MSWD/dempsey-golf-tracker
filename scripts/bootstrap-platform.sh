@@ -25,18 +25,23 @@ if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
 fi
 
 echo
-echo "== GitHub Pages: configure source + custom domain =="
-gh_pages_body=$(jq -n --arg branch main --arg path /src '{source: {branch: $branch, path: $path}}')
+echo "== GitHub Pages: configure Actions-based build + custom domain =="
+# Legacy branch-based Pages only allows a source path of "/" or "/docs" — not "/src" — so this
+# platform deploys via a GitHub Actions workflow instead (.github/workflows/deploy-pages.yml),
+# which uploads src/ as the Pages artifact regardless of its path. That workflow runs on a
+# published Release, not on every push — the site won't actually go live until you cut one.
 curl -sf -X POST "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/pages" \
   -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
-  -d "$gh_pages_body" >/dev/null 2>&1 || echo "  (Pages may already be enabled — continuing)"
+  -d '{"build_type": "workflow"}' >/dev/null 2>&1 || echo "  (Pages may already be enabled — continuing)"
 
 curl -sf -X PUT "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/pages" \
   -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
   -d "$(jq -n --arg cname "$DOMAIN" '{cname: $cname}')" >/dev/null
-echo "  Pages source set to main:/src, custom domain set to $DOMAIN."
+echo "  Pages build type set to 'workflow', custom domain set to $DOMAIN."
+echo "  The site won't be live until the deploy workflow runs — cut a GitHub Release (or run"
+echo "  the 'Deploy to GitHub Pages' workflow manually) to trigger the first deploy."
 echo "  Domain verification + TLS cert issuance happen asynchronously on GitHub's side — check"
-echo "  Settings > Pages in the repo once the DNS record below has propagated."
+echo "  Settings > Pages in the repo once the DNS record below has propagated AND a deploy has run."
 
 echo
 echo "== Cloudflare: DNS CNAME record =="

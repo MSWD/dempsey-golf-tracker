@@ -12,11 +12,19 @@ the registrar.
 
 ## GitHub Pages setup
 
-1. Repo Settings → Pages → Source: deploy from the `main` branch, folder `/src`.
+Branch-based Pages only supports a source path of `/` or `/docs` — not `/src` — which doesn't fit
+this repo's layout (and `/docs` is already the markdown documentation folder). So this platform
+uses **Actions-based Pages** instead: `.github/workflows/deploy-pages.yml` uploads `src/` as the
+Pages artifact directly, regardless of its path in the repo.
+
+1. Repo Settings → Pages → Source: **GitHub Actions** (set automatically by the bootstrap script
+   via `{"build_type": "workflow"}`; equivalent to picking it manually in that dropdown).
 2. `src/CNAME` (committed) contains `middle-school-golf-tracker.mswd.us`.
 3. Set the custom domain in the same Settings → Pages panel (or via the API, as the bootstrap
-   script does) and let GitHub verify it. Check "Enforce HTTPS" once the cert issues — can take a
-   few minutes after the DNS record below exists.
+   script does) and let GitHub verify it. Check "Enforce HTTPS" once the cert issues.
+4. **The site isn't live until the workflow actually runs.** It triggers on a published GitHub
+   Release (tag) — matching the "bump `src/version.js` + cut a release per feature" pattern — or
+   can be run manually via Actions → "Deploy to GitHub Pages" → Run workflow.
 
 ## Cloudflare DNS record
 

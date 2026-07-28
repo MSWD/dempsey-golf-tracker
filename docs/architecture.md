@@ -19,6 +19,8 @@ normal git commit — no code path in the app writes to it.
 ## File layout
 
 ```
+.github/workflows/
+  deploy-pages.yml            # Actions-based Pages deploy (see below), triggered on a Release
 src/
   index.html                 # root landing page: lists active teams from teams.json
   teams.json                 # slug -> { name, adminUsernames: [...] } — operator-edited only
@@ -41,6 +43,12 @@ scripts/
   add-team.py                  # scaffolds a new src/teams/<slug>/ + teams.json entry
   bootstrap-platform.sh         # one-time: Cloudflare DNS/Worker + GitHub Pages config
 ```
+
+GitHub Pages' branch-based source only allows a path of `/` or `/docs` (and `/docs` is already
+this repo's markdown docs folder), so the site deploys via `.github/workflows/deploy-pages.yml`
+instead — it uploads `src/` as the Pages artifact directly, sidestepping that restriction. It
+triggers on a published GitHub Release rather than every push, matching the "bump `version.js` +
+cut a release" pattern — see `docs/deployment.md`.
 
 `scoring-engine.js` is the single source of truth for all scoring math — pure functions, no
 localStorage, no DOM — so both the live app and `report-viewer.js` run the exact same logic

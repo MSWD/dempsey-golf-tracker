@@ -1,5 +1,23 @@
 # Design decisions
 
+## Why GitHub Pages deploys via a GitHub Actions workflow, not the branch/path source setting
+
+Discovered mid-setup: branch-based GitHub Pages only accepts a source path of `/` or `/docs` —
+`/src` was never valid, and the bootstrap script's Pages API call was silently failing on it.
+Three fixes were on the table: move the whole site to the repo root, move it to `/docs` (which
+collides with this repo's markdown documentation folder of the same name), or deploy via a custom
+GitHub Actions workflow (`build_type: "workflow"`), which uploads `src/` as the Pages artifact
+directly and isn't subject to that path restriction at all. Went with the Actions workflow —
+avoids restructuring every file path project-wide, and avoids the `/docs` naming collision. The
+one real tradeoff: it's a "build step" of sorts (checkout + upload + deploy), a small departure
+from the project's plain-static-site philosophy, but it runs entirely inside GitHub's
+infrastructure with zero local tooling, so it doesn't compromise the "no build step to run
+locally" property that actually mattered.
+
+It also gave a natural home for a request that came up around the same time: cutting deploys on a
+published GitHub Release rather than every push to `main`, matching the "bump `version.js` + tag a
+release per feature" pattern from the coach's other app — see `.github/workflows/deploy-pages.yml`.
+
 ## Why localStorage + JSON export/import instead of a database
 
 Single coach, single browser, no server budget. `localStorage` with an explicit Export/Import pair

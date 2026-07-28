@@ -53,6 +53,7 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
     <button data-view="rank">Rank</button>
     <button data-view="charts">Charts</button>
     <button data-view="matches">Matches</button>
+    <button data-view="help">Help</button>
   </nav>
 
   <main>
@@ -62,6 +63,7 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
     <section class="view" id="view-rank"></section>
     <section class="view" id="view-charts"></section>
     <section class="view" id="view-matches"></section>
+    <section class="view" id="view-help"></section>
   </main>
 
   <footer id="app-footer" class="app-footer"></footer>
@@ -76,6 +78,7 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
   <script src="../../js/ui-rounds.js"></script>
   <script src="../../js/ui-charts.js"></script>
   <script src="../../js/ui-matches.js"></script>
+  <script src="../../js/ui-help.js"></script>
   <script src="../../js/github-auth.js"></script>
   <script src="../../js/github-publish.js"></script>
   <script src="../../js/app.js"></script>

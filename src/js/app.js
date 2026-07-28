@@ -40,6 +40,7 @@ async function main() {
     rank: renderRankView,
     charts: renderChartsView,
     matches: renderMatchesView,
+    help: renderHelpView,
   };
 
   function showView(name) {

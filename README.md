@@ -51,12 +51,35 @@ The app defaults to read-only viewer mode. Any GitHub account can log in — whe
 admin rights (roster/round/match editing, report publishing) for the team being viewed depends on
 `src/teams.json`, not on GitHub repo access. See `docs/auth-and-publishing.md`.
 
-## Adding a new team
+## Requesting a new team
+
+Coach at another school and want your team added to this platform? There's no cost or technical
+setup on your end — email **Kendal Montgomery** at **montgoke1@delawarecityschools.net** with:
+
+1. **Team/school name** — e.g. "Riverside Middle School Golf." Used as the display name
+   throughout the app.
+2. **A GitHub username for every coach who needs admin access** (editing roster/rounds/matches and
+   publishing reports). Admin access is tied to a GitHub account, not a separate password or
+   login Kendal creates for you.
+   - No GitHub account yet? It's free and takes a minute — go to
+     [github.com/join](https://github.com/join), pick a username, verify your email. Any personal
+     account works; you don't need to be added as a collaborator on this repository or have any
+     prior GitHub experience beyond logging in when asked.
+3. **(Optional) A logo image** — if you'd like your team's own logo in the header instead of the
+   default golf-flag icon.
+4. **(Optional) Team colors** — if you have specific school colors you'd like used for interface
+   accents.
+
+Once set up, your team gets its own page at
+`middle-school-golf-tracker.mswd.us/teams/<your-team>/`, starting with an empty roster, and works
+exactly like the Dempsey team's — you (and any coaches you listed) use "Login with GitHub" for
+edit access; anyone else can view scores/reports read-only. Scoring rules (double-par cap,
+rolling-average window, team-score formula) are the same for every team — they're fixed
+competition rules, not something set per team.
+
+## Adding a new team (fulfilling a request)
 
 Run `scripts/add-team.py` — it scaffolds `src/teams/<slug>/` and adds an entry to
 `src/teams.json`. Review what it generated, then commit and push yourself; the script doesn't run
 git for you. No DNS, GitHub App, or Cloudflare setup needed per team — that's all one-time platform
 setup (`scripts/bootstrap-platform.sh`, `docs/deployment.md`).
-
-Scoring rules (double-par cap, rolling-average window, team-score formula) are the same for every
-team — they're fixed competition rules, not a per-team preference.

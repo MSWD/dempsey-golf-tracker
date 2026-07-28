@@ -32,6 +32,9 @@ async function main() {
     return;
   }
   _snapshot = await res.json();
+  if (_snapshot.seasonName) {
+    document.getElementById('team-title').textContent = `${TEAM_CONFIG.siteTitle} — ${_snapshot.seasonName} — Reports`;
+  }
 
   const select = document.getElementById('report-date-select');
   const dates = distinctDates(_snapshot.rounds, _snapshot.matches);

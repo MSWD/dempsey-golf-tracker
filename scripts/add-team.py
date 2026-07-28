@@ -36,9 +36,11 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
   <header class="app-header">
     <img class="logo" id="team-logo" alt="">
     <h1 id="team-title"></h1>
+    <input type="text" id="season-name-input" class="admin-only" placeholder="Season name (e.g. 2026 Dempsey Golf Season)">
+    <span id="season-name-display" class="viewer-only muted"></span>
     <div class="header-actions">
-      <button id="btn-export">Export data</button>
-      <button id="btn-import">Import data</button>
+      <button id="btn-export">Export season</button>
+      <button id="btn-import">Import season</button>
       <input type="file" id="file-import" accept="application/json" style="display:none">
       <button id="btn-publish" class="admin-only">Publish report</button>
       <button id="btn-login">Login with GitHub</button>

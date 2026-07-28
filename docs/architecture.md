@@ -68,7 +68,7 @@ Player  { id, firstName, lastName, grade, active }
 Course  { id, name, holePars[9], holeYardages[9]?, slope?, rating?, totalPar, verified }
 Round   { id, playerId, date, type: 'tryout'|'practice'|'match', courseId|inlineHolePars,
           holeScores[9], putts, matchId? }
-Match   { id, date, location, courseId|inlineHolePars,
+Match   { id, date, location: 'Home'|'Away', courseId|inlineHolePars,
           teams: [{ id, name, isOwnTeam, players: [{ playerId?, displayName, holeScores[9],
                                                        putts, isStarter }] }] }
 ```

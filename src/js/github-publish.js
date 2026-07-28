@@ -26,15 +26,22 @@ const GitHubPublish = {
       teams: match.teams.map((team) => ({
         ...team,
         players: team.players.map((entry) => {
-          const rosterPlayer = entry.playerId ? playersById.get(entry.playerId) : null;
-          if (!rosterPlayer) return entry;
-          return { ...entry, displayName: publicDisplayName(rosterPlayer, players) };
+          if (!entry.playerId) return entry; // free-text opponent/extra entry — coach's own responsibility, see Help page
+          const rosterPlayer = playersById.get(entry.playerId);
+          // Still on the roster: re-derive the abbreviation fresh (handles disambiguation
+          // changes). Removed since this match was recorded: no roster record left to look up or
+          // disambiguate against, but the stored name still needs abbreviating, not publishing raw.
+          const displayName = rosterPlayer
+            ? publicDisplayName(rosterPlayer, players)
+            : abbreviateFreeTextName(entry.displayName);
+          return { ...entry, displayName };
         }),
       })),
     }));
 
     const snapshot = {
       publishedAt,
+      seasonName: DataStore.getSeasonName(),
       players: abbreviatedPlayers,
       courses: DataStore.getAll('courses'),
       rounds: DataStore.getAll('rounds'),

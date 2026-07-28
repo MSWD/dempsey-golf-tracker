@@ -64,8 +64,16 @@ function contentsUrl(env, path) {
   return `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${path}`;
 }
 
+// GitHub's API rejects any request with no User-Agent header (403) — Cloudflare Workers' fetch()
+// doesn't send a default one the way curl/browsers do, so every call through here was silently
+// failing (getCallerUsername always returned null, so /whoami and /publish always looked like an
+// invalid token, regardless of the actual token).
 function githubHeaders(token) {
-  return { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
+  return {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'dempsey-golf-tracker-worker',
+  };
 }
 
 // Best-effort, per-isolate cache — acceptable at this scale; a cold isolate just re-fetches.

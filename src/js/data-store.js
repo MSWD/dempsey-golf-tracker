@@ -5,7 +5,7 @@ const STORAGE_KEY = `mstgt:data:${TEAM_CONFIG.teamSlug}`;
 const SEED_DATA_PATH = 'seed_data.json';
 
 function emptyData() {
-  return { players: [], courses: [], rounds: [], matches: [], tournaments: [] };
+  return { seasonName: '', players: [], courses: [], rounds: [], matches: [], tournaments: [] };
 }
 
 const DataStore = {
@@ -21,6 +21,7 @@ const DataStore = {
       const res = await fetch(SEED_DATA_PATH);
       const seed = await res.json();
       this._data = {
+        seasonName: seed.seasonName ?? '',
         players: seed.players ?? [],
         courses: seed.courses ?? [],
         rounds: seed.rounds ?? [],
@@ -41,6 +42,15 @@ const DataStore = {
 
   getAll(entity) {
     return this._data[entity];
+  },
+
+  getSeasonName() {
+    return this._data.seasonName || '';
+  },
+
+  setSeasonName(name) {
+    this._data.seasonName = name;
+    this._save();
   },
 
   getById(entity, id) {
@@ -71,12 +81,17 @@ const DataStore = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     const date = new Date().toISOString().slice(0, 10);
+    const seasonSlug = this._data.seasonName.trim()
+      ? this._data.seasonName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      : 'season';
     a.href = url;
-    a.download = `dempsey-golf-data-${date}.json`;
+    a.download = `${seasonSlug}-${date}.json`;
     a.click();
     URL.revokeObjectURL(url);
   },
 
+  // Full replace, not a merge — whatever's in the file becomes the entirety of local state.
+  // Callers should confirm with the coach before invoking this (see app.js's import handler).
   async importJSON(file) {
     const text = await file.text();
     const parsed = JSON.parse(text);
@@ -86,6 +101,7 @@ const DataStore = {
       }
     }
     this._data = {
+      seasonName: typeof parsed.seasonName === 'string' ? parsed.seasonName : '',
       players: parsed.players,
       courses: parsed.courses,
       rounds: parsed.rounds,

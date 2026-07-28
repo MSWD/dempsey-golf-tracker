@@ -10,6 +10,8 @@
 const AUTH_STORAGE_KEY = 'mstgt:github-token';
 
 const GitHubAuth = {
+  username: null,
+
   isConfigured() {
     const { clientId, deviceFlowWorkerUrl } = TEAM_CONFIG.githubApp;
     return !clientId.startsWith('REPLACE_') && !deviceFlowWorkerUrl.includes('REPLACE_');
@@ -21,6 +23,7 @@ const GitHubAuth = {
 
   logout() {
     localStorage.removeItem(AUTH_STORAGE_KEY);
+    this.username = null;
   },
 
   // Confirms the token is live and belongs to a teams.json-listed admin for this team.
@@ -33,6 +36,7 @@ const GitHubAuth = {
       });
       if (!res.ok) return false;
       const data = await res.json();
+      this.username = data.username ?? null;
       return Boolean(data.isAdmin);
     } catch (err) {
       console.warn('GitHub admin check failed.', err);

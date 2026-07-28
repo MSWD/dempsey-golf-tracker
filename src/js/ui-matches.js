@@ -19,7 +19,10 @@ function renderMatchesView() {
       <h2>New match</h2>
       <div class="form-row">
         <input type="date" id="match-date" value="${new Date().toISOString().slice(0, 10)}">
-        <input type="text" id="match-location" placeholder="Location">
+        <select id="match-location">
+          <option value="Home">Home</option>
+          <option value="Away">Away</option>
+        </select>
         <select id="match-course">
           ${courses.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
         </select>
@@ -35,7 +38,7 @@ function renderMatchesView() {
 
   el.querySelector('#btn-add-match').addEventListener('click', () => {
     const date = el.querySelector('#match-date').value;
-    const location = el.querySelector('#match-location').value.trim();
+    const location = el.querySelector('#match-location').value;
     const courseId = el.querySelector('#match-course').value;
     const teamCount = Number(el.querySelector('#match-team-count').value);
     if (!date || !location || !courseId) {

@@ -33,6 +33,22 @@ async function main() {
 
   await DataStore.init();
 
+  const seasonNameInput = document.getElementById('season-name-input');
+  const seasonNameDisplay = document.getElementById('season-name-display');
+
+  function updateSeasonNameUI() {
+    const name = DataStore.getSeasonName();
+    seasonNameInput.value = name;
+    seasonNameDisplay.textContent = name || 'No season name set';
+  }
+
+  seasonNameInput.addEventListener('change', () => {
+    DataStore.setSeasonName(seasonNameInput.value.trim());
+    updateSeasonNameUI();
+  });
+
+  updateSeasonNameUI();
+
   const views = {
     roster: renderRosterView,
     courses: renderCoursesView,
@@ -63,8 +79,18 @@ async function main() {
   document.getElementById('file-import').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const confirmed = confirm(
+      `Importing a season replaces ALL current data in this browser (roster, rounds, matches) ` +
+      `with the contents of "${file.name}" — this cannot be undone. ` +
+      `Make sure you've exported the current season first if you want to keep it. Continue?`
+    );
+    if (!confirmed) {
+      e.target.value = '';
+      return;
+    }
     try {
       await DataStore.importJSON(file);
+      updateSeasonNameUI();
       alert('Import successful.');
       showView('roster');
     } catch (err) {
@@ -80,7 +106,9 @@ async function main() {
   function updateAuthUI() {
     document.body.classList.toggle('admin-mode', AppState.isAdmin);
     document.body.classList.toggle('viewer-mode', !AppState.isAdmin);
-    loginBtn.textContent = AppState.isAdmin ? 'Logout' : 'Login with GitHub';
+    loginBtn.textContent = AppState.isAdmin
+      ? `Logout${GitHubAuth.username ? ` (${GitHubAuth.username})` : ''}`
+      : 'Login with GitHub';
   }
 
   async function refreshAdminStatus() {

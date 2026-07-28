@@ -87,3 +87,14 @@ function publicDisplayName(player, allPlayers) {
   const initial = abbreviatedLastName(player, allPlayers);
   return initial ? `${player.firstName} ${initial}` : player.firstName;
 }
+
+// Fallback for a match entry whose roster player has since been removed — publishSnapshot() can
+// no longer look up their record (or disambiguate against the current roster), but the entry's
+// own stored displayName is still a full name typed in before the player was removed, so it must
+// still be abbreviated rather than published as-is. Just initials whatever the last word is.
+function abbreviateFreeTextName(displayName) {
+  const parts = displayName.trim().split(/\s+/);
+  if (parts.length < 2) return displayName;
+  const last = parts.pop();
+  return `${parts.join(' ')} ${last.charAt(0)}`;
+}

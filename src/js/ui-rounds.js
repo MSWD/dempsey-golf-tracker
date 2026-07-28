@@ -25,14 +25,14 @@ function renderRoundsView(warningMessage) {
       <h2>Log a round</h2>
       <div class="form-row">
         <select id="round-player">
-          ${players.map((p) => `<option value="${p.id}">${p.firstName} ${p.lastName}</option>`).join('')}
+          ${players.map((p) => `<option value="${p.id}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
         </select>
         <select id="round-type">
           <option value="tryout">Tryout</option>
           <option value="practice">Practice</option>
         </select>
         <select id="round-course">
-          ${courses.map((c) => `<option value="${c.id}">${c.name}</option>`).join('')}
+          ${courses.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
         </select>
         <input type="date" id="round-date" value="${new Date().toISOString().slice(0, 10)}">
       </div>
@@ -65,9 +65,9 @@ function renderRoundsView(warningMessage) {
     return `
       <tr>
         <td>${r.date}</td>
-        <td>${player ? `${player.firstName} ${player.lastName}` : '—'}</td>
+        <td>${player ? `${escapeHtml(player.firstName)} ${escapeHtml(player.lastName)}` : '—'}</td>
         <td>${r.type}</td>
-        <td>${course ? course.name : '—'}</td>
+        <td>${course ? escapeHtml(course.name) : '—'}</td>
         <td>${holesPlayed}${!valid ? ' <span class="badge warn">incomplete</span>' : ''}</td>
         <td>${raw ?? '—'}</td>
         <td>${adj != null ? adj.toFixed(1) : '—'}</td>
@@ -125,7 +125,7 @@ function renderRankView() {
           ${ranked.map((p) => `
             <tr>
               <td>${p.rank ?? '—'}</td>
-              <td>${p.firstName} ${p.lastName}</td>
+              <td>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td>
               <td>${p.grade}</td>
               <td>${p.rollingAverage != null ? p.rollingAverage.toFixed(1) : 'No rounds yet'}</td>
             </tr>

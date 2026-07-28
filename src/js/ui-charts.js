@@ -9,7 +9,7 @@ function renderChartsView() {
 
   el.innerHTML = `<div class="charts-grid">${players.map((p) => `
     <div class="card">
-      <h3>${p.firstName} ${p.lastName}</h3>
+      <h3>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</h3>
       <canvas id="chart-score-${p.id}" height="140"></canvas>
       <canvas id="chart-putts-${p.id}" height="140" style="margin-top:12px"></canvas>
     </div>

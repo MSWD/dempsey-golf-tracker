@@ -21,7 +21,7 @@ function renderMatchesView() {
         <input type="date" id="match-date" value="${new Date().toISOString().slice(0, 10)}">
         <input type="text" id="match-location" placeholder="Location">
         <select id="match-course">
-          ${courses.map((c) => `<option value="${c.id}">${c.name}</option>`).join('')}
+          ${courses.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
         </select>
         <select id="match-team-count">
           <option value="2">2 teams</option>
@@ -59,7 +59,7 @@ function renderMatchCard(match) {
   const holePars = matchHolePars(match);
   return `
     <div class="card" data-match-id="${match.id}">
-      <h3>${match.date} — ${match.location} (${course ? course.name : 'unknown course'})</h3>
+      <h3>${match.date} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'})</h3>
       ${match.teams.map((team) => renderTeamBlock(match, team, holePars)).join('')}
     </div>
   `;
@@ -75,13 +75,13 @@ function renderTeamBlock(match, team, holePars) {
   return `
     <div class="card" style="background:#fafaf6" data-team-id="${team.id}">
       <div class="form-row">
-        <strong>${team.name}</strong>
+        <strong>${escapeHtml(team.name)}</strong>
         ${team.isOwnTeam ? '<span class="badge">own team</span>' : ''}
       </div>
       <div class="form-row add-player-row admin-only" data-match-id="${match.id}" data-team-id="${team.id}">
         ${team.isOwnTeam ? `
           <select class="player-select">
-            ${players.map((p) => `<option value="${p.id}">${p.firstName} ${p.lastName}</option>`).join('')}
+            ${players.map((p) => `<option value="${p.id}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
           </select>
         ` : `
           <input type="text" class="displayname-input" placeholder="Player name">
@@ -101,7 +101,7 @@ function renderTeamBlock(match, team, holePars) {
               const par = raw != null ? toPar(raw, roundTotalPar(holePars)) : null;
               const valid = isValidRound(p.holeScores);
               return `<tr>
-                <td>${p.displayName}</td>
+                <td>${escapeHtml(p.displayName)}</td>
                 <td>${p.isStarter ? 'Yes' : 'Alt'}</td>
                 <td>${raw ?? '—'}${!valid ? ' <span class="badge warn">incomplete</span>' : ''}</td>
                 <td>${p.putts ?? '—'}</td>

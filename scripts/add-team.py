@@ -70,6 +70,7 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
 
   <script src="team-config.js"></script>
   <script src="../../version.js"></script>
+  <script src="../../js/html-utils.js"></script>
   <script src="../../js/models.js"></script>
   <script src="../../js/scoring-engine.js"></script>
   <script src="../../js/data-store.js"></script>
@@ -148,6 +149,7 @@ REPORTS_INDEX_HTML = """<!doctype html>
 
   <script src="../team-config.js"></script>
   <script src="../../../version.js"></script>
+  <script src="../../../js/html-utils.js"></script>
   <script src="../../../js/scoring-engine.js"></script>
   <script src="report-viewer.js"></script>
 </body>

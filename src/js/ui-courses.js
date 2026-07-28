@@ -26,7 +26,7 @@ function renderCoursesView() {
   const rows = el.querySelector('#courses-rows');
   rows.innerHTML = courses.map((c) => `
     <tr data-id="${c.id}">
-      <td>${c.name} ${c.verified ? '' : '<span class="badge warn">unverified</span>'}</td>
+      <td>${escapeHtml(c.name)} ${c.verified ? '' : '<span class="badge warn">unverified</span>'}</td>
       <td>${c.totalPar}</td>
       <td class="muted">${c.holePars.join('-')}</td>
       <td><button class="btn-remove admin-only">Remove</button></td>

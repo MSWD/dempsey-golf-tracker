@@ -82,7 +82,7 @@ function render(asOfDate) {
           ${ranked.map((p) => `
             <tr>
               <td>${p.rank ?? '—'}</td>
-              <td>${p.firstName} ${p.lastName}</td>
+              <td>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td>
               <td>${p.grade}</td>
               <td>${p.rollingAverage != null ? p.rollingAverage.toFixed(1) : 'No rounds yet'}</td>
             </tr>

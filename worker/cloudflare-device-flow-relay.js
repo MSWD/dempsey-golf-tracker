@@ -124,8 +124,12 @@ async function handlePublish(request, env) {
   }
   // Defense in depth: even an authorized team admin's request must target their own team's
   // directory — a client bug (or a malicious caller) can't redirect the write elsewhere by
-  // passing a different path while claiming a valid teamSlug.
-  if (!path.startsWith(`src/teams/${teamSlug}/`)) {
+  // passing a different path while claiming a valid teamSlug. A plain startsWith prefix check
+  // isn't enough on its own — "src/teams/dempsey/../../teams.json" still satisfies it as a
+  // literal string — so path segments are checked explicitly to rule out any ".."/"." traversal.
+  const teamPrefix = `src/teams/${teamSlug}/`;
+  const hasTraversalSegment = path.split('/').some((segment) => segment === '.' || segment === '..');
+  if (!path.startsWith(teamPrefix) || hasTraversalSegment) {
     return json({ error: 'path must be under the requested team\'s own directory' }, 400);
   }
 
@@ -165,6 +169,15 @@ async function handlePublish(request, env) {
   return json({ ok: true });
 }
 
+// Flat per-IP cap across every POST endpoint (see wrangler.toml's RATE_LIMITER binding) — this
+// Worker holds a powerful credential (GITHUB_PAT), so an unthrottled public endpoint in front of
+// it is worth guarding even at this project's small scale.
+async function checkRateLimit(request, env) {
+  const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+  const { success } = await env.RATE_LIMITER.limit({ key: ip });
+  return success;
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') {
@@ -172,6 +185,10 @@ export default {
     }
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405, headers: CORS_HEADERS });
+    }
+
+    if (!(await checkRateLimit(request, env))) {
+      return json({ error: 'Too many requests — please wait a moment and try again.' }, 429);
     }
 
     const url = new URL(request.url);

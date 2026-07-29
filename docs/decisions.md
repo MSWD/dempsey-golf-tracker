@@ -158,12 +158,12 @@ template change like this lands but an already-onboarded team's files don't get 
 
 ## Named tee sets per course
 
-Courses can now have multiple named tee sets (`Course.teeSets[]`), each with its own 9-hole
-yardages and, rarely, its own par override (`holeParsOverride`) for the small number of courses
-where a forward/back tee actually changes par on a hole or two — confirmed by the coach as a real
-but uncommon case, so the common case (yardage-only tee sets) stays simple while still supporting
-it. Rounds and matches can each select which tee set was played (`teeSetId`); `Course.holePars`
-stays the base/default pars, used whenever no tee set (or a tee set with no override) is selected.
+Courses can now have multiple named tee sets (`Course.teeSets[]`), each with its own yardages and,
+rarely, its own par override (`holeParsOverride`) for the small number of courses where a
+forward/back tee actually changes par on a hole or two — confirmed by the coach as a real but
+uncommon case, so the common case (yardage-only tee sets) stays simple while still supporting it.
+Rounds and matches can each select which tee set was played (`teeSetId`); `Course.holePars` stays
+the base/default pars, used whenever no tee set (or a tee set with no override) is selected.
 
 Tee-set totals (`teeSetTotalPar`/`teeSetTotalYardage` in `scoring-engine.js`) are computed on read
 rather than precomputed and stored like `Course.totalPar` — a tee set's effective par depends on
@@ -172,6 +172,16 @@ single live source of truth instead of a cached value that could drift out of sy
 
 Slope/rating moved from the course to each tee set, matching how real courses rate them (per tee,
 not per course) — previously unused fields on `Course` regardless, so no scoring impact.
+
+## Optional 18-hole course cards, still 9-hole scoring records
+
+Courses can now store either 9 or 18 hole pars, and tee sets can store matching 9 or 18 hole
+yardages/par overrides. Rounds and matches remain 9-hole scoring records (`holeScores[9]`) because
+the ranking, double-par cap, team-score rules, and existing exports all operate on a 9-hole card.
+For 18-hole courses, the round/match stores a small additive `side` field (`front` or `back`) so
+`scoring-engine.js` resolves the selected side down to the 9 pars that actually apply. Existing
+exports do not need migration: a missing `side` defaults to the historical 9-hole/front behavior,
+and existing 9-value course/tee arrays continue to resolve as-is.
 
 ## Backlog / deliberately deferred
 

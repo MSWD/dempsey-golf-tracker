@@ -273,10 +273,14 @@ body.admin-mode .viewer-only { display: none; }
 /* icons.svg's own inline style="display:none" is blocked by the style-src 'self' CSP once it's
    injected into #icon-sprite via innerHTML (app.js) — hide the container instead. */
 #icon-sprite { display: none; }
+.hole-input { width: 56px; }
+.yardage-input { width: 76px; }
 .input-narrow { width: 70px; }
 .input-medium { width: 80px; }
 .full-width { width: 100%; }
 .chart-secondary { margin-top: 12px; }
+.hole-group { margin-bottom: 8px; }
+.hole-input-row { margin-top: 4px; }
 
 .charts-grid {
   display: grid;
@@ -293,5 +297,6 @@ body.admin-mode .viewer-only { display: none; }
   header.app-header { padding: 10px 12px; }
   header.app-header h1 { font-size: 1rem; }
   .card { padding: 12px; }
-  .hole-input { width: 38px; }
+  .hole-input { width: 52px; }
+  .yardage-input { width: 70px; }
 }

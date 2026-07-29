@@ -20,6 +20,24 @@ function updateTeeSetOptions(courseId, selectEl) {
   }
 }
 
+function updateSideOptions(courseId, selectEl) {
+  const course = getCourseById(courseId);
+  const sides = courseSides(course);
+  selectEl.disabled = sides.length === 1;
+  selectEl.innerHTML = sides.map((side) => `<option value="${side}">${sideLabel(side)}</option>`).join('');
+  selectEl.value = sides[0];
+}
+
+function selectedSideForCourse(course, sideValue) {
+  return normalizeSide(course, sideValue || 'front');
+}
+
+function updateHolePlaceholders(container, side) {
+  container.querySelectorAll('.hole-input').forEach((input, i) => {
+    input.placeholder = `H${sideHoleNumber(i, side)}`;
+  });
+}
+
 // Chronological adjusted scores for a player, oldest first (tryouts naturally sort first by date).
 function playerAdjustedScores(playerId) {
   return DataStore.getAll('rounds')
@@ -52,6 +70,7 @@ function renderRoundsView(warningMessage) {
         <select id="round-course">
           ${courses.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
         </select>
+        <select id="round-side"></select>
         <select id="round-tee-set"></select>
         <input type="date" id="round-date" value="${new Date().toISOString().slice(0, 10)}">
       </div>
@@ -66,7 +85,7 @@ function renderRoundsView(warningMessage) {
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Date</th><th>Player</th><th>Type</th><th>Course</th><th>Tee</th><th>Holes</th><th>Raw</th><th>Adjusted</th></tr>
+          <tr><th>Date</th><th>Player</th><th>Type</th><th>Course</th><th>Side</th><th>Tee</th><th>Holes</th><th>Raw</th><th>Adjusted</th></tr>
         </thead>
         <tbody id="rounds-rows"></tbody>
       </table>
@@ -74,24 +93,31 @@ function renderRoundsView(warningMessage) {
   `;
 
   const roundCourseSelect = el.querySelector('#round-course');
+  const roundSideSelect = el.querySelector('#round-side');
   const roundTeeSelect = el.querySelector('#round-tee-set');
   function updateRoundTeeInfo() {
     const course = getCourseById(roundCourseSelect.value);
     const teeSet = findTeeSet(course, roundTeeSelect.value);
+    const side = selectedSideForCourse(course, roundSideSelect.value);
     const info = el.querySelector('#round-tee-info');
     if (!course) { info.textContent = ''; return; }
-    const par = teeSetTotalPar(course, teeSet);
-    const yards = teeSet ? teeSetTotalYardage(teeSet) : null;
+    const par = teeSetTotalPar(course, teeSet, side);
+    const yards = teeSet ? teeSetTotalYardage(teeSet, side) : null;
+    const sideText = isEighteenHoleCourse(course) ? `${sideLabel(side)} · ` : '';
     info.textContent = teeSet
-      ? `Par ${par}${yards != null ? `, ${yards} yds` : ''}${teeSet.holeParsOverride ? ' (par differs on this tee)' : ''}`
-      : `Par ${course.totalPar} (course default)`;
+      ? `${sideText}Par ${par}${yards != null ? `, ${yards} yds` : ''}${teeSet.holeParsOverride ? ' (par differs on this tee)' : ''}`
+      : `${sideText}Par ${teeSetTotalPar(course, null, side)} (course default)`;
+    updateHolePlaceholders(el.querySelector('#round-holes'), side);
   }
+  updateSideOptions(roundCourseSelect.value, roundSideSelect);
   updateTeeSetOptions(roundCourseSelect.value, roundTeeSelect);
   updateRoundTeeInfo();
   roundCourseSelect.addEventListener('change', () => {
+    updateSideOptions(roundCourseSelect.value, roundSideSelect);
     updateTeeSetOptions(roundCourseSelect.value, roundTeeSelect);
     updateRoundTeeInfo();
   });
+  roundSideSelect.addEventListener('change', updateRoundTeeInfo);
   roundTeeSelect.addEventListener('change', updateRoundTeeInfo);
 
   const rows = el.querySelector('#rounds-rows');
@@ -99,6 +125,7 @@ function renderRoundsView(warningMessage) {
     const player = DataStore.getById('players', r.playerId);
     const course = getCourseById(r.courseId);
     const teeSet = findTeeSet(course, r.teeSetId);
+    const side = selectedSideForCourse(course, r.side);
     const holePars = resolveHolePars(r, getCourseById);
     const raw = rawScoreOrNull(r.holeScores);
     const holesPlayed = holesPlayedCount(r.holeScores);
@@ -110,6 +137,7 @@ function renderRoundsView(warningMessage) {
         <td>${player ? `${escapeHtml(player.firstName)} ${escapeHtml(player.lastName)}` : '—'}</td>
         <td>${r.type}</td>
         <td>${course ? escapeHtml(course.name) : '—'}</td>
+        <td>${course && isEighteenHoleCourse(course) ? sideLabel(side) : '—'}</td>
         <td>${teeSet ? escapeHtml(teeSet.name) : '—'}</td>
         <td>${holesPlayed}${!valid ? ' <span class="badge warn">incomplete</span>' : ''}</td>
         <td>${raw ?? '—'}</td>
@@ -122,6 +150,8 @@ function renderRoundsView(warningMessage) {
     const playerId = el.querySelector('#round-player').value;
     const type = el.querySelector('#round-type').value;
     const courseId = roundCourseSelect.value;
+    const course = getCourseById(courseId);
+    const side = selectedSideForCourse(course, roundSideSelect.value);
     const teeSetId = roundTeeSelect.value || null;
     const date = el.querySelector('#round-date').value;
     const putts = Number(el.querySelector('#round-putts').value) || null;
@@ -131,7 +161,6 @@ function renderRoundsView(warningMessage) {
       return;
     }
 
-    const course = getCourseById(courseId);
     const teeSet = findTeeSet(course, teeSetId);
     const rawInputs = Array.from(el.querySelectorAll('#round-holes .hole-input'))
       .map((i) => (i.value === '' ? null : Number(i.value)));
@@ -141,11 +170,11 @@ function renderRoundsView(warningMessage) {
       return;
     }
 
-    const capped = capAllHoleScores(rawInputs, teeSetEffectiveHolePars(course, teeSet));
+    const capped = capAllHoleScores(rawInputs, teeSetEffectiveHolePars(course, teeSet, side));
     const anyCapped = capped.some((c) => c.wasCapped);
     const holeScores = capped.map((c) => c.value);
 
-    DataStore.add('rounds', newRound({ playerId, date, type, courseId, teeSetId, holeScores, putts }));
+    DataStore.add('rounds', newRound({ playerId, date, type, courseId, teeSetId, side, holeScores, putts }));
 
     renderRoundsView(anyCapped ? 'Note: one or more hole scores exceeded double-par and were capped.' : null);
   });

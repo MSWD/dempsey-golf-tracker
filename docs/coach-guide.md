@@ -58,15 +58,17 @@ the rank table and round-entry player list.
 
 ### Courses
 
-Enter each course's 9 hole pars. A course marked "unverified" means its pars haven't been
-double-checked against an official source yet — treat scores from it with a little caution until
-someone confirms the card.
+Enter each course's hole pars as either a 9-hole card or a full 18-hole card. For an 18-hole
+course, rounds and matches ask whether you're playing the front side (holes 1-9) or back side
+(holes 10-18). A course marked "unverified" means its pars haven't been double-checked against an
+official source yet — treat scores from it with a little caution until someone confirms the card.
 
 Open "Tee sets" under a course to add named tees (e.g. "Gold," "Forward") with their own
-yardages — name them whatever you like. Par is normally the same on every tee, so you don't need
-to enter it again; only check "different par on this tee" if that specific tee actually changes
-par on a hole or two (rare). Selecting a tee set when logging a round or match shows the resulting
-total par and yardage.
+yardages — name them whatever you like. On an 18-hole course, enter yardages for both the front
+and back sides. Par is normally the same on every tee, so you don't need to enter it again; only
+check "different par on this tee" if that specific tee actually changes par on a hole or two
+(rare). Selecting a tee set when logging a round or match shows the resulting par and yardage for
+the selected side.
 
 Mark one tee set as the default (radio button in the tee sets table) if your team usually plays a
 particular color at that course — it'll be pre-selected next time you log a round or match there.

@@ -65,18 +65,24 @@ not a team.
 
 ```
 Player  { id, firstName, lastName, grade, active }
-Course  { id, name, holePars[9], totalPar, verified, defaultTeeSetId?,
-          teeSets: [{ id, name, holeYardages[9], holeParsOverride[9]?, slope?, rating? }] }
+Course  { id, name, holePars[9|18], totalPar, verified, defaultTeeSetId?,
+          teeSets: [{ id, name, holeYardages[9|18], holeParsOverride[9|18]?, slope?, rating? }] }
 Round   { id, playerId, date, type: 'tryout'|'practice'|'match', courseId|inlineHolePars, teeSetId?,
-          holeScores[9], putts, matchId? }
+          side?: 'front'|'back', holeScores[9], putts, matchId? }
 Match   { id, date, location: 'Home'|'Away', courseId|inlineHolePars, teeSetId?,
-          teams: [{ id, name, isOwnTeam, players: [{ playerId?, displayName, holeScores[9],
+          side?: 'front'|'back', teams: [{ id, name, isOwnTeam,
+                                           players: [{ playerId?, displayName, holeScores[9],
                                                        putts, isStarter }] }] }
 ```
 
 `isStarter` on a match team's player entry distinguishes the 6 official starters from
 alternates/extra players who tee off and post a score just to play, but never count toward team
 score (rule below).
+
+Courses may store either a 9-hole card or a full 18-hole card. Rounds and matches are still
+9-hole scoring records; for an 18-hole course, `side` selects whether holes 1-9 (`front`) or
+10-18 (`back`) supply the pars and tee yardages. Existing data without `side` remains valid and
+defaults to the current 9-hole/front behavior.
 
 ## Scoring rules (fixed, not per-team configurable — see decisions.md)
 
@@ -93,7 +99,8 @@ score (rule below).
   manually sets the full lineup order.
 - **Team score** = sum of the 4 lowest raw scores among the 6 starters (not alternates) who posted
   a valid score that day. Fewer than 4 → explicitly "incomplete."
-- **18-hole events** are two independent 9-hole Match records (front nine, back nine).
+- **18-hole events** are two independent 9-hole Match records, one with `side: 'front'` and one
+  with `side: 'back'`.
 
 ## Report publishing
 

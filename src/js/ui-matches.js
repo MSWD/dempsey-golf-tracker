@@ -79,30 +79,41 @@ function renderMatchesView() {
   matches.forEach((m) => wireMatchCard(m));
 }
 
+function computeTeamScore(team) {
+  const starterRaws = team.players
+    .filter((p) => p.isStarter)
+    .map((p) => (isValidRound(p.holeScores) ? rawScoreOrNull(p.holeScores) : null));
+  return teamScore(starterRaws);
+}
+
 function renderMatchCard(match) {
   const course = getCourseById(match.courseId);
   const teeSet = findTeeSet(course, match.teeSetId);
   const holePars = matchHolePars(match);
+  const teamScores = match.teams.map((team) => ({ team, score: computeTeamScore(team) }));
+  // Only declare a winner once at least 2 teams have posted a complete score — with fewer than
+  // that there's nothing to compare, so no highlight rather than a premature/misleading one.
+  const completeTotals = teamScores.filter((t) => t.score.complete).map((t) => t.score.total);
+  const lowestScore = completeTotals.length >= 2 ? Math.min(...completeTotals) : null;
   return `
     <div class="card" data-match-id="${match.id}">
       <h3>${match.date} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
-      ${match.teams.map((team) => renderTeamBlock(match, team, holePars)).join('')}
+      ${teamScores.map(({ team, score }) =>
+        renderTeamBlock(match, team, holePars, score, lowestScore != null && score.complete && score.total === lowestScore)
+      ).join('')}
     </div>
   `;
 }
 
-function renderTeamBlock(match, team, holePars) {
+function renderTeamBlock(match, team, holePars, score, isWinner) {
   const players = DataStore.getAll('players').slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
-  const starterRaws = team.players
-    .filter((p) => p.isStarter)
-    .map((p) => (isValidRound(p.holeScores) ? rawScoreOrNull(p.holeScores) : null));
-  const score = teamScore(starterRaws);
 
   return `
-    <div class="card" style="background:#fafaf6" data-team-id="${team.id}">
+    <div class="card team-block${isWinner ? ' winning-team' : ''}" data-team-id="${team.id}">
       <div class="form-row">
         <strong>${escapeHtml(team.name)}</strong>
         ${team.isOwnTeam ? '<span class="badge">own team</span>' : ''}
+        ${isWinner ? '<span class="badge win">Winner</span>' : ''}
       </div>
       <div class="form-row add-player-row admin-only" data-match-id="${match.id}" data-team-id="${team.id}">
         ${team.isOwnTeam ? `

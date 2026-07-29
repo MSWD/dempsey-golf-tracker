@@ -130,57 +130,63 @@ async function main() {
     }
 
     if (!GitHubAuth.isConfigured()) {
+      loginStatus.classList.remove('login-active');
       loginStatus.textContent = 'GitHub login is not configured yet — see docs/auth-and-publishing.md.';
       return;
     }
 
-    let loginPopup = null;
-    // Opens the GitHub verification page as a small fixed-size popup instead of a full tab —
-    // easy to tell apart from the main app window, so the coach doesn't accidentally close or
-    // navigate the tab that's quietly polling for login completion in the background.
-    function openLoginPopup(verificationUri) {
-      const width = 520;
-      const height = 650;
-      const left = window.screenX + (window.outerWidth - width) / 2;
-      const top = window.screenY + (window.outerHeight - height) / 2;
-      if (loginPopup && !loginPopup.closed) {
-        loginPopup.focus();
-        return loginPopup;
-      }
-      loginPopup = window.open(
-        verificationUri,
-        'github-login',
-        `width=${width},height=${height},left=${left},top=${top},noopener,noreferrer`
-      );
-      return loginPopup;
-    }
+    // GitHub's device-verification page is always this fixed URL — knowing that lets us open it
+    // synchronously, in the same tick as the click, so the browser still treats it as a direct
+    // user gesture and won't block it as a popup. Waiting for the device-code fetch to resolve
+    // first (even briefly) loses that direct-gesture window in most browsers, so the popup can't
+    // be opened automatically once the code is ready — only right now, before we even have it.
+    const GITHUB_DEVICE_VERIFICATION_URL = 'https://github.com/login/device';
+    const popupWidth = 520;
+    const popupHeight = 650;
+    const popupLeft = window.screenX + (window.outerWidth - popupWidth) / 2;
+    const popupTop = window.screenY + (window.outerHeight - popupHeight) / 2;
+    let loginPopup = window.open(
+      GITHUB_DEVICE_VERIFICATION_URL,
+      'github-login',
+      `width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop},noopener,noreferrer`
+    );
 
     try {
+      loginStatus.classList.add('login-active');
       loginStatus.textContent = 'Starting login…';
       await GitHubAuth.login((userCode, verificationUri) => {
-        loginStatus.innerHTML = `Go to <a href="${verificationUri}" id="login-verify-link" rel="noopener">${verificationUri}</a> and enter code <strong>${userCode}</strong> <button type="button" id="copy-login-code">Copy code</button><br><span class="muted">Keep this tab open — login finishes automatically here once you approve in the popup.</span>`;
-        document.getElementById('login-verify-link').addEventListener('click', (e) => {
-          e.preventDefault();
-          openLoginPopup(verificationUri);
-        });
-        const copyBtn = document.getElementById('copy-login-code');
-        copyBtn.addEventListener('click', async () => {
+        // Belt-and-suspenders: point the already-open popup at whatever GitHub actually returned,
+        // in case it ever differs from the well-known URL used to open it above.
+        if (loginPopup && !loginPopup.closed && verificationUri !== GITHUB_DEVICE_VERIFICATION_URL) {
+          loginPopup.location.href = verificationUri;
+        }
+        navigator.clipboard.writeText(userCode).catch(() => {});
+        loginStatus.innerHTML = `
+          Code <span id="login-code">${userCode}</span> copied — paste it into the popup window.
+          <button type="button" id="copy-login-code">Copy again</button><br>
+          No popup? <a href="${verificationUri}" id="login-verify-link" target="_blank" rel="noopener">Open GitHub's login page</a>
+          and keep this tab open — login finishes automatically here once you approve.
+        `;
+        document.getElementById('copy-login-code').addEventListener('click', async () => {
+          const btn = document.getElementById('copy-login-code');
           try {
             await navigator.clipboard.writeText(userCode);
-            copyBtn.textContent = 'Copied!';
+            btn.textContent = 'Copied!';
           } catch {
-            copyBtn.textContent = 'Copy failed — select manually';
+            btn.textContent = 'Copy failed — select manually';
           }
-          setTimeout(() => { copyBtn.textContent = 'Copy code'; }, 2000);
+          setTimeout(() => { btn.textContent = 'Copy again'; }, 2000);
         });
       });
       if (loginPopup && !loginPopup.closed) loginPopup.close();
+      loginStatus.classList.remove('login-active');
       loginStatus.textContent = 'Logged in.';
       AppState.isAdmin = true;
       updateAuthUI();
       showView(currentView() ?? 'roster');
     } catch (err) {
       if (loginPopup && !loginPopup.closed) loginPopup.close();
+      loginStatus.classList.remove('login-active');
       loginStatus.textContent = err.message;
     }
   });

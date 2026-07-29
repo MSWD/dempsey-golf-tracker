@@ -182,6 +182,22 @@ function renderRoundsView(warningMessage) {
 
 function renderRankView() {
   const el = document.getElementById('view-rank');
+
+  // Viewer mode almost never means "the coach's own browser" — localStorage is per-browser, so
+  // anyone else looking has their own (usually empty or stale) copy of the data, not the coach's.
+  // Computing a rank table from that would be misleading rather than just unhelpful, so send
+  // viewers straight to the published report instead, which reflects the actual season data
+  // regardless of whose browser they're on. Admins still get the live local table below, since
+  // that's the coach's own browser and the whole point is checking it before publishing.
+  if (!AppState.isAdmin) {
+    el.innerHTML = `
+      <p class="muted">Rankings are only meaningful from the coach's own browser — this device's
+      local data likely isn't in sync with the team's.</p>
+      <p><a href="reports/index.html">View published rankings report</a></p>
+    `;
+    return;
+  }
+
   const players = DataStore.getAll('players').filter((p) => p.active);
 
   const withAverage = players.map((p) => ({

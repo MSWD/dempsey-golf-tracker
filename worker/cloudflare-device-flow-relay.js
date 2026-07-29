@@ -229,19 +229,21 @@ async function handlePublish(request, env) {
   const callerToken = authHeader.replace(/^Bearer\s+/i, '');
   if (!callerToken) return json({ error: 'Missing Authorization token' }, 401);
 
-  const { teamSlug, path, content, message } = await request.json();
+  const body = await readJson(request);
+  if (!body) return json({ error: 'Invalid JSON body' }, 400);
+  const { teamSlug, path, content, message } = body;
   if (!teamSlug || !path || !content || !message) {
     return json({ error: 'Missing teamSlug, path, content, or message' }, 400);
   }
-  // Defense in depth: even an authorized team admin's request must target their own team's
-  // directory — a client bug (or a malicious caller) can't redirect the write elsewhere by
-  // passing a different path while claiming a valid teamSlug. A plain startsWith prefix check
-  // isn't enough on its own — "src/teams/dempsey/../../teams.json" still satisfies it as a
-  // literal string — so path segments are checked explicitly to rule out any ".."/"." traversal.
-  const teamPrefix = `src/teams/${teamSlug}/`;
-  const hasTraversalSegment = path.split('/').some((segment) => segment === '.' || segment === '..');
-  if (!path.startsWith(teamPrefix) || hasTraversalSegment) {
-    return json({ error: 'path must be under the requested team\'s own directory' }, 400);
+  // Exact allowlist, not a prefix check: the client only ever writes this one file
+  // (src/js/github-publish.js), so nothing legitimate needs any other path. A prefix+traversal
+  // check still lets an authorized-for-team-A caller write *any* filename/extension into their own
+  // team's directory (e.g. an .html file, which executes on this same shared origin that holds the
+  // cross-team, unnamespaced auth token — see docs/decisions.md). Pinning to the one real path
+  // removes that, the encoded-traversal question, and the extension question all at once.
+  const allowedPath = `src/teams/${teamSlug}/reports/data/latest.json`;
+  if (path !== allowedPath) {
+    return json({ error: 'path not allowed' }, 400);
   }
 
   const username = await getCallerUsername(callerToken);

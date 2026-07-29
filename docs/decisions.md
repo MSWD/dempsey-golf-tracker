@@ -18,6 +18,34 @@ It also gave a natural home for a request that came up around the same time: cut
 published GitHub Release rather than every push to `main`, matching the "bump `version.js` + tag a
 release per feature" pattern from the coach's other app — see `.github/workflows/deploy-pages.yml`.
 
+**Update (issue #7):** the release-only trigger didn't account for the "Publish report" flow added
+later — `/publish` commits `latest.json` straight to `main`, but nothing deployed it until someone
+separately cut a release, so publishing was silently a no-op in production. Fixed by adding a
+`push` trigger scoped to `src/teams/*/reports/data/**` only — the *one* path
+`handlePublish` (`worker/cloudflare-device-flow-relay.js`) is allowed to write to (an exact-path
+allowlist, not a prefix check — see the next entry). That pairing is deliberate: a push-triggered
+deploy would otherwise mean "any push to main deploys unreviewed code," but since `/publish` can
+only ever touch that one data path, scoping the trigger to it can't be turned into a code-deploy
+hole. **If you ever widen what `/publish` is allowed to write, widen this trigger's `paths` to
+match — don't revert to a release-only trigger without re-checking whether publishing still needs
+this.**
+
+## Why `/publish`'s path check is an exact allowlist, not a prefix check
+
+The original prefix check (`path.startsWith('src/teams/<slug>/')` + a check for `.`/`..` path
+segments) only ruled out directory traversal — it didn't constrain the filename or extension, so
+an authorized admin for team A could write *any* file (any name, any extension) into team A's own
+directory. That's more than it looks like: a JSON-stringified body is still valid content for an
+`.html` file, and HTML written to this repo's Pages site executes on the same shared origin that
+holds `AUTH_STORAGE_KEY` (see the auth-session-lifecycle entry above) — unnamespaced by team, by
+design, so one team's admin writing HTML into their own team's directory can still reach another
+coach's token. `src/js/github-publish.js` only ever writes one exact path
+(`src/teams/<slug>/reports/data/latest.json`), so there's no legitimate case that needs more than
+an exact match — `handlePublish` now rejects anything else outright, which removes the filename/
+extension question and the "does GitHub's contents API decode an encoded traversal segment"
+question (both raised in issue #7) in one line, rather than trying to enumerate every string a
+prefix check would still need to reject.
+
 ## Why localStorage + JSON export/import instead of a database
 
 Single coach, single browser, no server budget. `localStorage` with an explicit Export/Import pair

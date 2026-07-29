@@ -7,12 +7,40 @@ function matchHolePars(match) {
   return resolveHolePars(match, getCourseById);
 }
 
+// Own team's season W-L-T. A tri-match counts as two separate decisions — one against each
+// opponent, compared independently — not one decision for the match as a whole, since the own
+// team can beat one opponent and lose to the other in the same match. Only counts a decision once
+// both sides of that particular comparison have a complete team score; an incomplete side (own or
+// that specific opponent) is skipped rather than guessed, same "don't pad partial data" rule as
+// team score itself.
+function computeSeasonRecord(matches) {
+  let wins = 0;
+  let losses = 0;
+  let ties = 0;
+  matches.forEach((match) => {
+    const ownTeam = match.teams.find((t) => t.isOwnTeam);
+    if (!ownTeam) return;
+    const ownScore = computeTeamScore(ownTeam);
+    if (!ownScore.complete) return;
+    match.teams.filter((t) => !t.isOwnTeam).forEach((opponent) => {
+      const oppScore = computeTeamScore(opponent);
+      if (!oppScore.complete) return;
+      if (ownScore.total < oppScore.total) wins++;
+      else if (ownScore.total > oppScore.total) losses++;
+      else ties++;
+    });
+  });
+  return { wins, losses, ties };
+}
+
 function renderMatchesView() {
   const el = document.getElementById('view-matches');
   const courses = DataStore.getAll('courses').slice().sort((a, b) => a.name.localeCompare(b.name));
   const matches = DataStore.getAll('matches').slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+  const record = computeSeasonRecord(matches);
 
   el.innerHTML = `
+    <p class="season-record"><strong>Season record:</strong> ${record.wins}-${record.losses}-${record.ties}</p>
     <div class="card admin-only">
       <h2>New match</h2>
       <div class="form-row">

@@ -24,9 +24,9 @@ function renderRosterView() {
 
   const rows = el.querySelector('#roster-rows');
   rows.innerHTML = players.map((p) => `
-    <tr data-id="${p.id}">
+    <tr data-id="${escapeHtml(p.id)}">
       <td>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td>
-      <td>${p.grade}</td>
+      <td>${escapeHtml(p.grade)}</td>
       <td>
         <input type="checkbox" class="toggle-active admin-only" ${p.active ? 'checked' : ''}>
         <span class="viewer-only">${p.active ? 'Yes' : 'No'}</span>

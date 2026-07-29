@@ -180,6 +180,11 @@ def main():
     if not name:
         sys.exit("Display name is required.")
 
+    # Matched case-insensitively by the Worker, but still matched by username, not GitHub's
+    # permanent numeric user ID — see docs/auth-and-publishing.md's "teams.json — who can edit it"
+    # section. If an admin later renames their GitHub handle, teams.json must be updated to the
+    # new handle in the same change, or the old (now-available-to-anyone) handle keeps admin
+    # rights here.
     admins_raw = input("Admin GitHub username(s), comma-separated: ").strip()
     admin_usernames = [u.strip() for u in admins_raw.split(",") if u.strip()]
     if not admin_usernames:

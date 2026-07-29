@@ -98,6 +98,11 @@ function renderHelpView() {
       <p>"Export data" downloads everything as a JSON file — do this regularly as a backup, since
       your data lives only in this browser until it's exported or published. "Import data" replaces
       the current data with a previously exported file.</p>
+      <p class="admin-only">If this browser's data ever becomes corrupted or unusable, use
+      <strong>"Reset local data"</strong> to clear it back to a blank season. This cannot be undone
+      and will <strong>not</strong> restore this team's original starter roster or courses — export
+      a backup first if you want to keep anything.</p>
+      <button id="btn-reset-data" class="admin-only">Reset local data</button>
     </div>
 
     <div class="card">
@@ -129,4 +134,16 @@ function renderHelpView() {
       <a href="${issuesUrl}" target="_blank" rel="noopener">${issuesUrl}</a></p>
     </div>
   `;
+
+  el.querySelector('#btn-reset-data').addEventListener('click', () => {
+    if (!AppState.isAdmin) return;
+    const confirmed = confirm(
+      'Reset local data clears ALL data in this browser (roster, courses, rounds, matches) back ' +
+      'to a blank season — this cannot be undone and will NOT restore this team\'s original ' +
+      'starter roster or courses. Export a backup first if you want to keep anything. Continue?'
+    );
+    if (!confirmed) return;
+    DataStore.reset();
+    location.reload();
+  });
 }

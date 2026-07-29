@@ -6,8 +6,18 @@ compatibility_date = "2025-01-01"
 GITHUB_OWNER = "MSWD"
 GITHUB_REPO = "dempsey-golf-tracker"
 GITHUB_BRANCH = "main"
+# The one GitHub App this relay brokers device-flow logins for — public, safe in [vars] (it
+# already ships in every team's team-config.js). /device/code and /token reject any other
+# client_id, so this relay can't be used as a free CORS bridge for someone else's GitHub App.
+GITHUB_CLIENT_ID = "Iv23lihwcQrIGaTeMaO4"
 
 # GITHUB_PAT is a secret, not set here — run: wrangler secret put GITHUB_PAT
+
+# GITHUB_APP_CLIENT_SECRET is a secret, not set here — run:
+#   wrangler secret put GITHUB_APP_CLIENT_SECRET
+# Needed for refreshing an access token (grant_type=refresh_token) and revoking a token on logout
+# (DELETE /applications/{client_id}/token) — the initial device-code exchange doesn't need this.
+# Generate it in the GitHub App's settings: General → "Generate a new client secret."
 
 # Applies to every POST endpoint (device flow relay + /whoami + /publish), keyed by caller IP —
 # a flat per-IP cap across the whole Worker, not tuned per-endpoint. Cloudflare's native binding,

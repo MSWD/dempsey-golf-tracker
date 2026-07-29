@@ -1,0 +1,321 @@
+{
+  "seasonName": "2026 Hostile Fixture Season",
+  "players": [
+    {
+      "id": "player_001",
+      "firstName": "Ethan",
+      "lastName": "Turner",
+      "grade": 8,
+      "active": true
+    }
+  ],
+  "courses": [
+    {
+      "id": "course_001",
+      "name": "Airport Golf Club",
+      "holePars": [
+        4,
+        4,
+        3,
+        5,
+        4,
+        3,
+        4,
+        5,
+        4
+      ],
+      "holeYardages": null,
+      "slope": 118,
+      "rating": 34.5,
+      "totalPar": 36,
+      "verified": true
+    }
+  ],
+  "rounds": [
+    {
+      "id": "round_001",
+      "playerId": "player_001",
+      "date": "2026-08-03",
+      "type": "tryout",
+      "courseId": "course_001",
+      "inlineHolePars": null,
+      "holeScores": [
+        4,
+        6,
+        5,
+        5,
+        6,
+        4,
+        5,
+        5,
+        7
+      ],
+      "putts": 20,
+      "matchId": null
+    }
+  ],
+  "matches": [
+    {
+      "id": "match_001",
+      "date": "2026-08-05",
+      "location": "Home",
+      "courseId": "course_does_not_exist",
+      "inlineHolePars": null,
+      "teams": [
+        {
+          "id": "team_001",
+          "name": "2026 Test Team",
+          "isOwnTeam": true,
+          "players": [
+            {
+              "playerId": "player_001",
+              "displayName": "Ethan Turner",
+              "holeScores": [
+                7,
+                5,
+                6,
+                6,
+                6,
+                7,
+                5,
+                6,
+                5
+              ],
+              "putts": 17,
+              "isStarter": true
+            },
+            {
+              "playerId": "player_015",
+              "displayName": "Ryan Nolan",
+              "holeScores": [
+                5,
+                4,
+                5,
+                9,
+                5,
+                7,
+                7,
+                6,
+                8
+              ],
+              "putts": 20,
+              "isStarter": true
+            },
+            {
+              "playerId": "player_002",
+              "displayName": "Liam Brooks",
+              "holeScores": [
+                7,
+                5,
+                8,
+                7,
+                6,
+                4,
+                5,
+                null,
+                null
+              ],
+              "putts": 18,
+              "isStarter": true
+            },
+            {
+              "playerId": "player_004",
+              "displayName": "Mason Hayes",
+              "holeScores": [
+                8,
+                6,
+                6,
+                7,
+                6,
+                5,
+                5,
+                7,
+                7
+              ],
+              "putts": 24,
+              "isStarter": true
+            },
+            {
+              "playerId": "player_012",
+              "displayName": "Julian Mercer",
+              "holeScores": [
+                6,
+                4,
+                7,
+                6,
+                4,
+                8,
+                6,
+                6,
+                7
+              ],
+              "putts": 14,
+              "isStarter": true
+            },
+            {
+              "playerId": "player_009",
+              "displayName": "Grayson Price",
+              "holeScores": [
+                4,
+                4,
+                5,
+                6,
+                6,
+                8,
+                5,
+                6,
+                6
+              ],
+              "putts": 24,
+              "isStarter": true
+            },
+            {
+              "playerId": "player_014",
+              "displayName": "Asher Whitfield",
+              "holeScores": [
+                5,
+                4,
+                6,
+                6,
+                5,
+                8,
+                6,
+                5,
+                8
+              ],
+              "putts": 22,
+              "isStarter": false
+            },
+            {
+              "playerId": "player_011",
+              "displayName": "Isaac Griffin",
+              "holeScores": [
+                7,
+                6,
+                5,
+                6,
+                6,
+                6,
+                6,
+                6,
+                6
+              ],
+              "putts": 18,
+              "isStarter": false
+            }
+          ]
+        },
+        {
+          "id": "team_002",
+          "name": "Olentangy Berlin",
+          "isOwnTeam": false,
+          "players": [
+            {
+              "playerId": null,
+              "displayName": "Olentangy Berlin Player 1",
+              "holeScores": [
+                8,
+                6,
+                4,
+                8,
+                6,
+                6,
+                5,
+                6,
+                5
+              ],
+              "putts": 20,
+              "isStarter": true
+            },
+            {
+              "playerId": null,
+              "displayName": "Olentangy Berlin Player 2",
+              "holeScores": [
+                5,
+                3,
+                7,
+                8,
+                6,
+                7,
+                6,
+                5,
+                6
+              ],
+              "putts": 24,
+              "isStarter": true
+            },
+            {
+              "playerId": null,
+              "displayName": "Olentangy Berlin Player 3",
+              "holeScores": [
+                6,
+                4,
+                5,
+                6,
+                6,
+                8,
+                8,
+                6,
+                6
+              ],
+              "putts": 15,
+              "isStarter": true
+            },
+            {
+              "playerId": null,
+              "displayName": "Olentangy Berlin Player 4",
+              "holeScores": [
+                8,
+                6,
+                7,
+                6,
+                3,
+                8,
+                8,
+                5,
+                6
+              ],
+              "putts": 15,
+              "isStarter": true
+            },
+            {
+              "playerId": null,
+              "displayName": "Olentangy Berlin Player 5",
+              "holeScores": [
+                8,
+                5,
+                5,
+                7,
+                6,
+                5,
+                6,
+                6,
+                8
+              ],
+              "putts": 22,
+              "isStarter": true
+            },
+            {
+              "playerId": null,
+              "displayName": "Olentangy Berlin Player 6",
+              "holeScores": [
+                7,
+                6,
+                7,
+                7,
+                6,
+                5,
+                8,
+                6,
+                5
+              ],
+              "putts": 15,
+              "isStarter": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tournaments": []
+}

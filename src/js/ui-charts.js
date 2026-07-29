@@ -10,8 +10,8 @@ function renderChartsView() {
   el.innerHTML = `<div class="charts-grid">${players.map((p) => `
     <div class="card">
       <h3>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</h3>
-      <canvas id="chart-score-${p.id}" height="140"></canvas>
-      <canvas id="chart-putts-${p.id}" height="140" class="chart-secondary"></canvas>
+      <canvas id="chart-score-${escapeHtml(p.id)}" height="140"></canvas>
+      <canvas id="chart-putts-${escapeHtml(p.id)}" height="140" class="chart-secondary"></canvas>
     </div>
   `).join('')}</div>`;
 

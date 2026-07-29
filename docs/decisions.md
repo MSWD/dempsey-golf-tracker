@@ -42,8 +42,10 @@ file, and `reports/report-viewer.js`'s "View as of" selector does the date-filte
 A pasted personal-access-token field would have been simpler to build (no Worker needed), but the
 coach already has a Cloudflare account and wanted a real "Login with GitHub" button over a token
 field. GitHub's device-flow endpoints don't send CORS headers for direct browser calls, so a small
-stateless Worker relays those two requests. No secrets live in the Worker — GitHub Apps' device
-flow doesn't require a client secret, only the public Client ID.
+stateless Worker relays those two requests. The device-code exchange itself needs no secret —
+GitHub Apps' device flow is a public-client flow, gated only by the public Client ID. (The Worker
+did later pick up a client secret for two narrower flows — token refresh and logout revocation —
+see the session-lifecycle entry below; that's unrelated to the device-code exchange itself.)
 
 ## Why admin/viewer mode is gated on a live check, not just "a token exists"
 
@@ -51,6 +53,37 @@ A stale or revoked token sitting in localStorage should silently fall back to vi
 throw errors in the coach's face. `GitHubAuth.isAdmin()` re-checks live every time, rather than
 trusting a cached "logged in" flag. What it checks against changed with the move to path-based
 hosting — see the next entry.
+
+## Auth session lifecycle: expiry, revocation, and why `AUTH_STORAGE_KEY` isn't namespaced
+
+Three related gaps in the original device-flow login, all reaching a coach as "the login did
+something weird" (GitHub issue #11):
+
+- The client stored the bare access token and ignored `expires_in`/`refresh_token`. The GitHub
+  App has "User-to-server token expiration" enabled (access tokens expire after 8h), so this was a
+  live bug, not a hypothetical one — admin mode was silently falling back to viewer mode mid-session
+  with no explanation. Fixed by storing the token alongside its expiry and refresh token, and
+  transparently refreshing via the Worker before falling back to an explicit "please log in again."
+- `logout()` only cleared `localStorage`; the token stayed valid on GitHub's side. Fixed with a
+  best-effort server-side revoke (`DELETE /applications/{client_id}/token` — the single-token
+  revoke, deliberately not `/applications/{client_id}/grant`, which would deauthorize the coach's
+  entire app access across every device at once).
+- Both the refresh grant and the revoke call need the GitHub App's client secret, unlike the
+  device-code exchange — see the previous entry. The Worker now holds a second secret,
+  `GITHUB_APP_CLIENT_SECRET`, alongside `GITHUB_PAT`.
+
+Unlike `DataStore`'s `STORAGE_KEY`, `github-auth.js`'s `AUTH_STORAGE_KEY` is deliberately the same
+key regardless of which team path the coach is currently on — a GitHub token identifies the same
+account no matter which team's page it was obtained on, so one login covers every team that
+account happens to administer. Namespacing it per team would just force the same coach to log in
+again on every team path, for no benefit.
+
+To be explicit about what this is *not*: this is not the fix for the cross-tenant token-theft
+chain described in issues #1 and #7 (any team's page, being same-origin under path-based hosting,
+can read a token stored by any other team's page). Namespacing this key wouldn't close that gap
+either — a same-origin script can already read every localStorage key regardless of its name. That
+chain is addressed at the origin/CSP layer (locking down what scripts can run on each team's page
+at all — see the Chart.js/CSP entry below), not by how this one key is named.
 
 ## Why path-based multi-team hosting instead of one repo/domain per team
 

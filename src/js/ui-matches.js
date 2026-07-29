@@ -52,6 +52,7 @@ function renderMatchesView() {
         <select id="match-course">
           ${courses.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
         </select>
+        <select id="match-side"></select>
         <select id="match-tee-set"></select>
         <select id="match-team-count">
           <option value="2">2 teams</option>
@@ -65,30 +66,38 @@ function renderMatchesView() {
   `;
 
   const matchCourseSelect = el.querySelector('#match-course');
+  const matchSideSelect = el.querySelector('#match-side');
   const matchTeeSelect = el.querySelector('#match-tee-set');
   function updateMatchTeeInfo() {
     const course = getCourseById(matchCourseSelect.value);
     const teeSet = findTeeSet(course, matchTeeSelect.value);
+    const side = selectedSideForCourse(course, matchSideSelect.value);
     const info = el.querySelector('#match-tee-info');
     if (!course) { info.textContent = ''; return; }
-    const par = teeSetTotalPar(course, teeSet);
-    const yards = teeSet ? teeSetTotalYardage(teeSet) : null;
+    const par = teeSetTotalPar(course, teeSet, side);
+    const yards = teeSet ? teeSetTotalYardage(teeSet, side) : null;
+    const sideText = isEighteenHoleCourse(course) ? `${sideLabel(side)} · ` : '';
     info.textContent = teeSet
-      ? `Par ${par}${yards != null ? `, ${yards} yds` : ''}${teeSet.holeParsOverride ? ' (par differs on this tee)' : ''}`
-      : `Par ${course.totalPar} (course default)`;
+      ? `${sideText}Par ${par}${yards != null ? `, ${yards} yds` : ''}${teeSet.holeParsOverride ? ' (par differs on this tee)' : ''}`
+      : `${sideText}Par ${teeSetTotalPar(course, null, side)} (course default)`;
   }
+  updateSideOptions(matchCourseSelect.value, matchSideSelect);
   updateTeeSetOptions(matchCourseSelect.value, matchTeeSelect);
   updateMatchTeeInfo();
   matchCourseSelect.addEventListener('change', () => {
+    updateSideOptions(matchCourseSelect.value, matchSideSelect);
     updateTeeSetOptions(matchCourseSelect.value, matchTeeSelect);
     updateMatchTeeInfo();
   });
+  matchSideSelect.addEventListener('change', updateMatchTeeInfo);
   matchTeeSelect.addEventListener('change', updateMatchTeeInfo);
 
   el.querySelector('#btn-add-match').addEventListener('click', () => {
     const date = el.querySelector('#match-date').value;
     const location = el.querySelector('#match-location').value;
     const courseId = matchCourseSelect.value;
+    const course = getCourseById(courseId);
+    const side = selectedSideForCourse(course, matchSideSelect.value);
     const teeSetId = matchTeeSelect.value || null;
     const teamCount = Number(el.querySelector('#match-team-count').value);
     if (!date || !location || !courseId) {
@@ -98,7 +107,7 @@ function renderMatchesView() {
     const teams = Array.from({ length: teamCount }, (_, i) =>
       newMatchTeam({ name: i === 0 ? 'Dempsey' : `Opponent ${i}`, isOwnTeam: i === 0 })
     );
-    DataStore.add('matches', newMatch({ date, location, courseId, teeSetId, teams }));
+    DataStore.add('matches', newMatch({ date, location, courseId, teeSetId, side, teams }));
     renderMatchesView();
   });
 
@@ -134,6 +143,7 @@ function computeMedalistScore(match) {
 function renderMatchCard(match) {
   const course = getCourseById(match.courseId);
   const teeSet = findTeeSet(course, match.teeSetId);
+  const side = selectedSideForCourse(course, match.side);
   const holePars = matchHolePars(match);
   const teamScores = match.teams.map((team) => ({ team, score: computeTeamScore(team) }));
   // Only declare a winner once at least 2 teams have posted a complete score — with fewer than
@@ -143,15 +153,15 @@ function renderMatchCard(match) {
   const medalistScore = computeMedalistScore(match);
   return `
     <div class="card" data-match-id="${match.id}">
-      <h3>${match.date} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
+      <h3>${match.date} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${course && isEighteenHoleCourse(course) ? ` — ${sideLabel(side)}` : ''}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
       ${teamScores.map(({ team, score }) =>
-        renderTeamBlock(match, team, holePars, score, lowestScore != null && score.complete && score.total === lowestScore, medalistScore)
+        renderTeamBlock(match, team, holePars, side, score, lowestScore != null && score.complete && score.total === lowestScore, medalistScore)
       ).join('')}
     </div>
   `;
 }
 
-function renderTeamBlock(match, team, holePars, score, isWinner, medalistScore) {
+function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistScore) {
   const players = DataStore.getAll('players').slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
 
   return `
@@ -170,7 +180,7 @@ function renderTeamBlock(match, team, holePars, score, isWinner, medalistScore) 
           <input type="text" class="displayname-input" placeholder="Player name">
         `}
         <label class="muted"><input type="checkbox" class="starter-checkbox" checked> Starter</label>
-        ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${i + 1}">`).join('')}
+        ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${sideHoleNumber(i, side)}">`).join('')}
         <input type="number" class="putts-input input-narrow" placeholder="Putts">
         <button class="btn-add-team-player">Add score</button>
       </div>

@@ -21,7 +21,7 @@ function newCourse({ name, holePars, teeSets = [], defaultTeeSetId = null, verif
     name,
     holePars,
     totalPar: holePars.reduce((sum, par) => sum + par, 0),
-    teeSets, // [{ id, name, holeYardages[9], holeParsOverride[9]?, slope?, rating? }]
+    teeSets, // [{ id, name, holeYardages[9|18], holeParsOverride[9|18]?, slope?, rating? }]
     defaultTeeSetId, // which tee set to pre-select for matches/rounds — varies per course, not global
     verified,
   };
@@ -41,7 +41,7 @@ function newTeeSet({ name, holeYardages, holeParsOverride = null, slope = null, 
   };
 }
 
-function newRound({ playerId, date, type, courseId = null, teeSetId = null, inlineHolePars = null, holeScores, putts = null, matchId = null }) {
+function newRound({ playerId, date, type, courseId = null, teeSetId = null, side = 'front', inlineHolePars = null, holeScores, putts = null, matchId = null }) {
   return {
     id: makeId('round'),
     playerId,
@@ -49,6 +49,7 @@ function newRound({ playerId, date, type, courseId = null, teeSetId = null, inli
     type, // 'tryout' | 'practice' | 'match'
     courseId,
     teeSetId,
+    side,
     inlineHolePars,
     holeScores,
     putts,
@@ -56,13 +57,14 @@ function newRound({ playerId, date, type, courseId = null, teeSetId = null, inli
   };
 }
 
-function newMatch({ date, location, courseId = null, teeSetId = null, inlineHolePars = null, teams }) {
+function newMatch({ date, location, courseId = null, teeSetId = null, side = 'front', inlineHolePars = null, teams }) {
   return {
     id: makeId('match'),
     date,
     location,
     courseId,
     teeSetId,
+    side,
     inlineHolePars,
     teams, // [{ id, name, isOwnTeam, players: [{ playerId?, displayName, holeScores[9], putts }] }]
   };

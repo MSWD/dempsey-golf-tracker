@@ -22,6 +22,46 @@ function roundTotalPar(holePars) {
   return holePars.reduce((sum, par) => sum + par, 0);
 }
 
+function sideStartIndex(side) {
+  return side === 'back' ? 9 : 0;
+}
+
+function sideLabel(side) {
+  return side === 'back' ? 'Back 9' : 'Front 9';
+}
+
+function sideHoleNumber(index, side) {
+  return sideStartIndex(side) + index + 1;
+}
+
+function courseHoleCount(course) {
+  return course && Array.isArray(course.holePars) ? course.holePars.length : 0;
+}
+
+function isEighteenHoleCourse(course) {
+  return courseHoleCount(course) >= 18;
+}
+
+function courseSides(course) {
+  return isEighteenHoleCourse(course) ? ['front', 'back'] : ['front'];
+}
+
+function normalizeSide(course, side) {
+  return isEighteenHoleCourse(course) && side === 'back' ? 'back' : 'front';
+}
+
+function sideValues(values, side) {
+  if (!Array.isArray(values)) return null;
+  if (values.length <= 9) return values;
+  return values.slice(sideStartIndex(side), sideStartIndex(side) + 9);
+}
+
+function sideTotal(values, side) {
+  const sliced = sideValues(values, side);
+  if (!sliced) return null;
+  return sliced.reduce((sum, value) => sum + (value ?? 0), 0);
+}
+
 // Finds a course's tee set by id; null if the course has none, teeSetId is unset, or the tee set
 // has since been removed (rounds/matches keep a dangling id in that case — this is the graceful
 // fallback path, matching the app's general lack of referential-integrity checks on removal).
@@ -33,22 +73,24 @@ function findTeeSet(course, teeSetId) {
 // The hole pars that actually apply for a given tee set: its own override for the rare
 // different-par-on-this-tee case, else the course's base pars. teeSet may be null (no tee set
 // selected, or the course has none) — falls back to the course's base pars either way.
-function teeSetEffectiveHolePars(course, teeSet) {
+function teeSetEffectiveHolePars(course, teeSet, side = 'front') {
   if (!course) return null;
-  return (teeSet && teeSet.holeParsOverride) ? teeSet.holeParsOverride : course.holePars;
+  const normalizedSide = normalizeSide(course, side);
+  const pars = (teeSet && teeSet.holeParsOverride) ? teeSet.holeParsOverride : course.holePars;
+  return sideValues(pars, normalizedSide);
 }
 
 // Computed on read rather than precomputed like Course.totalPar — a tee set's effective par
 // depends on an override that feeds directly into the double-par cap / adjusted-score math, so it
 // stays a single live source of truth instead of a cached value that could drift.
-function teeSetTotalPar(course, teeSet) {
-  const pars = teeSetEffectiveHolePars(course, teeSet);
+function teeSetTotalPar(course, teeSet, side = 'front') {
+  const pars = teeSetEffectiveHolePars(course, teeSet, side);
   return pars ? roundTotalPar(pars) : null;
 }
 
-function teeSetTotalYardage(teeSet) {
+function teeSetTotalYardage(teeSet, side = 'front') {
   if (!teeSet || !teeSet.holeYardages) return null;
-  return teeSet.holeYardages.reduce((sum, y) => sum + (y ?? 0), 0);
+  return sideTotal(teeSet.holeYardages, side);
 }
 
 // A hole score can never exceed 2x that hole's par. Returns the capped value and whether capping
@@ -86,14 +128,14 @@ function adjustedScore(holeScores, holePars) {
   return raw + (36 - roundTotalPar(holePars));
 }
 
-// Resolves the hole pars that apply to a round or match, given a course lookup function.
+// Resolves the 9 hole pars that apply to a round or match, given a course lookup function.
 // inlineHolePars (an escape hatch on both models) wins outright; otherwise falls back through the
-// entity's selected tee set (if any) to the course's base pars.
+// entity's selected tee set (if any), selected side, and then to the course's base pars.
 function resolveHolePars(entity, getCourseById) {
-  if (entity.inlineHolePars) return entity.inlineHolePars;
+  if (entity.inlineHolePars) return sideValues(entity.inlineHolePars, entity.side);
   const course = getCourseById(entity.courseId);
   if (!course) return null;
-  return teeSetEffectiveHolePars(course, findTeeSet(course, entity.teeSetId));
+  return teeSetEffectiveHolePars(course, findTeeSet(course, entity.teeSetId), entity.side);
 }
 
 // Best 4 of the player's last 6 rounds (chronologically, tryouts count as the earliest entries),

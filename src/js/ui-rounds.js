@@ -11,7 +11,7 @@ function updateTeeSetOptions(courseId, selectEl) {
   selectEl.disabled = teeSets.length === 0;
   selectEl.innerHTML = teeSets.length === 0
     ? '<option value="">No tee data</option>'
-    : ['<option value="">— no tee set —</option>', ...teeSets.map((t) => `<option value="${t.id}">${escapeHtml(t.name)}</option>`)].join('');
+    : ['<option value="">— no tee set —</option>', ...teeSets.map((t) => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`)].join('');
   // Pre-select the course's default tee set, if it has one set and it still exists — which tee is
   // "usual" varies per course (not every course defaults to the same yellow/gold tee), so this is
   // per-course rather than a single app-wide default.
@@ -61,14 +61,14 @@ function renderRoundsView(warningMessage) {
       <h2>Log a round</h2>
       <div class="form-row">
         <select id="round-player">
-          ${players.map((p) => `<option value="${p.id}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
+          ${players.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
         </select>
         <select id="round-type">
           <option value="tryout">Tryout</option>
           <option value="practice">Practice</option>
         </select>
         <select id="round-course">
-          ${courses.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+          ${courses.map((c) => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('')}
         </select>
         <select id="round-side"></select>
         <select id="round-tee-set"></select>

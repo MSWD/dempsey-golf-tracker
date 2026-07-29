@@ -32,7 +32,7 @@ function isNumberOrNull(v) {
   return v === null || isFiniteNumber(v);
 }
 
-function isHoleParsArray(v) {
+function isNineOrEighteenNumberArray(v) {
   return Array.isArray(v) && (v.length === 9 || v.length === 18) && v.every(isFiniteNumber);
 }
 
@@ -60,10 +60,10 @@ function validateTeeSet(t, coursePath, ti, courseHoleCount) {
   if (typeof t !== 'object' || t === null) fail(path, 'must be an object');
   if (!isPlainString(t.id)) fail(path, 'id must be a non-empty string');
   if (!isPlainString(t.name)) fail(path, 'name must be a non-empty string');
-  if (!isHoleParsArray(t.holeYardages) || t.holeYardages.length !== courseHoleCount) {
+  if (!isNineOrEighteenNumberArray(t.holeYardages) || t.holeYardages.length !== courseHoleCount) {
     fail(path, `holeYardages must be an array of ${courseHoleCount} numbers`);
   }
-  if (t.holeParsOverride != null && (!isHoleParsArray(t.holeParsOverride) || t.holeParsOverride.length !== courseHoleCount)) {
+  if (t.holeParsOverride != null && (!isNineOrEighteenNumberArray(t.holeParsOverride) || t.holeParsOverride.length !== courseHoleCount)) {
     fail(path, `holeParsOverride must be null or an array of ${courseHoleCount} numbers`);
   }
   if (t.slope != null && !isFiniteNumber(t.slope)) fail(path, 'slope must be null or a number');
@@ -75,7 +75,7 @@ function validateCourse(c, i) {
   if (typeof c !== 'object' || c === null) fail(path, 'must be an object');
   if (!isPlainString(c.id)) fail(path, 'id must be a non-empty string');
   if (!isPlainString(c.name)) fail(path, 'name must be a non-empty string');
-  if (!isHoleParsArray(c.holePars)) fail(path, 'holePars must be an array of 9 or 18 numbers');
+  if (!isNineOrEighteenNumberArray(c.holePars)) fail(path, 'holePars must be an array of 9 or 18 numbers');
   const teeSets = c.teeSets ?? [];
   if (!Array.isArray(teeSets)) fail(path, 'teeSets must be an array');
   teeSets.forEach((t, ti) => validateTeeSet(t, path, ti, c.holePars.length));
@@ -91,7 +91,7 @@ function validateRound(r, i) {
   if (!isDateString(r.date)) fail(path, 'date must be a "YYYY-MM-DD" string');
   if (!['tryout', 'practice', 'match'].includes(r.type)) fail(path, 'type must be "tryout", "practice", or "match"');
   if (r.courseId != null && !isPlainString(r.courseId)) fail(path, 'courseId must be null or a non-empty string');
-  if (r.inlineHolePars != null && !isHoleParsArray(r.inlineHolePars)) fail(path, 'inlineHolePars must be null or an array of 9 or 18 numbers');
+  if (r.inlineHolePars != null && !isNineOrEighteenNumberArray(r.inlineHolePars)) fail(path, 'inlineHolePars must be null or an array of 9 or 18 numbers');
   if (!r.courseId && !r.inlineHolePars) fail(path, 'must have either a courseId or inlineHolePars');
   if (r.teeSetId != null && !isPlainString(r.teeSetId)) fail(path, 'teeSetId must be null or a string');
   if (r.side != null && !['front', 'back'].includes(r.side)) fail(path, 'side must be null, "front", or "back"');
@@ -126,7 +126,7 @@ function validateMatch(m, i) {
   if (!isDateString(m.date)) fail(path, 'date must be a "YYYY-MM-DD" string');
   if (!['Home', 'Away'].includes(m.location)) fail(path, 'location must be "Home" or "Away"');
   if (m.courseId != null && !isPlainString(m.courseId)) fail(path, 'courseId must be null or a non-empty string');
-  if (m.inlineHolePars != null && !isHoleParsArray(m.inlineHolePars)) fail(path, 'inlineHolePars must be null or an array of 9 or 18 numbers');
+  if (m.inlineHolePars != null && !isNineOrEighteenNumberArray(m.inlineHolePars)) fail(path, 'inlineHolePars must be null or an array of 9 or 18 numbers');
   if (!m.courseId && !m.inlineHolePars) fail(path, 'must have either a courseId or inlineHolePars');
   if (m.teeSetId != null && !isPlainString(m.teeSetId)) fail(path, 'teeSetId must be null or a string');
   if (m.side != null && !['front', 'back'].includes(m.side)) fail(path, 'side must be null, "front", or "back"');

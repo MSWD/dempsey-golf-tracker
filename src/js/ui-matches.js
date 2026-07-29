@@ -50,7 +50,7 @@ function renderMatchesView() {
           <option value="Away">Away</option>
         </select>
         <select id="match-course">
-          ${courses.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+          ${courses.map((c) => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('')}
         </select>
         <select id="match-side"></select>
         <select id="match-tee-set"></select>
@@ -183,7 +183,7 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
       <div class="form-row add-player-row admin-only" data-match-id="${escapeHtml(match.id)}" data-team-id="${escapeHtml(team.id)}">
         ${team.isOwnTeam ? `
           <select class="player-select">
-            ${players.map((p) => `<option value="${p.id}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
+            ${players.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
           </select>
         ` : `
           <input type="text" class="displayname-input" placeholder="Player name">

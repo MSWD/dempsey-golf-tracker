@@ -66,7 +66,10 @@ function buildSessionFromTokenResponse(tokenData) {
 
 // Exchanges a refresh token for a new session via the Worker (the refresh grant needs the GitHub
 // App's client secret, unlike the initial device-code exchange — see worker/cloudflare-device-flow-relay.js).
-// Returns null on any failure; callers fall back to treating the session as unrecoverably expired.
+// Returns { session: null|Session, transient: boolean }. `transient` distinguishes "couldn't even
+// reach the network" (session should be left alone so a later call can retry) from "GitHub itself
+// rejected the refresh token" (session really is dead) — treating a flaky-wifi moment the same as
+// an actually-invalid refresh token would force a full re-login over what might just be a blip.
 async function requestRefresh(refreshToken) {
   const { clientId, deviceFlowWorkerUrl } = TEAM_CONFIG.githubApp;
   try {
@@ -76,12 +79,27 @@ async function requestRefresh(refreshToken) {
       body: JSON.stringify({ client_id: clientId, grant_type: 'refresh_token', refresh_token: refreshToken }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.access_token) return null;
-    return buildSessionFromTokenResponse(data);
+    if (!res.ok || !data.access_token) return { session: null, transient: false };
+    return { session: buildSessionFromTokenResponse(data), transient: false };
   } catch (err) {
-    console.warn('GitHub token refresh failed.', err);
-    return null;
+    console.warn('GitHub token refresh failed (network error) — leaving session as-is to retry later.', err);
+    return { session: null, transient: true };
   }
+}
+
+// Memoizes the in-flight refresh so concurrent callers (e.g. the startup admin check and an
+// almost-simultaneous publish click) share one network call instead of each independently
+// exchanging the same refresh token — GitHub may rotate/invalidate a refresh token the instant
+// it's used, so two parallel exchanges could otherwise race and the loser would wipe out the
+// session the winner just wrote.
+let _refreshInFlight = null;
+function refreshOnce(refreshToken) {
+  if (!_refreshInFlight) {
+    _refreshInFlight = requestRefresh(refreshToken).finally(() => {
+      _refreshInFlight = null;
+    });
+  }
+  return _refreshInFlight;
 }
 
 // Best-effort server-side revoke of exactly this one token (see the Worker's /revoke handler).
@@ -139,11 +157,16 @@ const GitHubAuth = {
     const refreshUsable =
       session.refreshToken && (session.refreshTokenExpiresAt === null || session.refreshTokenExpiresAt > now);
     if (refreshUsable) {
-      const refreshed = await requestRefresh(session.refreshToken);
+      const { session: refreshed, transient } = await refreshOnce(session.refreshToken);
       if (refreshed) {
         writeSession(refreshed);
         this.sessionExpired = false;
         return refreshed;
+      }
+      if (transient) {
+        // Couldn't reach the network, not a real rejection — leave the stored session alone so
+        // the next call can retry the refresh instead of forcing a full re-login over a blip.
+        return null;
       }
     }
 

@@ -152,3 +152,17 @@ coach rather than done unilaterally.
   fix applied) and Pixel 10 (portrait/landscape) in Chrome. Safari itself hasn't been tested yet —
   coach is fine running Chrome on iPad for now, but wants to verify Safari behavior in a later
   iteration.
+- **Putts stat skewed by picked-up holes — needs design.** `Round.putts` is a single total for the
+  whole round (see `models.js`/`ui-rounds.js`), not per-hole. Once a player hits the double-par cap
+  on a hole they often pick up rather than finish holing out, so the true putt count for that hole
+  is unknown — right now there's no way to flag that a hole wasn't completed for putting purposes,
+  so a coach either has to guess/estimate or the round's putts total silently under- or
+  over-represents actual putting. Coach wants putts tracked well enough to show real improvement
+  over time, but not skewed by picked-up holes. Even strong players have pick-up holes sometimes,
+  so this isn't a rare edge case. Coach's leaning: a simple round-level "incomplete / picked up"
+  marker (not necessarily per-hole) to at least flag that a round had pickup holes, rather than a
+  full per-hole putts breakdown — but what that marker should *do* to the rank/rolling-average
+  putts math isn't decided yet (exclude the round's putts from stats entirely? show it but flag it
+  in the UI? something else?). Needs a real design pass before building — bundle with
+  `MIN_HOLES_FOR_VALID_ROUND` / incomplete-round logic since it's the same "how much of this round
+  actually counts" problem.

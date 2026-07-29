@@ -133,7 +133,17 @@ async function main() {
     try {
       loginStatus.textContent = 'Starting login…';
       await GitHubAuth.login((userCode, verificationUri) => {
-        loginStatus.innerHTML = `Go to <a href="${verificationUri}" target="_blank" rel="noopener">${verificationUri}</a> and enter code <strong>${userCode}</strong>`;
+        loginStatus.innerHTML = `Go to <a href="${verificationUri}" target="_blank" rel="noopener">${verificationUri}</a> and enter code <strong>${userCode}</strong> <button type="button" id="copy-login-code">Copy code</button>`;
+        const copyBtn = document.getElementById('copy-login-code');
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(userCode);
+            copyBtn.textContent = 'Copied!';
+          } catch {
+            copyBtn.textContent = 'Copy failed — select manually';
+          }
+          setTimeout(() => { copyBtn.textContent = 'Copy code'; }, 2000);
+        });
       });
       loginStatus.textContent = 'Logged in.';
       AppState.isAdmin = true;

@@ -8,6 +8,15 @@ const GitHubPublish = {
   async publishSnapshot() {
     if (!AppState.isAdmin) throw new Error('Admin login required to publish.');
 
+    const token = await GitHubAuth.getValidAccessToken();
+    if (!token) {
+      throw new Error(
+        GitHubAuth.sessionExpired
+          ? 'Your session expired — please log in again before publishing.'
+          : 'Admin login required to publish.'
+      );
+    }
+
     const publishedAt = new Date().toISOString().slice(0, 10);
     const players = DataStore.getAll('players');
     const playersById = new Map(players.map((p) => [p.id, p]));
@@ -52,7 +61,7 @@ const GitHubPublish = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${GitHubAuth.getStoredToken()}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         teamSlug: TEAM_CONFIG.teamSlug,

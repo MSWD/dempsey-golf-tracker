@@ -17,9 +17,16 @@ install apps on `MSWD/dempsey-golf-tracker`.
 - Webhook: uncheck "Active"
 - Repository permissions → **Contents: Read & write**
 - Enable **Device Flow**
+- Under **Optional features**, "User-to-server token expiration" — currently **on** for this app
+  (access tokens expire after 8h; GitHub issues a refresh token alongside them). `github-auth.js`
+  handles this transparently (see "Token expiry + refresh" below); if it's ever opted back out,
+  nothing needs to change — tokens are then treated as non-expiring, same as before this was added.
 - Install the app on the `dempsey-golf-tracker` repo
 - Note the **Client ID** (public, safe to embed) — goes into every team's `team-config.js` →
   `githubApp.clientId`
+- Generate a **client secret** (General → "Generate a new client secret") — unlike the Client ID,
+  this is never embedded client-side; it goes only into the Worker's `GITHUB_APP_CLIENT_SECRET`
+  secret (see below)
 
 ## 2. Deploy the Cloudflare Worker relay
 
@@ -27,6 +34,10 @@ See `docs/deployment.md` → "Cloudflare Worker deploy." Note its `*.workers.dev
 `GITHUB_PAT` secret it needs (a fine-grained PAT scoped to this repo, distinct from the GitHub
 App above — the App handles *who's logging in*, the PAT is what the Worker uses to *make the
 actual commit* once someone's verified as an admin).
+
+The Worker also needs `GITHUB_APP_CLIENT_SECRET` (`wrangler secret put GITHUB_APP_CLIENT_SECRET`,
+value from step 1 above) — used only for refreshing an access token and for revoking a token on
+logout, both server-side; never sent to or readable by the browser.
 
 ## 3. Wire the config
 
@@ -42,10 +53,31 @@ ever change.
    `/login/device/code`. GitHub returns a short user code and a verification URL.
 3. The app shows that code/URL; the coach opens it on any device, enters the code, approves.
 4. `github-auth.js` polls the Worker's `/token` endpoint until GitHub issues an access token.
-5. The token is stored in localStorage (shared across every team on this domain, since it
-   identifies the account, not a team). `GitHubAuth.isAdmin()` then calls the Worker's `/whoami`
+5. The access token, its expiry, and the refresh token (plus its own expiry) are stored together
+   in localStorage (shared across every team on this domain, since it identifies the account, not
+   a team — see `docs/decisions.md`). `GitHubAuth.isAdmin()` then calls the Worker's `/whoami`
    with `{ teamSlug }` to check that account against `teams.json` for the team currently being
    viewed — re-checked live on every page load, not cached client-side.
+
+## Token expiry + refresh
+
+The GitHub App's "User-to-server token expiration" is on (see step 1), so access tokens expire
+after 8h. `GitHubAuth.ensureValidSession()` checks the stored expiry before every admin check or
+publish call; if the access token is expired but the refresh token is still live, it silently
+exchanges it via the Worker's `/token` (`grant_type=refresh_token`, which — unlike the initial
+device-code exchange — needs `GITHUB_APP_CLIENT_SECRET` server-side). If refresh isn't possible
+(no refresh token, or it's also expired), the session is cleared and `GitHubAuth.sessionExpired` is
+set so the UI can show "your session expired — please log in again" instead of the generic
+"not an admin" state those two would otherwise look identical to.
+
+## How logout works
+
+Clicking "Logout" clears the local session immediately, then best-effort calls the Worker's
+`/revoke` to revoke that specific access token server-side (`DELETE
+/applications/{client_id}/token` — revoking only this token, not the coach's entire app
+authorization). The revoke call is fire-and-forget from the user's perspective: a slow or failed
+network call never blocks or fails the logout, since the local session is already gone by the
+time it's attempted.
 
 ## How publishing works
 

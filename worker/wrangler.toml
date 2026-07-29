@@ -9,6 +9,12 @@ GITHUB_BRANCH = "main"
 
 # GITHUB_PAT is a secret, not set here — run: wrangler secret put GITHUB_PAT
 
+# GITHUB_APP_CLIENT_SECRET is a secret, not set here — run:
+#   wrangler secret put GITHUB_APP_CLIENT_SECRET
+# Needed for refreshing an access token (grant_type=refresh_token) and revoking a token on logout
+# (DELETE /applications/{client_id}/token) — the initial device-code exchange doesn't need this.
+# Generate it in the GitHub App's settings: General → "Generate a new client secret."
+
 # Applies to every POST endpoint (device flow relay + /whoami + /publish), keyed by caller IP —
 # a flat per-IP cap across the whole Worker, not tuned per-endpoint. Cloudflare's native binding,
 # not the zone-level WAF "Rate Limiting Rules" product — this Worker is served from its own

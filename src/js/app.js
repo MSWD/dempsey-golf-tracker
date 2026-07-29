@@ -118,11 +118,20 @@ async function main() {
   async function refreshAdminStatus() {
     AppState.isAdmin = await GitHubAuth.isAdmin();
     updateAuthUI();
+    if (!AppState.isAdmin && GitHubAuth.sessionExpired) {
+      loginStatus.classList.remove('login-active');
+      loginStatus.textContent = 'Your session expired — please log in again.';
+    }
   }
 
   loginBtn.addEventListener('click', async () => {
     if (AppState.isAdmin) {
-      GitHubAuth.logout();
+      loginBtn.disabled = true;
+      try {
+        await GitHubAuth.logout();
+      } finally {
+        loginBtn.disabled = false;
+      }
       AppState.isAdmin = false;
       updateAuthUI();
       showView(currentView() ?? 'roster');
@@ -145,10 +154,19 @@ async function main() {
     const popupHeight = 650;
     const popupLeft = window.screenX + (window.outerWidth - popupWidth) / 2;
     const popupTop = window.screenY + (window.outerHeight - popupHeight) / 2;
+    // No noopener/noreferrer here (unlike the "Open GitHub's login page" fallback link below,
+    // which keeps them) — this popup only ever navigates to github.com: the fixed
+    // device-verification URL it's opened with, and then whatever verification_uri GitHub's own
+    // response returns, which is always github.com too. A real window handle is what lets the
+    // code below redirect it to that verification_uri and auto-close it on success/failure;
+    // noopener would silence both by making loginPopup always null. The reverse-tabnabbing risk
+    // noopener normally guards against — an opened page rewriting window.opener.location to
+    // something malicious — doesn't apply to a destination already fully trusted with the login
+    // credentials themselves.
     let loginPopup = window.open(
       GITHUB_DEVICE_VERIFICATION_URL,
       'github-login',
-      `width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop},noopener,noreferrer`
+      `width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop}`
     );
 
     try {
@@ -198,6 +216,10 @@ async function main() {
       loginStatus.innerHTML = `Published: <a href="${url}" target="_blank" rel="noopener">${url}</a>`;
     } catch (err) {
       loginStatus.textContent = `Publish failed: ${err.message}`;
+      if (GitHubAuth.sessionExpired) {
+        AppState.isAdmin = false;
+        updateAuthUI();
+      }
     }
   });
 

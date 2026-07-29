@@ -18,6 +18,11 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   min-height: 100vh;
+  /* iOS/iPadOS Safari's 100vh is the height with the address-bar/toolbar chrome collapsed, taller
+     than what's actually visible when it's showing — so the sticky footer below sat just out of
+     view until you scrolled, even on a short page. 100dvh tracks the real visible viewport;
+     browsers that don't support it ignore this line and keep the 100vh above. */
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }

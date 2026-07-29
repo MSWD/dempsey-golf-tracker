@@ -236,6 +236,11 @@ input[type="text"], input[type="number"], input[type="date"], select {
   color: #7a1f1f;
 }
 
+.rank-highlight {
+  background: #e9f5e9;
+  font-weight: bold;
+}
+
 /* Hidden by default (safe: viewer mode) until app.js confirms admin and adds .admin-mode to body. */
 .admin-only { display: none; }
 body.admin-mode .admin-only { display: revert; }
@@ -278,6 +283,7 @@ body.admin-mode .viewer-only { display: none; }
 .input-narrow { width: 70px; }
 .input-medium { width: 80px; }
 .full-width { width: 100%; }
+#season-name-input { min-width: 18em; }
 .chart-secondary { margin-top: 12px; }
 .hole-group { margin-bottom: 8px; }
 .hole-input-row { margin-top: 4px; }

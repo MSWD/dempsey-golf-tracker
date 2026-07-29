@@ -35,4 +35,8 @@ const TEAM_CONFIG = {
   },
 
   domain: 'https://middle-school-golf-tracker.mswd.us/teams/dempsey',
+
+  // Optional — highlights the top N ranked players on the rankings screen (Dempsey always plays
+  // its top 3 in matches). Omit this field for teams that don't want the highlight.
+  rankHighlightCount: 3,
 };

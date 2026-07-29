@@ -1,6 +1,14 @@
 {
   "dempsey": {
     "name": "Delaware Dempsey Pacers Golf",
-    "adminUsernames": ["theWizK"]
+    "adminUsernames": [
+      "theWizK"
+    ]
+  },
+  "test-team": {
+    "name": "Test MS Team 01",
+    "adminUsernames": [
+      "theWizK"
+    ]
   }
 }

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test MS Team 01 Golf Tracker Reports</title>
+  <link rel="icon" type="image/svg+xml" href="../../../assets/favicon.svg">
+  <link rel="stylesheet" href="../../../css/styles.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <img class="logo" id="team-logo" alt="">
+    <h1 id="team-title"></h1>
+    <a class="btn" href="../index.html">Back to app</a>
+  </header>
+
+  <main>
+    <div class="card">
+      <div class="form-row">
+        <label for="report-date-select">View as of:</label>
+        <select id="report-date-select"></select>
+      </div>
+    </div>
+    <div id="report-content"></div>
+  </main>
+
+  <footer id="app-footer" class="app-footer"></footer>
+
+  <script src="../team-config.js"></script>
+  <script src="../../../version.js"></script>
+  <script src="../../../js/html-utils.js"></script>
+  <script src="../../../js/scoring-engine.js"></script>
+  <script src="report-viewer.js"></script>
+</body>
+</html>

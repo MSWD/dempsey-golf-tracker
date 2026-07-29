@@ -133,9 +133,9 @@ function renderRoundsView(warningMessage) {
     const adj = holePars && valid ? adjustedScore(r.holeScores, holePars) : null;
     return `
       <tr>
-        <td>${r.date}</td>
+        <td>${escapeHtml(r.date)}</td>
         <td>${player ? `${escapeHtml(player.firstName)} ${escapeHtml(player.lastName)}` : '—'}</td>
-        <td>${r.type}</td>
+        <td>${escapeHtml(r.type)}</td>
         <td>${course ? escapeHtml(course.name) : '—'}</td>
         <td>${course && isEighteenHoleCourse(course) ? sideLabel(side) : '—'}</td>
         <td>${teeSet ? escapeHtml(teeSet.name) : '—'}</td>
@@ -200,7 +200,7 @@ function renderRankView() {
             <tr class="${p.rank != null && p.rank <= (TEAM_CONFIG.rankHighlightCount || 0) ? 'rank-highlight' : ''}">
               <td>${p.rank ?? '—'}</td>
               <td>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td>
-              <td>${p.grade}</td>
+              <td>${escapeHtml(p.grade)}</td>
               <td>${p.rollingAverage != null ? p.rollingAverage.toFixed(1) : 'No rounds yet'}</td>
             </tr>
           `).join('')}

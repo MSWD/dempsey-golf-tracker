@@ -40,7 +40,7 @@ async function main() {
   const dates = distinctDates(_snapshot.rounds, _snapshot.matches);
   select.innerHTML = [
     '<option value="">Latest (all data)</option>',
-    ...dates.map((d) => `<option value="${d}">As of ${d}</option>`),
+    ...dates.map((d) => `<option value="${escapeHtml(d)}">As of ${escapeHtml(d)}</option>`),
   ].join('');
 
   select.addEventListener('change', () => render(select.value || null));
@@ -75,7 +75,7 @@ function render(asOfDate) {
 
   document.getElementById('report-content').innerHTML = `
     <p class="muted">
-      Data published ${publishedAt}${asOfDate ? ` — showing standings as of ${asOfDate}` : ' — latest standings'}.
+      Data published ${escapeHtml(publishedAt)}${asOfDate ? ` — showing standings as of ${escapeHtml(asOfDate)}` : ' — latest standings'}.
       Reference/suggestion only, the coach sets the lineup manually.
     </p>
     <div class="table-wrap">
@@ -86,7 +86,7 @@ function render(asOfDate) {
             <tr>
               <td>${p.rank ?? '—'}</td>
               <td>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td>
-              <td>${p.grade}</td>
+              <td>${escapeHtml(p.grade)}</td>
               <td>${p.rollingAverage != null ? p.rollingAverage.toFixed(1) : 'No rounds yet'}</td>
             </tr>
           `).join('')}

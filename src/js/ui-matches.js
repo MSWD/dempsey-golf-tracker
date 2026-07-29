@@ -113,7 +113,11 @@ function renderMatchesView() {
 
   const list = el.querySelector('#matches-list');
   list.innerHTML = matches.map((m) => renderMatchCard(m)).join('');
-  matches.forEach((m) => wireMatchCard(m));
+  // renderMatchCard(m) emits exactly one top-level .card per match, in the same order as
+  // `matches` — zip by position instead of re-querying by id, so a match id (which may originate
+  // from an imported file) can never be mistaken for, or break, a CSS selector.
+  const cards = Array.from(list.children);
+  matches.forEach((m, i) => wireMatchCard(m, cards[i]));
 }
 
 function computeTeamScore(team) {
@@ -152,8 +156,13 @@ function renderMatchCard(match) {
   const lowestScore = completeTotals.length >= 2 ? Math.min(...completeTotals) : null;
   const medalistScore = computeMedalistScore(match);
   return `
-    <div class="card" data-match-id="${match.id}">
-      <h3>${match.date} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${course && isEighteenHoleCourse(course) ? ` — ${sideLabel(side)}` : ''}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
+    <div class="card" data-match-id="${escapeHtml(match.id)}">
+      <h3>${escapeHtml(match.date)} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${course && isEighteenHoleCourse(course) ? ` — ${sideLabel(side)}` : ''}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
+      ${holePars == null ? `
+        <p class="muted"><span class="badge warn">Course unavailable</span> This match's course
+        record can't be found (was it deleted?) — scores below can't be compared to par, and new
+        scores can't be added until this is resolved. Team score and medalist are unaffected.</p>
+      ` : ''}
       ${teamScores.map(({ team, score }) =>
         renderTeamBlock(match, team, holePars, side, score, lowestScore != null && score.complete && score.total === lowestScore, medalistScore)
       ).join('')}
@@ -165,13 +174,13 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
   const players = DataStore.getAll('players').slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
 
   return `
-    <div class="card team-block${isWinner ? ' winning-team' : ''}" data-team-id="${team.id}">
+    <div class="card team-block${isWinner ? ' winning-team' : ''}" data-team-id="${escapeHtml(team.id)}">
       <div class="form-row">
         <strong>${escapeHtml(team.name)}</strong>
         ${team.isOwnTeam ? '<span class="badge">own team</span>' : ''}
         ${isWinner ? '<span class="badge win">Winner</span>' : ''}
       </div>
-      <div class="form-row add-player-row admin-only" data-match-id="${match.id}" data-team-id="${team.id}">
+      <div class="form-row add-player-row admin-only" data-match-id="${escapeHtml(match.id)}" data-team-id="${escapeHtml(team.id)}">
         ${team.isOwnTeam ? `
           <select class="player-select">
             ${players.map((p) => `<option value="${p.id}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
@@ -191,7 +200,7 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
             ${team.players.map((p) => {
               const raw = rawScoreOrNull(p.holeScores);
               const splits = holeSplits(p.holeScores);
-              const par = raw != null ? toPar(raw, roundTotalPar(holePars)) : null;
+              const par = holePars && raw != null ? toPar(raw, roundTotalPar(holePars)) : null;
               const valid = isValidRound(p.holeScores);
               const isMedalist = valid && raw != null && medalistScore != null && raw === medalistScore;
               return `<tr>
@@ -213,8 +222,7 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
   `;
 }
 
-function wireMatchCard(match) {
-  const card = document.querySelector(`[data-match-id="${match.id}"]`);
+function wireMatchCard(match, card) {
   card.querySelectorAll('.add-player-row').forEach((row) => {
     const teamId = row.dataset.teamId;
     row.querySelector('.btn-add-team-player').addEventListener('click', () => {
@@ -240,7 +248,12 @@ function wireMatchCard(match) {
         alert('Enter at least one hole score.');
         return;
       }
-      const capped = capAllHoleScores(rawInputs, matchHolePars(match));
+      const holePars = matchHolePars(match);
+      if (!holePars) {
+        alert("This match's course record is missing (was it deleted?), so new scores can't be capped to par. Existing recorded scores are unaffected, but new scores can't be added until this is resolved.");
+        return;
+      }
+      const capped = capAllHoleScores(rawInputs, holePars);
       const putts = Number(row.querySelector('.putts-input').value) || null;
 
       team.players.push({ playerId, displayName, holeScores: capped.map((c) => c.value), putts, isStarter });

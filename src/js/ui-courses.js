@@ -21,6 +21,13 @@ function groupedHoleInputs({ length, className, prefix, min = null, max = null, 
   `;
 }
 
+function courseUsageCounts(courseId) {
+  return {
+    rounds: DataStore.getAll('rounds').filter((r) => r.courseId === courseId).length,
+    matches: DataStore.getAll('matches').filter((m) => m.courseId === courseId).length,
+  };
+}
+
 function courseParSummary(course) {
   if (isEighteenHoleCourse(course)) {
     return `18 holes · Front ${sideTotal(course.holePars, 'front')} / Back ${sideTotal(course.holePars, 'back')} / Total ${roundTotalPar(course.holePars)}`;
@@ -86,13 +93,13 @@ function renderCoursesView() {
 
   const rows = el.querySelector('#courses-rows');
   rows.innerHTML = courses.map((c) => `
-    <tr data-id="${c.id}">
+    <tr data-id="${escapeHtml(c.id)}">
       <td>${escapeHtml(c.name)} ${c.verified ? '' : '<span class="badge warn">unverified</span>'}</td>
       <td>${courseParSummary(c)}</td>
-      <td class="muted">${c.holePars.join('-')}</td>
+      <td class="muted">${escapeHtml(c.holePars.join('-'))}</td>
       <td><button class="btn-remove admin-only">Remove</button></td>
     </tr>
-    <tr class="tee-sets-row" data-id="${c.id}">
+    <tr class="tee-sets-row" data-id="${escapeHtml(c.id)}">
       <td colspan="4">
         <details>
           <summary>Tee sets (${(c.teeSets || []).length})</summary>
@@ -101,9 +108,9 @@ function renderCoursesView() {
               <thead><tr><th class="admin-only">Default</th><th>Name</th><th>Par</th><th>Yardage</th><th>Slope</th><th>Rating</th><th></th></tr></thead>
               <tbody>
                 ${(c.teeSets || []).map((t) => `
-                  <tr data-tee-id="${t.id}">
+                  <tr data-tee-id="${escapeHtml(t.id)}">
                     <td class="admin-only">
-                      <input type="radio" class="default-tee-radio" name="default-tee-${c.id}" ${t.id === c.defaultTeeSetId ? 'checked' : ''}>
+                      <input type="radio" class="default-tee-radio" name="default-tee-${escapeHtml(c.id)}" ${t.id === c.defaultTeeSetId ? 'checked' : ''}>
                     </td>
                     <td>${escapeHtml(t.name)} ${t.id === c.defaultTeeSetId ? '<span class="badge">default</span>' : ''}</td>
                     <td>${teeSetParSummary(c, t)}${t.holeParsOverride ? ' <span class="badge">override</span>' : ''}</td>
@@ -131,7 +138,7 @@ function renderCoursesView() {
               <input type="number" class="new-tee-slope" placeholder="Slope (optional)">
               <input type="number" step="0.1" class="new-tee-rating" placeholder="Rating (optional)">
             </div>
-            <button class="btn-add-tee-set" data-course-id="${c.id}">Add tee set</button>
+            <button class="btn-add-tee-set" data-course-id="${escapeHtml(c.id)}">Add tee set</button>
           </div>
         </details>
       </td>
@@ -141,7 +148,11 @@ function renderCoursesView() {
   rows.querySelectorAll('.btn-remove').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = btn.closest('tr').dataset.id;
-      if (confirm('Remove this course?')) {
+      const { rounds, matches } = courseUsageCounts(id);
+      const usageNote = (rounds || matches)
+        ? ` This course is referenced by ${rounds} round(s) and ${matches} match(es) — removing it won't delete those records, but their par comparisons will become unavailable.`
+        : '';
+      if (confirm(`Remove this course?${usageNote}`)) {
         DataStore.remove('courses', id);
         renderCoursesView();
       }

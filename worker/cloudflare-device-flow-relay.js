@@ -21,10 +21,16 @@
 // discarded. Both need the GitHub App's client secret — unlike the device-code exchange above,
 // which is a public-client flow and never touches it.
 //
+// (4) client_id pinning: this relay only ever brokers device-flow logins for our own GitHub App,
+// so /device/code and /token reject any request carrying a different client_id (GITHUB_CLIENT_ID
+// in [vars] — public, not a secret, since it already ships in every team's team-config.js).
+// Without this, anyone could point their own site at this Worker as a free CORS bridge for their
+// own GitHub App's device flow, consuming the rate-limit budget meant to protect GITHUB_PAT.
+//
 // Deploy: `wrangler deploy` (or paste into the Cloudflare dashboard's Quick Edit) under the same
 // Cloudflare account that manages mswd.us DNS. Requires env vars/secrets: GITHUB_PAT (secret),
-// GITHUB_APP_CLIENT_SECRET (secret), GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH. See
-// docs/auth-and-publishing.md for full setup.
+// GITHUB_APP_CLIENT_SECRET (secret), GITHUB_CLIENT_ID, GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH.
+// See docs/auth-and-publishing.md for full setup.
 
 const GITHUB_DEVICE_CODE_URL = 'https://github.com/login/device/code';
 const GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token';
@@ -44,6 +50,15 @@ function json(body, status = 200) {
   });
 }
 
+// A malformed POST body should be a 400, not an uncaught throw that surfaces as a 500.
+async function readJson(request) {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
 async function relayDeviceFlow(githubUrl, body) {
   const res = await fetch(githubUrl, {
     method: 'POST',
@@ -59,7 +74,15 @@ async function relayDeviceFlow(githubUrl, body) {
 // there. The refresh grant does require one, so it's the one branch that reaches into
 // env.GITHUB_APP_CLIENT_SECRET; that secret is never sent to or readable by the browser.
 async function handleToken(request, env) {
-  const body = await request.json().catch(() => ({}));
+  const body = await readJson(request);
+  if (!body) return json({ error: 'Invalid JSON body' }, 400);
+  // This relay only ever brokers logins for our own GitHub App — without this check, anyone
+  // could point their own site at it and use it as a free CORS bridge for a device-flow login
+  // against a completely different client_id, burning the shared per-IP rate-limit budget that
+  // protects the endpoints holding GITHUB_PAT.
+  if (body.client_id !== env.GITHUB_CLIENT_ID) {
+    return json({ error: 'unknown client' }, 400);
+  }
 
   if (body.grant_type === 'refresh_token') {
     if (!body.refresh_token) {
@@ -89,7 +112,9 @@ async function handleToken(request, env) {
 // "logout this tab"; the /grant one would silently sign the coach out everywhere, an easy,
 // high-blast-radius mistake to make here.
 async function handleRevoke(request, env) {
-  const { client_id: clientId, access_token: accessToken } = await request.json().catch(() => ({}));
+  const body = await readJson(request);
+  if (!body) return json({ error: 'Invalid JSON body' }, 400);
+  const { client_id: clientId, access_token: accessToken } = body;
   if (!accessToken || !clientId) return json({ error: 'Missing client_id or access_token' }, 400);
   if (!env.GITHUB_APP_CLIENT_SECRET) {
     // Not configured yet (e.g. mid-rollout) — logout must never hard-fail client-side just
@@ -178,14 +203,22 @@ async function handleWhoami(request, env) {
   const callerToken = authHeader.replace(/^Bearer\s+/i, '');
   if (!callerToken) return json({ isAdmin: false });
 
-  const { teamSlug } = await request.json();
+  const body = await readJson(request);
+  if (!body) return json({ error: 'Invalid JSON body' }, 400);
+  const { teamSlug } = body;
   const username = await getCallerUsername(callerToken);
   if (!username || !teamSlug) return json({ isAdmin: false });
 
   try {
     const teams = await getTeamsJson(env);
     const team = teams[teamSlug];
-    return json({ isAdmin: Boolean(team && team.adminUsernames.includes(username)), username });
+    // Case-insensitive: GitHub usernames aren't case-sensitive for login purposes, but a
+    // differently-cased handle in teams.json (typo, or just inconsistent casing when it was
+    // typed in) would otherwise silently fail this check with no indication to the coach why.
+    const isAdmin = Boolean(
+      team && (team.adminUsernames || []).some((u) => u.toLowerCase() === username.toLowerCase())
+    );
+    return json({ isAdmin, username });
   } catch (err) {
     return json({ isAdmin: false });
   }
@@ -222,7 +255,9 @@ async function handlePublish(request, env) {
   }
 
   const team = teams[teamSlug];
-  if (!team || !team.adminUsernames.includes(username)) {
+  // Case-insensitive — see the matching comment in handleWhoami.
+  const isAdmin = team && (team.adminUsernames || []).some((u) => u.toLowerCase() === username.toLowerCase());
+  if (!isAdmin) {
     return json({ error: `${username} is not an admin for team "${teamSlug}"` }, 403);
   }
 
@@ -283,7 +318,11 @@ export default {
       return handleToken(request, env);
     }
     if (url.pathname === '/device/code') {
-      const body = await request.json();
+      const body = await readJson(request);
+      if (!body) return json({ error: 'Invalid JSON body' }, 400);
+      if (body.client_id !== env.GITHUB_CLIENT_ID) {
+        return json({ error: 'unknown client' }, 400);
+      }
       return relayDeviceFlow(GITHUB_DEVICE_CODE_URL, { client_id: body.client_id });
     }
     return new Response('Not found', { status: 404, headers: CORS_HEADERS });

@@ -23,7 +23,9 @@ install apps on `MSWD/dempsey-golf-tracker`.
   nothing needs to change — tokens are then treated as non-expiring, same as before this was added.
 - Install the app on the `dempsey-golf-tracker` repo
 - Note the **Client ID** (public, safe to embed) — goes into every team's `team-config.js` →
-  `githubApp.clientId`
+  `githubApp.clientId`, **and** into the Worker's `GITHUB_CLIENT_ID` var (see below) — the Worker
+  pins device-flow logins to this one App and rejects any other `client_id`, so this relay can't
+  be used as a free CORS bridge for a login flow that isn't ours
 - Generate a **client secret** (General → "Generate a new client secret") — unlike the Client ID,
   this is never embedded client-side; it goes only into the Worker's `GITHUB_APP_CLIENT_SECRET`
   secret (see below)
@@ -38,6 +40,10 @@ actual commit* once someone's verified as an admin).
 The Worker also needs `GITHUB_APP_CLIENT_SECRET` (`wrangler secret put GITHUB_APP_CLIENT_SECRET`,
 value from step 1 above) — used only for refreshing an access token and for revoking a token on
 logout, both server-side; never sent to or readable by the browser.
+
+`GITHUB_CLIENT_ID` (the same Client ID from step 1) goes in `wrangler.toml`'s `[vars]` — it's
+public, not a secret, but it's what `/device/code` and `/token` check every request's `client_id`
+against.
 
 ## 3. Wire the config
 
@@ -102,3 +108,14 @@ Only the platform operator, directly via git. There is intentionally no in-app o
 that writes to `teams.json` — the Worker only ever reads it. Adding a team or changing its admins
 means running `scripts/add-team.py` (for a new team) or hand-editing `src/teams.json` (for an
 existing one), then committing.
+
+`adminUsernames` matching is case-insensitive (a differently-cased handle shouldn't silently lock
+a coach out), but it's still matched by **username**, not by GitHub's permanent numeric user ID.
+That means if an admin ever renames their GitHub handle, `teams.json` still has the *old* handle
+— and the old handle becomes available for anyone else to register on GitHub, who would then pass
+this app's admin check for whichever team(s) still list it. **If you (or any other admin) rename
+your GitHub username, update `teams.json` to the new handle in the same change** — don't treat the
+rename as a GitHub-only settings change. This is a deliberately accepted, low-likelihood risk for
+a single-operator setup like this one (see `docs/decisions.md`) rather than something the code
+enforces — the durable fix would be matching on the numeric GitHub user ID instead, which isn't
+implemented here.

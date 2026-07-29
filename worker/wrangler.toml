@@ -6,6 +6,10 @@ compatibility_date = "2025-01-01"
 GITHUB_OWNER = "MSWD"
 GITHUB_REPO = "dempsey-golf-tracker"
 GITHUB_BRANCH = "main"
+# The one GitHub App this relay brokers device-flow logins for — public, safe in [vars] (it
+# already ships in every team's team-config.js). /device/code and /token reject any other
+# client_id, so this relay can't be used as a free CORS bridge for someone else's GitHub App.
+GITHUB_CLIENT_ID = "Iv23lihwcQrIGaTeMaO4"
 
 # GITHUB_PAT is a secret, not set here — run: wrangler secret put GITHUB_PAT
 

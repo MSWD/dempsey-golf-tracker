@@ -269,6 +269,10 @@ body.admin-mode .viewer-only { display: none; }
    'self' with no 'unsafe-inline' — inline style attributes and JS .style mutations are both
    blocked under a strict style-src. */
 .hidden { display: none; }
+
+/* icons.svg's own inline style="display:none" is blocked by the style-src 'self' CSP once it's
+   injected into #icon-sprite via innerHTML (app.js) — hide the container instead. */
+#icon-sprite { display: none; }
 .input-narrow { width: 70px; }
 .input-medium { width: 80px; }
 .full-width { width: 100%; }

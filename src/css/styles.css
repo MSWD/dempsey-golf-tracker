@@ -48,6 +48,49 @@ header.app-header img.logo {
   height: 40px;
 }
 
+header.app-header a.back-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+header.app-header a.back-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* Overrides #login-status's default .muted styling while a login is in progress — the
+   verification link/code are an active call-to-action at that moment, not secondary text, so
+   they need real contrast against the dark header instead of blending into it. */
+#login-status.login-active {
+  color: #fff;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+#login-status.login-active a {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+#login-status.login-active #login-code {
+  display: inline-block;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: #fff;
+  color: var(--color-dark);
+  padding: 1px 8px;
+  border-radius: 4px;
+}
+
 header.app-header h1 {
   font-size: 1.1rem;
   margin: 0;
@@ -162,6 +205,20 @@ input[type="text"], input[type="number"], input[type="date"], select {
   border-radius: 10px;
   background: #f0d9a0;
   color: #6b4e00;
+}
+
+.badge.win {
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.team-block {
+  background: #fafaf6;
+}
+
+.team-block.winning-team {
+  background: #e9f5e9;
+  border: 2px solid var(--color-secondary);
 }
 
 .badge.warn {

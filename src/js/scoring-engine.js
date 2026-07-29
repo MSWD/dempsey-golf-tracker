@@ -22,6 +22,35 @@ function roundTotalPar(holePars) {
   return holePars.reduce((sum, par) => sum + par, 0);
 }
 
+// Finds a course's tee set by id; null if the course has none, teeSetId is unset, or the tee set
+// has since been removed (rounds/matches keep a dangling id in that case — this is the graceful
+// fallback path, matching the app's general lack of referential-integrity checks on removal).
+function findTeeSet(course, teeSetId) {
+  if (!course || !teeSetId) return null;
+  return (course.teeSets || []).find((t) => t.id === teeSetId) ?? null;
+}
+
+// The hole pars that actually apply for a given tee set: its own override for the rare
+// different-par-on-this-tee case, else the course's base pars. teeSet may be null (no tee set
+// selected, or the course has none) — falls back to the course's base pars either way.
+function teeSetEffectiveHolePars(course, teeSet) {
+  if (!course) return null;
+  return (teeSet && teeSet.holeParsOverride) ? teeSet.holeParsOverride : course.holePars;
+}
+
+// Computed on read rather than precomputed like Course.totalPar — a tee set's effective par
+// depends on an override that feeds directly into the double-par cap / adjusted-score math, so it
+// stays a single live source of truth instead of a cached value that could drift.
+function teeSetTotalPar(course, teeSet) {
+  const pars = teeSetEffectiveHolePars(course, teeSet);
+  return pars ? roundTotalPar(pars) : null;
+}
+
+function teeSetTotalYardage(teeSet) {
+  if (!teeSet || !teeSet.holeYardages) return null;
+  return teeSet.holeYardages.reduce((sum, y) => sum + (y ?? 0), 0);
+}
+
 // A hole score can never exceed 2x that hole's par. Returns the capped value and whether capping
 // actually changed anything, so callers can warn on entry without silently losing the raw input.
 function capHoleScore(score, par) {
@@ -57,11 +86,14 @@ function adjustedScore(holeScores, holePars) {
   return raw + (36 - roundTotalPar(holePars));
 }
 
-// Resolves the hole pars that apply to a round, given a course lookup function.
-function resolveHolePars(round, getCourseById) {
-  if (round.inlineHolePars) return round.inlineHolePars;
-  const course = getCourseById(round.courseId);
-  return course ? course.holePars : null;
+// Resolves the hole pars that apply to a round or match, given a course lookup function.
+// inlineHolePars (an escape hatch on both models) wins outright; otherwise falls back through the
+// entity's selected tee set (if any) to the course's base pars.
+function resolveHolePars(entity, getCourseById) {
+  if (entity.inlineHolePars) return entity.inlineHolePars;
+  const course = getCourseById(entity.courseId);
+  if (!course) return null;
+  return teeSetEffectiveHolePars(course, findTeeSet(course, entity.teeSetId));
 }
 
 // Best 4 of the player's last 6 rounds (chronologically, tryouts count as the earliest entries),

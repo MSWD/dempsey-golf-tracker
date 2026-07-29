@@ -72,13 +72,17 @@ async function main() {
     btn.addEventListener('click', () => showView(btn.dataset.view));
   });
 
-  document.getElementById('btn-export').addEventListener('click', () => DataStore.exportJSON());
+  document.getElementById('btn-export').addEventListener('click', () => {
+    if (!AppState.isAdmin) return;
+    DataStore.exportJSON();
+  });
   document.getElementById('btn-import').addEventListener('click', () => {
+    if (!AppState.isAdmin) return;
     document.getElementById('file-import').click();
   });
   document.getElementById('file-import').addEventListener('change', async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || !AppState.isAdmin) return;
     const confirmed = confirm(
       `Importing a season replaces ALL current data in this browser (roster, rounds, matches) ` +
       `with the contents of "${file.name}" — this cannot be undone. ` +
@@ -126,20 +130,63 @@ async function main() {
     }
 
     if (!GitHubAuth.isConfigured()) {
+      loginStatus.classList.remove('login-active');
       loginStatus.textContent = 'GitHub login is not configured yet — see docs/auth-and-publishing.md.';
       return;
     }
 
+    // GitHub's device-verification page is always this fixed URL — knowing that lets us open it
+    // synchronously, in the same tick as the click, so the browser still treats it as a direct
+    // user gesture and won't block it as a popup. Waiting for the device-code fetch to resolve
+    // first (even briefly) loses that direct-gesture window in most browsers, so the popup can't
+    // be opened automatically once the code is ready — only right now, before we even have it.
+    const GITHUB_DEVICE_VERIFICATION_URL = 'https://github.com/login/device';
+    const popupWidth = 520;
+    const popupHeight = 650;
+    const popupLeft = window.screenX + (window.outerWidth - popupWidth) / 2;
+    const popupTop = window.screenY + (window.outerHeight - popupHeight) / 2;
+    let loginPopup = window.open(
+      GITHUB_DEVICE_VERIFICATION_URL,
+      'github-login',
+      `width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop},noopener,noreferrer`
+    );
+
     try {
+      loginStatus.classList.add('login-active');
       loginStatus.textContent = 'Starting login…';
       await GitHubAuth.login((userCode, verificationUri) => {
-        loginStatus.innerHTML = `Go to <a href="${verificationUri}" target="_blank" rel="noopener">${verificationUri}</a> and enter code <strong>${userCode}</strong>`;
+        // Belt-and-suspenders: point the already-open popup at whatever GitHub actually returned,
+        // in case it ever differs from the well-known URL used to open it above.
+        if (loginPopup && !loginPopup.closed && verificationUri !== GITHUB_DEVICE_VERIFICATION_URL) {
+          loginPopup.location.href = verificationUri;
+        }
+        navigator.clipboard.writeText(userCode).catch(() => {});
+        loginStatus.innerHTML = `
+          Code <span id="login-code">${userCode}</span> copied — paste it into the popup window.
+          <button type="button" id="copy-login-code">Copy again</button><br>
+          No popup? <a href="${verificationUri}" id="login-verify-link" target="_blank" rel="noopener">Open GitHub's login page</a>
+          and keep this tab open — login finishes automatically here once you approve.
+        `;
+        document.getElementById('copy-login-code').addEventListener('click', async () => {
+          const btn = document.getElementById('copy-login-code');
+          try {
+            await navigator.clipboard.writeText(userCode);
+            btn.textContent = 'Copied!';
+          } catch {
+            btn.textContent = 'Copy failed — select manually';
+          }
+          setTimeout(() => { btn.textContent = 'Copy again'; }, 2000);
+        });
       });
+      if (loginPopup && !loginPopup.closed) loginPopup.close();
+      loginStatus.classList.remove('login-active');
       loginStatus.textContent = 'Logged in.';
       AppState.isAdmin = true;
       updateAuthUI();
       showView(currentView() ?? 'roster');
     } catch (err) {
+      if (loginPopup && !loginPopup.closed) loginPopup.close();
+      loginStatus.classList.remove('login-active');
       loginStatus.textContent = err.message;
     }
   });

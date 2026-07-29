@@ -4,9 +4,7 @@
 // count toward it even if they post a score.
 
 function matchHolePars(match) {
-  if (match.inlineHolePars) return match.inlineHolePars;
-  const course = getCourseById(match.courseId);
-  return course ? course.holePars : null;
+  return resolveHolePars(match, getCourseById);
 }
 
 function renderMatchesView() {
@@ -26,20 +24,44 @@ function renderMatchesView() {
         <select id="match-course">
           ${courses.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
         </select>
+        <select id="match-tee-set"></select>
         <select id="match-team-count">
           <option value="2">2 teams</option>
           <option value="3">3 teams</option>
         </select>
       </div>
+      <div class="muted" id="match-tee-info"></div>
       <button class="primary" id="btn-add-match">Create match</button>
     </div>
     <div id="matches-list"></div>
   `;
 
+  const matchCourseSelect = el.querySelector('#match-course');
+  const matchTeeSelect = el.querySelector('#match-tee-set');
+  function updateMatchTeeInfo() {
+    const course = getCourseById(matchCourseSelect.value);
+    const teeSet = findTeeSet(course, matchTeeSelect.value);
+    const info = el.querySelector('#match-tee-info');
+    if (!course) { info.textContent = ''; return; }
+    const par = teeSetTotalPar(course, teeSet);
+    const yards = teeSet ? teeSetTotalYardage(teeSet) : null;
+    info.textContent = teeSet
+      ? `Par ${par}${yards != null ? `, ${yards} yds` : ''}${teeSet.holeParsOverride ? ' (par differs on this tee)' : ''}`
+      : `Par ${course.totalPar} (course default)`;
+  }
+  updateTeeSetOptions(matchCourseSelect.value, matchTeeSelect);
+  updateMatchTeeInfo();
+  matchCourseSelect.addEventListener('change', () => {
+    updateTeeSetOptions(matchCourseSelect.value, matchTeeSelect);
+    updateMatchTeeInfo();
+  });
+  matchTeeSelect.addEventListener('change', updateMatchTeeInfo);
+
   el.querySelector('#btn-add-match').addEventListener('click', () => {
     const date = el.querySelector('#match-date').value;
     const location = el.querySelector('#match-location').value;
-    const courseId = el.querySelector('#match-course').value;
+    const courseId = matchCourseSelect.value;
+    const teeSetId = matchTeeSelect.value || null;
     const teamCount = Number(el.querySelector('#match-team-count').value);
     if (!date || !location || !courseId) {
       alert('Date, location, and course are required.');
@@ -48,7 +70,7 @@ function renderMatchesView() {
     const teams = Array.from({ length: teamCount }, (_, i) =>
       newMatchTeam({ name: i === 0 ? 'Dempsey' : `Opponent ${i}`, isOwnTeam: i === 0 })
     );
-    DataStore.add('matches', newMatch({ date, location, courseId, teams }));
+    DataStore.add('matches', newMatch({ date, location, courseId, teeSetId, teams }));
     renderMatchesView();
   });
 
@@ -57,29 +79,41 @@ function renderMatchesView() {
   matches.forEach((m) => wireMatchCard(m));
 }
 
+function computeTeamScore(team) {
+  const starterRaws = team.players
+    .filter((p) => p.isStarter)
+    .map((p) => (isValidRound(p.holeScores) ? rawScoreOrNull(p.holeScores) : null));
+  return teamScore(starterRaws);
+}
+
 function renderMatchCard(match) {
   const course = getCourseById(match.courseId);
+  const teeSet = findTeeSet(course, match.teeSetId);
   const holePars = matchHolePars(match);
+  const teamScores = match.teams.map((team) => ({ team, score: computeTeamScore(team) }));
+  // Only declare a winner once at least 2 teams have posted a complete score — with fewer than
+  // that there's nothing to compare, so no highlight rather than a premature/misleading one.
+  const completeTotals = teamScores.filter((t) => t.score.complete).map((t) => t.score.total);
+  const lowestScore = completeTotals.length >= 2 ? Math.min(...completeTotals) : null;
   return `
     <div class="card" data-match-id="${match.id}">
-      <h3>${match.date} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'})</h3>
-      ${match.teams.map((team) => renderTeamBlock(match, team, holePars)).join('')}
+      <h3>${match.date} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
+      ${teamScores.map(({ team, score }) =>
+        renderTeamBlock(match, team, holePars, score, lowestScore != null && score.complete && score.total === lowestScore)
+      ).join('')}
     </div>
   `;
 }
 
-function renderTeamBlock(match, team, holePars) {
+function renderTeamBlock(match, team, holePars, score, isWinner) {
   const players = DataStore.getAll('players').slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
-  const starterRaws = team.players
-    .filter((p) => p.isStarter)
-    .map((p) => (isValidRound(p.holeScores) ? rawScoreOrNull(p.holeScores) : null));
-  const score = teamScore(starterRaws);
 
   return `
-    <div class="card" style="background:#fafaf6" data-team-id="${team.id}">
+    <div class="card team-block${isWinner ? ' winning-team' : ''}" data-team-id="${team.id}">
       <div class="form-row">
         <strong>${escapeHtml(team.name)}</strong>
         ${team.isOwnTeam ? '<span class="badge">own team</span>' : ''}
+        ${isWinner ? '<span class="badge win">Winner</span>' : ''}
       </div>
       <div class="form-row add-player-row admin-only" data-match-id="${match.id}" data-team-id="${team.id}">
         ${team.isOwnTeam ? `
@@ -128,7 +162,6 @@ function wireMatchCard(match) {
     const teamId = row.dataset.teamId;
     row.querySelector('.btn-add-team-player').addEventListener('click', () => {
       const team = match.teams.find((t) => t.id === teamId);
-      const course = getCourseById(match.courseId);
       const isStarter = row.querySelector('.starter-checkbox').checked;
 
       let playerId = null;
@@ -150,7 +183,7 @@ function wireMatchCard(match) {
         alert('Enter at least one hole score.');
         return;
       }
-      const capped = capAllHoleScores(rawInputs, course.holePars);
+      const capped = capAllHoleScores(rawInputs, matchHolePars(match));
       const putts = Number(row.querySelector('.putts-input').value) || null;
 
       team.players.push({ playerId, displayName, holeScores: capped.map((c) => c.value), putts, isStarter });

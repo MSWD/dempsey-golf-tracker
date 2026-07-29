@@ -133,12 +133,25 @@ remain in public git history once the repo goes public. Rewriting history to rem
 possible but disruptive (force-push, every clone gets invalidated); left as a decision for the
 coach rather than done unilaterally.
 
+## Named tee sets per course
+
+Courses can now have multiple named tee sets (`Course.teeSets[]`), each with its own 9-hole
+yardages and, rarely, its own par override (`holeParsOverride`) for the small number of courses
+where a forward/back tee actually changes par on a hole or two — confirmed by the coach as a real
+but uncommon case, so the common case (yardage-only tee sets) stays simple while still supporting
+it. Rounds and matches can each select which tee set was played (`teeSetId`); `Course.holePars`
+stays the base/default pars, used whenever no tee set (or a tee set with no override) is selected.
+
+Tee-set totals (`teeSetTotalPar`/`teeSetTotalYardage` in `scoring-engine.js`) are computed on read
+rather than precomputed and stored like `Course.totalPar` — a tee set's effective par depends on
+its override and feeds directly into the double-par cap / adjusted-score math, so it stays a
+single live source of truth instead of a cached value that could drift out of sync.
+
+Slope/rating moved from the course to each tee set, matching how real courses rate them (per tee,
+not per course) — previously unused fields on `Course` regardless, so no scoring impact.
+
 ## Backlog / deliberately deferred
 
-- **Tee box / yardage per tee set.** Middle-school golf typically plays forward tees (yellow/red).
-  A next-level feature would let a Course have multiple named tee sets, each with its own
-  per-hole yardage (pars stay the same regardless of tee). Not built yet — current `Course` model
-  only has a single optional `holeYardages[9]`.
 - **Exact minimum-holes-for-valid-round number.** Currently `5` in `scoring-engine.js`
   (`MIN_HOLES_FOR_VALID_ROUND`) — coach is confirming the OHSAA rule, may be `6`. Change that one
   constant once confirmed.
@@ -152,3 +165,20 @@ coach rather than done unilaterally.
   fix applied) and Pixel 10 (portrait/landscape) in Chrome. Safari itself hasn't been tested yet —
   coach is fine running Chrome on iPad for now, but wants to verify Safari behavior in a later
   iteration.
+- **Putts stat skewed by picked-up holes — needs design.** `Round.putts` is a single total for the
+  whole round (see `models.js`/`ui-rounds.js`), not per-hole. Once a player hits the double-par cap
+  on a hole they often pick up rather than finish holing out, so the true putt count for that hole
+  is unknown — right now there's no way to flag that a hole wasn't completed for putting purposes,
+  so a coach either has to guess/estimate or the round's putts total silently under- or
+  over-represents actual putting. Coach wants putts tracked well enough to show real improvement
+  over time, but not skewed by picked-up holes. Even strong players have pick-up holes sometimes,
+  so this isn't a rare edge case. Coach's leaning: a simple round-level "incomplete / picked up"
+  marker (not necessarily per-hole) to at least flag that a round had pickup holes, rather than a
+  full per-hole putts breakdown — but what that marker should *do* to the rank/rolling-average
+  putts math isn't decided yet (exclude the round's putts from stats entirely? show it but flag it
+  in the UI? something else?). Needs a real design pass before building — bundle with
+  `MIN_HOLES_FOR_VALID_ROUND` / incomplete-round logic since it's the same "how much of this round
+  actually counts" problem.
+- **Highlight the winning team on match cards.** On the Matches view, visually highlight whichever
+  team's container has the lowest *complete* team score (`scoring-engine.js`'s `teamScore()`) —
+  purely a display/UI change, no new data needed. Not started.

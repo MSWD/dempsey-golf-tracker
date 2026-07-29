@@ -15,26 +15,40 @@ function newPlayer({ firstName, lastName, grade, active = true }) {
   };
 }
 
-function newCourse({ name, holePars, holeYardages = null, slope = null, rating = null, verified = false }) {
+function newCourse({ name, holePars, teeSets = [], defaultTeeSetId = null, verified = false }) {
   return {
     id: makeId('course'),
     name,
     holePars,
-    holeYardages,
-    slope,
-    rating,
     totalPar: holePars.reduce((sum, par) => sum + par, 0),
+    teeSets, // [{ id, name, holeYardages[9], holeParsOverride[9]?, slope?, rating? }]
+    defaultTeeSetId, // which tee set to pre-select for matches/rounds — varies per course, not global
     verified,
   };
 }
 
-function newRound({ playerId, date, type, courseId = null, inlineHolePars = null, holeScores, putts = null, matchId = null }) {
+// Yardages are required to be meaningful; holeParsOverride is null except for the rare course
+// where a forward/back tee actually changes par on a hole or two — most tee sets just inherit the
+// course's base holePars (see scoring-engine.js's teeSetEffectiveHolePars).
+function newTeeSet({ name, holeYardages, holeParsOverride = null, slope = null, rating = null }) {
+  return {
+    id: makeId('tee'),
+    name,
+    holeYardages,
+    holeParsOverride,
+    slope,
+    rating,
+  };
+}
+
+function newRound({ playerId, date, type, courseId = null, teeSetId = null, inlineHolePars = null, holeScores, putts = null, matchId = null }) {
   return {
     id: makeId('round'),
     playerId,
     date,
     type, // 'tryout' | 'practice' | 'match'
     courseId,
+    teeSetId,
     inlineHolePars,
     holeScores,
     putts,
@@ -42,12 +56,13 @@ function newRound({ playerId, date, type, courseId = null, inlineHolePars = null
   };
 }
 
-function newMatch({ date, location, courseId = null, inlineHolePars = null, teams }) {
+function newMatch({ date, location, courseId = null, teeSetId = null, inlineHolePars = null, teams }) {
   return {
     id: makeId('match'),
     date,
     location,
     courseId,
+    teeSetId,
     inlineHolePars,
     teams, // [{ id, name, isOwnTeam, players: [{ playerId?, displayName, holeScores[9], putts }] }]
   };

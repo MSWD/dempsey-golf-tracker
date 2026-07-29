@@ -65,10 +65,11 @@ not a team.
 
 ```
 Player  { id, firstName, lastName, grade, active }
-Course  { id, name, holePars[9], holeYardages[9]?, slope?, rating?, totalPar, verified }
-Round   { id, playerId, date, type: 'tryout'|'practice'|'match', courseId|inlineHolePars,
+Course  { id, name, holePars[9], totalPar, verified, defaultTeeSetId?,
+          teeSets: [{ id, name, holeYardages[9], holeParsOverride[9]?, slope?, rating? }] }
+Round   { id, playerId, date, type: 'tryout'|'practice'|'match', courseId|inlineHolePars, teeSetId?,
           holeScores[9], putts, matchId? }
-Match   { id, date, location: 'Home'|'Away', courseId|inlineHolePars,
+Match   { id, date, location: 'Home'|'Away', courseId|inlineHolePars, teeSetId?,
           teams: [{ id, name, isOwnTeam, players: [{ playerId?, displayName, holeScores[9],
                                                        putts, isStarter }] }] }
 ```

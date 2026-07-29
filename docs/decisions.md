@@ -133,12 +133,25 @@ remain in public git history once the repo goes public. Rewriting history to rem
 possible but disruptive (force-push, every clone gets invalidated); left as a decision for the
 coach rather than done unilaterally.
 
+## Named tee sets per course
+
+Courses can now have multiple named tee sets (`Course.teeSets[]`), each with its own 9-hole
+yardages and, rarely, its own par override (`holeParsOverride`) for the small number of courses
+where a forward/back tee actually changes par on a hole or two — confirmed by the coach as a real
+but uncommon case, so the common case (yardage-only tee sets) stays simple while still supporting
+it. Rounds and matches can each select which tee set was played (`teeSetId`); `Course.holePars`
+stays the base/default pars, used whenever no tee set (or a tee set with no override) is selected.
+
+Tee-set totals (`teeSetTotalPar`/`teeSetTotalYardage` in `scoring-engine.js`) are computed on read
+rather than precomputed and stored like `Course.totalPar` — a tee set's effective par depends on
+its override and feeds directly into the double-par cap / adjusted-score math, so it stays a
+single live source of truth instead of a cached value that could drift out of sync.
+
+Slope/rating moved from the course to each tee set, matching how real courses rate them (per tee,
+not per course) — previously unused fields on `Course` regardless, so no scoring impact.
+
 ## Backlog / deliberately deferred
 
-- **Tee box / yardage per tee set.** Middle-school golf typically plays forward tees (yellow/red).
-  A next-level feature would let a Course have multiple named tee sets, each with its own
-  per-hole yardage (pars stay the same regardless of tee). Not built yet — current `Course` model
-  only has a single optional `holeYardages[9]`.
 - **Exact minimum-holes-for-valid-round number.** Currently `5` in `scoring-engine.js`
   (`MIN_HOLES_FOR_VALID_ROUND`) — coach is confirming the OHSAA rule, may be `6`. Change that one
   constant once confirmed.
@@ -166,3 +179,6 @@ coach rather than done unilaterally.
   in the UI? something else?). Needs a real design pass before building — bundle with
   `MIN_HOLES_FOR_VALID_ROUND` / incomplete-round logic since it's the same "how much of this round
   actually counts" problem.
+- **Highlight the winning team on match cards.** On the Matches view, visually highlight whichever
+  team's container has the lowest *complete* team score (`scoring-engine.js`'s `teamScore()`) —
+  purely a display/UI change, no new data needed. Not started.

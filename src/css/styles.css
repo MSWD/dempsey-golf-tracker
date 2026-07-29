@@ -48,6 +48,19 @@ header.app-header img.logo {
   height: 40px;
 }
 
+header.app-header a.back-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+header.app-header a.back-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
 header.app-header h1 {
   font-size: 1.1rem;
   margin: 0;

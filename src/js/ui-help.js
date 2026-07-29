@@ -38,6 +38,14 @@ function renderHelpView() {
       <p>Enter each course's 9 hole pars. A course marked <span class="badge warn">unverified</span>
       means its pars haven't been double-checked against an official source yet — treat scores
       from it with a little caution until someone confirms the card.</p>
+      <p>Open "Tee sets" under a course to add named tees (e.g. "Gold," "Forward") with their own
+      yardages — name them whatever you like. Par is normally the same on every tee, so you don't
+      need to enter it again; only check "different par on this tee" if that specific tee actually
+      changes par on a hole or two (rare). Selecting a tee set when logging a round or match shows
+      the resulting total par and yardage.</p>
+      <p>Mark one tee set as the <strong>default</strong> (radio button in the tee sets table) if
+      your team usually plays a particular color at that course — it'll be pre-selected next time
+      you log a round or match there. Different courses can have different defaults.</p>
     </div>
 
     <div class="card">

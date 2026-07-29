@@ -72,13 +72,17 @@ async function main() {
     btn.addEventListener('click', () => showView(btn.dataset.view));
   });
 
-  document.getElementById('btn-export').addEventListener('click', () => DataStore.exportJSON());
+  document.getElementById('btn-export').addEventListener('click', () => {
+    if (!AppState.isAdmin) return;
+    DataStore.exportJSON();
+  });
   document.getElementById('btn-import').addEventListener('click', () => {
+    if (!AppState.isAdmin) return;
     document.getElementById('file-import').click();
   });
   document.getElementById('file-import').addEventListener('change', async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || !AppState.isAdmin) return;
     const confirmed = confirm(
       `Importing a season replaces ALL current data in this browser (roster, rounds, matches) ` +
       `with the contents of "${file.name}" — this cannot be undone. ` +
@@ -130,10 +134,35 @@ async function main() {
       return;
     }
 
+    let loginPopup = null;
+    // Opens the GitHub verification page as a small fixed-size popup instead of a full tab —
+    // easy to tell apart from the main app window, so the coach doesn't accidentally close or
+    // navigate the tab that's quietly polling for login completion in the background.
+    function openLoginPopup(verificationUri) {
+      const width = 520;
+      const height = 650;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+      if (loginPopup && !loginPopup.closed) {
+        loginPopup.focus();
+        return loginPopup;
+      }
+      loginPopup = window.open(
+        verificationUri,
+        'github-login',
+        `width=${width},height=${height},left=${left},top=${top},noopener,noreferrer`
+      );
+      return loginPopup;
+    }
+
     try {
       loginStatus.textContent = 'Starting login…';
       await GitHubAuth.login((userCode, verificationUri) => {
-        loginStatus.innerHTML = `Go to <a href="${verificationUri}" target="_blank" rel="noopener">${verificationUri}</a> and enter code <strong>${userCode}</strong> <button type="button" id="copy-login-code">Copy code</button>`;
+        loginStatus.innerHTML = `Go to <a href="${verificationUri}" id="login-verify-link" rel="noopener">${verificationUri}</a> and enter code <strong>${userCode}</strong> <button type="button" id="copy-login-code">Copy code</button><br><span class="muted">Keep this tab open — login finishes automatically here once you approve in the popup.</span>`;
+        document.getElementById('login-verify-link').addEventListener('click', (e) => {
+          e.preventDefault();
+          openLoginPopup(verificationUri);
+        });
         const copyBtn = document.getElementById('copy-login-code');
         copyBtn.addEventListener('click', async () => {
           try {
@@ -145,11 +174,13 @@ async function main() {
           setTimeout(() => { copyBtn.textContent = 'Copy code'; }, 2000);
         });
       });
+      if (loginPopup && !loginPopup.closed) loginPopup.close();
       loginStatus.textContent = 'Logged in.';
       AppState.isAdmin = true;
       updateAuthUI();
       showView(currentView() ?? 'roster');
     } catch (err) {
+      if (loginPopup && !loginPopup.closed) loginPopup.close();
       loginStatus.textContent = err.message;
     }
   });

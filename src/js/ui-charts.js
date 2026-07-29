@@ -11,7 +11,7 @@ function renderChartsView() {
     <div class="card">
       <h3>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</h3>
       <canvas id="chart-score-${p.id}" height="140"></canvas>
-      <canvas id="chart-putts-${p.id}" height="140" style="margin-top:12px"></canvas>
+      <canvas id="chart-putts-${p.id}" height="140" class="chart-secondary"></canvas>
     </div>
   `).join('')}</div>`;
 

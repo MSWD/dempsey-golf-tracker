@@ -8,7 +8,7 @@ function renderRosterView() {
       <div class="form-row">
         <input type="text" id="new-first-name" placeholder="First name">
         <input type="text" id="new-last-name" placeholder="Last name">
-        <input type="number" id="new-grade" placeholder="Grade" min="5" max="12" style="width:80px">
+        <input type="number" id="new-grade" class="input-medium" placeholder="Grade" min="5" max="12">
         <button class="primary" id="btn-add-player">Add</button>
       </div>
     </div>

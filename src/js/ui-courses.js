@@ -63,7 +63,7 @@ function renderCoursesView() {
               ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="Y${i + 1}">`).join('')}
             </div>
             <label class="muted"><input type="checkbox" class="tee-par-override-toggle"> Different par on this tee (rare)</label>
-            <div class="form-row new-tee-pars" style="display:none">
+            <div class="form-row new-tee-pars hidden">
               ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="P${i + 1} (course: ${c.holePars[i]})" min="3" max="6">`).join('')}
             </div>
             <div class="form-row">
@@ -89,7 +89,7 @@ function renderCoursesView() {
 
   rows.querySelectorAll('.tee-par-override-toggle').forEach((cb) => {
     cb.addEventListener('change', () => {
-      cb.closest('details').querySelector('.new-tee-pars').style.display = cb.checked ? '' : 'none';
+      cb.closest('details').querySelector('.new-tee-pars').classList.toggle('hidden', !cb.checked);
     });
   });
 

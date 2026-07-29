@@ -133,6 +133,29 @@ remain in public git history once the repo goes public. Rewriting history to rem
 possible but disruptive (force-push, every clone gets invalidated); left as a decision for the
 coach rather than done unilaterally.
 
+## Why Chart.js is vendored and every page carries a CSP
+
+The app holds a GitHub token in `localStorage` (see the device-flow entry above), on the same
+origin every team's page shares. That makes "what can third-party JS do on this page" a real
+question, not a theoretical one — Chart.js was previously loaded unpinned from a CDN
+(`chart.js@4`, floating major version, no integrity check), which meant any 4.x release, or a
+compromise of that CDN path, was arbitrary JS with access to that token. It's now vendored at
+`src/assets/vendor/chart.min.js` and every page ships a `script-src 'self'` CSP meta tag (GitHub
+Pages can't set response headers, so `<meta http-equiv>` is the only option) — the CSP is real
+defense in depth only once nothing on the page needs a script-src exception, which is why the CDN
+tag had to go first.
+
+The stricter `style-src 'self'` (no `'unsafe-inline'`) turned out to have a second cost: every
+inline `style="..."` attribute and every `element.style.x = ...` mutation is blocked under it too,
+not just inline `<script>` blocks. Rather than carve out an `'unsafe-inline'` exception for
+style-src, the handful of call sites that used inline styles were converted to utility classes
+(`.hidden`, `.input-narrow`, etc. in `styles.css`) so the policy could ship with no exceptions at
+all.
+
+`add-team.py`'s templates carry the vendored script tag and the CSP tag too, so newly scaffolded
+teams get them by default — `scripts/check-team-templates.py` (run in CI) catches the case where a
+template change like this lands but an already-onboarded team's files don't get it.
+
 ## Named tee sets per course
 
 Courses can now have multiple named tee sets (`Course.teeSets[]`), each with its own 9-hole

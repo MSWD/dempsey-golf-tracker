@@ -83,7 +83,7 @@ function render(asOfDate) {
         <thead><tr><th>Rank</th><th>Player</th><th>Grade</th><th>Rolling avg (best 4 of last 6)</th></tr></thead>
         <tbody>
           ${ranked.map((p) => `
-            <tr>
+            <tr class="${p.rank != null && p.rank <= (TEAM_CONFIG.rankHighlightCount || 0) ? 'rank-highlight' : ''}">
               <td>${p.rank ?? '—'}</td>
               <td>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td>
               <td>${escapeHtml(p.grade)}</td>

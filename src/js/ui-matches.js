@@ -114,6 +114,23 @@ function computeTeamScore(team) {
   return teamScore(starterRaws);
 }
 
+// The lowest individual valid raw score across every player in the match, regardless of team or
+// starter status — medalist is an individual stroke-play award, separate from the team-score
+// mechanic (which only counts starters). Ties are co-medalists: every player at that score gets
+// the badge, not just the first found.
+function computeMedalistScore(match) {
+  let lowest = null;
+  match.teams.forEach((team) => {
+    team.players.forEach((p) => {
+      if (!isValidRound(p.holeScores)) return;
+      const raw = rawScoreOrNull(p.holeScores);
+      if (raw == null) return;
+      if (lowest == null || raw < lowest) lowest = raw;
+    });
+  });
+  return lowest;
+}
+
 function renderMatchCard(match) {
   const course = getCourseById(match.courseId);
   const teeSet = findTeeSet(course, match.teeSetId);
@@ -123,17 +140,18 @@ function renderMatchCard(match) {
   // that there's nothing to compare, so no highlight rather than a premature/misleading one.
   const completeTotals = teamScores.filter((t) => t.score.complete).map((t) => t.score.total);
   const lowestScore = completeTotals.length >= 2 ? Math.min(...completeTotals) : null;
+  const medalistScore = computeMedalistScore(match);
   return `
     <div class="card" data-match-id="${match.id}">
       <h3>${match.date} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
       ${teamScores.map(({ team, score }) =>
-        renderTeamBlock(match, team, holePars, score, lowestScore != null && score.complete && score.total === lowestScore)
+        renderTeamBlock(match, team, holePars, score, lowestScore != null && score.complete && score.total === lowestScore, medalistScore)
       ).join('')}
     </div>
   `;
 }
 
-function renderTeamBlock(match, team, holePars, score, isWinner) {
+function renderTeamBlock(match, team, holePars, score, isWinner, medalistScore) {
   const players = DataStore.getAll('players').slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
 
   return `
@@ -165,8 +183,9 @@ function renderTeamBlock(match, team, holePars, score, isWinner) {
               const splits = holeSplits(p.holeScores);
               const par = raw != null ? toPar(raw, roundTotalPar(holePars)) : null;
               const valid = isValidRound(p.holeScores);
+              const isMedalist = valid && raw != null && medalistScore != null && raw === medalistScore;
               return `<tr>
-                <td>${escapeHtml(p.displayName)}</td>
+                <td>${escapeHtml(p.displayName)}${isMedalist ? ' <span class="badge medalist" title="Match medalist">🏆</span>' : ''}</td>
                 <td>${p.isStarter ? 'Yes' : 'Alt'}</td>
                 <td>${raw ?? '—'}${!valid ? ' <span class="badge warn">incomplete</span>' : ''}</td>
                 <td>${p.putts ?? '—'}</td>

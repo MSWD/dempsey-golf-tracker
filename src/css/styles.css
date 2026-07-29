@@ -212,6 +212,11 @@ input[type="text"], input[type="number"], input[type="date"], select {
   color: #fff;
 }
 
+.badge.medalist {
+  background: #ffd700;
+  color: #6b4e00;
+}
+
 .team-block {
   background: #fafaf6;
 }

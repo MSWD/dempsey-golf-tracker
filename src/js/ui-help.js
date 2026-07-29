@@ -83,7 +83,8 @@ function renderHelpView() {
       count toward the team score. Team score is the sum of the 4 lowest scores among the 6
       starters who posted a valid score — if fewer than 4 have, it shows as "incomplete" rather
       than guessing a number. The lowest-scoring team in a match is highlighted with a "Winner"
-      badge once at least two teams have a complete score.</p>
+      badge once at least two teams have a complete score. The player (or players, if tied) with
+      the lowest individual score across every team in the match gets a 🏆 medalist badge.</p>
       <p>The "Season record" shown at the top counts a 3-team match as two separate results — one
       against each opponent — since your team might beat one and lose to the other in the same
       match. A result only counts once both teams being compared have a complete score.</p>

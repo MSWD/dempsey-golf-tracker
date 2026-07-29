@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
   <title>Middle School Golf Tracker</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/styles.css">
@@ -27,22 +29,6 @@
   <footer id="app-footer" class="app-footer"></footer>
 
   <script src="version.js"></script>
-  <script>
-    async function main() {
-      const res = await fetch('teams.json');
-      const teams = await res.json();
-      const list = document.getElementById('team-list');
-      list.innerHTML = Object.entries(teams).map(([slug, team]) =>
-        `<li><a href="teams/${slug}/index.html">${team.name}</a></li>`
-      ).join('');
-
-      const year = new Date().getFullYear();
-      document.getElementById('app-footer').innerHTML = `
-        <p><strong>&copy; ${year} MSWD &mdash; Montgomery's Software &amp; Web Development</strong></p>
-        <p class="muted">Middle School Golf Tracker &middot; Built with Claude (AI-assisted) &middot; v${APP_VERSION}</p>
-      `;
-    }
-    main();
-  </script>
+  <script src="js/home.js"></script>
 </body>
 </html>

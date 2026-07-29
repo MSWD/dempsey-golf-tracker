@@ -12,8 +12,11 @@ share this one domain, each at its own path (`/teams/<slug>/`) — see
 
 ## Tech stack
 
-Plain HTML/CSS/JS, no build step, no framework. Chart.js via CDN for trend charts. A Cloudflare
-Worker relays GitHub device-flow login and gatekeeps report publishing per team (see
+Plain HTML/CSS/JS, no build step, no framework. Chart.js is vendored locally
+(`src/assets/vendor/chart.min.js`, not loaded from a CDN — see `src/assets/vendor/README.md` for
+version/upgrade info) and every page ships a Content-Security-Policy meta tag, since the app holds
+a GitHub token in `localStorage`. A Cloudflare Worker relays GitHub device-flow login and
+gatekeeps report publishing per team (see
 [`docs/auth-and-publishing.md`](docs/auth-and-publishing.md)).
 
 ## Running locally
@@ -34,7 +37,10 @@ work — the seed-data fetch requires an HTTP server.)
 - `src/` — the app itself: `teams.json` + `teams/<slug>/` per team, shared `js/`/`css`/`assets/`
   (see [`docs/architecture.md`](docs/architecture.md) for the full layout)
 - `worker/` — the Cloudflare Worker used for GitHub device-flow login and publish gatekeeping
-- `scripts/` — `add-team.py` (onboard a new team) and `bootstrap-platform.sh` (one-time platform setup)
+- `scripts/` — `add-team.py` (onboard a new team), `bootstrap-platform.sh` (one-time platform
+  setup), and `check-team-templates.py` (CI check that every team's scaffolded files still match
+  add-team.py's template — catches drift like a CSP or vendored-script change that landed in the
+  template but not in already-onboarded teams)
 - `docs/` — architecture, deployment, and auth/publishing setup notes
 - `prompts/` — the original project brief and any maintenance-oriented prompts
 

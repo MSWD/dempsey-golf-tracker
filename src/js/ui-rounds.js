@@ -58,7 +58,7 @@ function renderRoundsView(warningMessage) {
       <div class="muted" id="round-tee-info"></div>
       <div class="form-row" id="round-holes">
         ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${i + 1}">`).join('')}
-        <input type="number" id="round-putts" placeholder="Putts" style="width:70px">
+        <input type="number" id="round-putts" class="input-narrow" placeholder="Putts">
       </div>
       <button class="primary" id="btn-add-round">Save round</button>
       <div class="muted" id="round-warning">${warningMessage ?? ''}</div>

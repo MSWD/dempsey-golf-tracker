@@ -28,7 +28,7 @@ async function main() {
   const res = await fetch('data/latest.json');
   if (!res.ok) {
     document.getElementById('report-content').innerHTML = '<p class="muted">No report has been published yet.</p>';
-    document.querySelector('.card').style.display = 'none';
+    document.querySelector('.card').classList.add('hidden');
     return;
   }
   _snapshot = await res.json();

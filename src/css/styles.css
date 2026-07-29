@@ -265,6 +265,15 @@ body.admin-mode .viewer-only { display: none; }
 
 .muted { color: var(--color-muted); font-size: 0.85rem; }
 
+/* Utility classes replacing inline style="" attributes, so the CSP's style-src can stay
+   'self' with no 'unsafe-inline' — inline style attributes and JS .style mutations are both
+   blocked under a strict style-src. */
+.hidden { display: none; }
+.input-narrow { width: 70px; }
+.input-medium { width: 80px; }
+.full-width { width: 100%; }
+.chart-secondary { margin-top: 12px; }
+
 .charts-grid {
   display: grid;
   grid-template-columns: 1fr;

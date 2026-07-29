@@ -171,7 +171,7 @@ function renderTeamBlock(match, team, holePars, score, isWinner, medalistScore) 
         `}
         <label class="muted"><input type="checkbox" class="starter-checkbox" checked> Starter</label>
         ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${i + 1}">`).join('')}
-        <input type="number" class="putts-input" placeholder="Putts" style="width:70px">
+        <input type="number" class="putts-input input-narrow" placeholder="Putts">
         <button class="btn-add-team-player">Add score</button>
       </div>
       <div class="table-wrap">

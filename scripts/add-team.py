@@ -24,10 +24,12 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' {worker_url}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
   <title>{site_title}</title>
   <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
   <link rel="stylesheet" href="../../css/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="../../assets/vendor/chart.min.js"></script>
 </head>
 <body>
 
@@ -42,11 +44,11 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
     <div class="header-actions">
       <button id="btn-export" class="admin-only">Export season</button>
       <button id="btn-import" class="admin-only">Import season</button>
-      <input type="file" id="file-import" accept="application/json" style="display:none">
+      <input type="file" id="file-import" accept="application/json" class="hidden">
       <button id="btn-publish" class="admin-only">Publish report</button>
       <button id="btn-login">Login with GitHub</button>
     </div>
-    <div id="login-status" class="muted" style="width:100%"></div>
+    <div id="login-status" class="muted full-width"></div>
   </header>
 
   <nav class="tabs">
@@ -126,6 +128,8 @@ REPORTS_INDEX_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
   <title>{site_title} Reports</title>
   <link rel="icon" type="image/svg+xml" href="../../../assets/favicon.svg">
   <link rel="stylesheet" href="../../../css/styles.css">
@@ -184,7 +188,10 @@ def main():
     site_title = f"{name} Golf Tracker"
 
     team_dir.mkdir(parents=True)
-    (team_dir / "index.html").write_text(INDEX_HTML_TEMPLATE.format(site_title=site_title))
+    (team_dir / "index.html").write_text(INDEX_HTML_TEMPLATE.format(
+        site_title=site_title,
+        worker_url=PLATFORM_WORKER_URL,
+    ))
     (team_dir / "team-config.js").write_text(TEAM_CONFIG_TEMPLATE.format(
         slug=slug,
         name=name,

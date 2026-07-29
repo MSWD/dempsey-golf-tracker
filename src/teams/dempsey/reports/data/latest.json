@@ -1,0 +1,609 @@
+{
+  "publishedAt": "2026-07-29",
+  "seasonName": "2026 Dempsey Golf Season",
+  "players": [
+    {
+      "id": "player_19fa8e6d69e_vscvi3",
+      "firstName": "Graham",
+      "lastName": "B",
+      "grade": 7,
+      "active": true
+    },
+    {
+      "id": "player_19fa8e6d69e_q6e747",
+      "firstName": "Jensen",
+      "lastName": "B",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "player_19fa8e6d69e_hucr9l",
+      "firstName": "Liam",
+      "lastName": "C",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "player_19fa8e6d69e_o2tbsy",
+      "firstName": "Theo",
+      "lastName": "C",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "player_19fa8e6d69e_dye45a",
+      "firstName": "Myles",
+      "lastName": "H",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "player_19fa8e6d69e_rt2fhl",
+      "firstName": "Greyson",
+      "lastName": "I",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "player_19fa8e6d69e_mtda4r",
+      "firstName": "Grady",
+      "lastName": "L",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "player_19fa8e6d69e_b3x0gc",
+      "firstName": "Nicholas",
+      "lastName": "M",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "player_19fa8e6d69e_hqgr3j",
+      "firstName": "Gabriel",
+      "lastName": "P",
+      "grade": 7,
+      "active": false
+    },
+    {
+      "id": "player_19fa8e6d69e_fijhdz",
+      "firstName": "Deacon",
+      "lastName": "R",
+      "grade": 7,
+      "active": false
+    },
+    {
+      "id": "player_19fa8e6d69e_vvn0fp",
+      "firstName": "Benjamin",
+      "lastName": "S",
+      "grade": 7,
+      "active": true
+    },
+    {
+      "id": "player_19fa8e6d69e_joly3g",
+      "firstName": "William",
+      "lastName": "S",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "player_19fa8e6d69e_g9ux2f",
+      "firstName": "Ryan",
+      "lastName": "S",
+      "grade": 7,
+      "active": true
+    },
+    {
+      "id": "player_ms5eijsb_i5k4ou",
+      "firstName": "Levi",
+      "lastName": "L",
+      "grade": 8,
+      "active": true
+    },
+    {
+      "id": "player_ms6i5nui_49abwh",
+      "firstName": "Xavier",
+      "lastName": "C",
+      "grade": 8,
+      "active": true
+    }
+  ],
+  "courses": [
+    {
+      "id": "airportgolfclub",
+      "name": "Airport Golf Club",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        4,
+        5,
+        4,
+        3,
+        4
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "timberview",
+      "name": "Timberview",
+      "holePars": [
+        4,
+        4,
+        5,
+        4,
+        3,
+        4,
+        3,
+        4,
+        5
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "hiddenvalley",
+      "name": "Hidden Valley",
+      "holePars": [
+        3,
+        3,
+        3,
+        4,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 28,
+      "verified": false
+    },
+    {
+      "id": "millcreek",
+      "name": "Mill Creek",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        5,
+        4,
+        3,
+        4,
+        4
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "royalamerican",
+      "name": "Royal American",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        5,
+        4,
+        3,
+        4,
+        4
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "rollingmeadows",
+      "name": "Rolling Meadows",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        5,
+        4,
+        3,
+        4,
+        4
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "delawaregolfclub",
+      "name": "Delaware Golf Club",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        4,
+        5,
+        4,
+        4,
+        3
+      ],
+      "holeYardages": null,
+      "slope": null,
+      "rating": null,
+      "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "course_ms6k4cqm_w8kuld",
+      "name": "Oakhaven",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        4,
+        5,
+        4,
+        4,
+        3,
+        4,
+        3,
+        4,
+        5,
+        4,
+        5,
+        4,
+        3,
+        4
+      ],
+      "totalPar": 72,
+      "teeSets": [
+        {
+          "id": "tee_ms6k8jhu_a1q4yc",
+          "name": "Gold",
+          "holeYardages": [
+            429,
+            321,
+            100,
+            288,
+            335,
+            472,
+            326,
+            312,
+            122,
+            279,
+            92,
+            284,
+            413,
+            236,
+            318,
+            296,
+            114,
+            337
+          ],
+          "holeParsOverride": null,
+          "slope": 63.6,
+          "rating": 98
+        }
+      ],
+      "defaultTeeSetId": null,
+      "verified": false
+    }
+  ],
+  "rounds": [
+    {
+      "id": "round_ms6inu6b_vwsj0a",
+      "playerId": "player_19fa8e6d69e_vscvi3",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "inlineHolePars": null,
+      "holeScores": [
+        9,
+        7,
+        7,
+        8,
+        7,
+        10,
+        4,
+        8,
+        4
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6iri2s_ulwj6l",
+      "playerId": "player_19fa8e6d69e_q6e747",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "inlineHolePars": null,
+      "holeScores": [
+        10,
+        6,
+        6,
+        8,
+        8,
+        8,
+        8,
+        8,
+        6
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6kh50p_6nrnun",
+      "playerId": "player_19fa8e6d69e_hucr9l",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        5,
+        4,
+        5,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "putts": 21,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6kir86_havzzt",
+      "playerId": "player_19fa8e6d69e_o2tbsy",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        5,
+        4,
+        5,
+        5,
+        6,
+        5,
+        5,
+        6
+      ],
+      "putts": 14,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6kjnku_fc5se2",
+      "playerId": "player_19fa8e6d69e_dye45a",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        10,
+        8,
+        5,
+        8,
+        8,
+        10,
+        8,
+        7,
+        6
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6kkgcu_g83h1h",
+      "playerId": "player_19fa8e6d69e_rt2fhl",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        8,
+        6,
+        8,
+        6,
+        8,
+        7,
+        7,
+        4
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6kmixp_hwf0ud",
+      "playerId": "player_ms5eijsb_i5k4ou",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        5,
+        4,
+        4,
+        5,
+        5,
+        6,
+        5,
+        5
+      ],
+      "putts": 22,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6knmdc_su6uid",
+      "playerId": "player_19fa8e6d69e_mtda4r",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        6,
+        4,
+        5,
+        6,
+        8,
+        5,
+        5,
+        3
+      ],
+      "putts": 24,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6kondi_h06pzs",
+      "playerId": "player_19fa8e6d69e_b3x0gc",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        7,
+        4,
+        4,
+        5,
+        5,
+        8,
+        4,
+        6,
+        4
+      ],
+      "putts": 19,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6kpca5_07n64k",
+      "playerId": "player_19fa8e6d69e_vvn0fp",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        7,
+        8,
+        4,
+        8,
+        7,
+        10,
+        8,
+        7,
+        6
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6ks2gy_tjkehb",
+      "playerId": "player_19fa8e6d69e_joly3g",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        10,
+        8,
+        5,
+        7,
+        5,
+        7,
+        7,
+        6,
+        3
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6kso7q_k40wv6",
+      "playerId": "player_19fa8e6d69e_g9ux2f",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        10,
+        8,
+        4,
+        7,
+        8,
+        7,
+        7,
+        8,
+        6
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_ms6ktzlu_un7xam",
+      "playerId": "player_ms6i5nui_49abwh",
+      "date": "2026-07-29",
+      "type": "tryout",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        10,
+        8,
+        6,
+        8,
+        8,
+        10,
+        8,
+        8,
+        6
+      ],
+      "putts": null,
+      "matchId": null
+    }
+  ],
+  "matches": []
+}

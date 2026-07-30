@@ -208,6 +208,7 @@ function renderRankView() {
 
   el.innerHTML = `
     <p class="muted">Reference/suggestion only — the coach always sets the full lineup order manually.</p>
+    <p><a href="reports/index.html" title="See current published report">See current published report</a></p>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Rank</th><th>Player</th><th>Grade</th><th>Rolling avg (best 4 of last 6)</th></tr></thead>

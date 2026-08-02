@@ -104,6 +104,12 @@ Log tryout or practice rounds hole-by-hole. A couple of rules apply automaticall
 - **Course selection** — the course field starts blank and must be explicitly chosen, unless a
   home course is set (see Courses above), in which case that course is pre-selected but still
   changeable.
+- **Holes default to par** — once a course (and side/tee, if applicable) is picked, each hole
+  score starts at that hole's par so you can just nudge the number up/down for a bogey or birdie
+  instead of typing every score from scratch. If you change the course, side, or tee set again
+  after one's already selected, you'll get a warning first ("resets all 9 hole scores to the new
+  selection's par") since it wipes out anything entered so far — choosing to cancel puts the
+  course/side/tee selection back exactly as it was, with your scores untouched.
 
 Click any row in the rounds table to expand it and see the hole-by-hole scores. In admin mode, the
 expanded row has an **Edit** button that reloads the round into the form above for correction.
@@ -136,10 +142,15 @@ Per-player scoring and putts trends over time, drawn from the same rounds used f
 
 ### Matches
 
-A match card can have 2 or 3 teams. Add each team's players with their hole-by-hole scores;
-uncheck "Starter" for anyone who's just playing an extra round that day and shouldn't count toward
-the team score. Team score is the sum of the 4 lowest scores among the 6 starters who posted a
-valid score — if fewer than 4 have, it shows as "incomplete" rather than guessing a number. The
+A match card can have 2 or 3 teams. Add each team's players with their hole-by-hole scores — like
+the Rounds page, each hole starts at that hole's par so you can nudge it up/down rather than
+typing from scratch; unlike Rounds, changing a match's course/side/tee happens through "Edit
+match" (see below), not inline in the score-entry row, so there's no reset-to-par warning here —
+editing the match header never touches scores you've already entered, only where new entries
+default to. Uncheck "Starter" for anyone who's just playing an extra round that day and shouldn't
+count toward the team score. Team score is the sum of the 4 lowest scores among the 6 starters who
+posted a valid score — if fewer than 4 have, it shows as "incomplete" rather than guessing a
+number. The
 lowest-scoring team in a match is highlighted with a "Winner" badge once at least two teams have a
 complete score. The player (or players, if tied) with the lowest individual score across every
 team in the match gets a 🏆 medalist badge.

@@ -129,18 +129,21 @@ function renderRoundsView(warningMessage, editingRoundId) {
       ? `${sideText}Par ${par}${yards != null ? `, ${yards} yds` : ''}${teeSet.holeParsOverride ? ' (par differs on this tee)' : ''}`
       : `${sideText}Par ${teeSetTotalPar(course, null, side)} (course default)`;
     updateHolePlaceholders(el.querySelector('#round-holes'), side);
-    // New rounds default each hole to par so the coach can just nudge the number up/down for a
-    // bogey/birdie instead of typing every score — same as the match-entry form. Editing an
-    // existing round always shows what was actually recorded, never a par fallback. Holes the
-    // coach has already typed into (`data-touched`) are left alone even when the course/side/tee
-    // selection changes afterward, so a mid-entry course correction doesn't wipe real scores.
-    if (!editingRound) {
-      const holePars = teeSetEffectiveHolePars(course, teeSet, side);
-      el.querySelectorAll('#round-holes .hole-input').forEach((input, i) => {
-        if (input.dataset.touched === 'true') return;
-        input.value = holePars[i];
-      });
-    }
+  }
+
+  // New rounds default every hole to par so the coach can nudge the spinner up/down for a
+  // bogey/birdie instead of typing every score. This is a plain, explicit reset rather than a
+  // "smart" per-hole tracker — changing course/side/tee after one's already selected always asks
+  // first, since it wipes all 9 holes to the new selection's par; declining reverts the dropdown(s)
+  // back and leaves every hole exactly as it was. Editing an existing round never resets or asks —
+  // it always shows what was actually recorded.
+  function applyParDefaults() {
+    const course = getCourseById(roundCourseSelect.value);
+    const teeSet = findTeeSet(course, roundTeeSelect.value);
+    const side = selectedSideForCourse(course, roundSideSelect.value);
+    if (!course) return;
+    const holePars = teeSetEffectiveHolePars(course, teeSet, side);
+    el.querySelectorAll('#round-holes .hole-input').forEach((input, i) => { input.value = holePars[i]; });
   }
 
   if (editingRound) {
@@ -156,15 +159,58 @@ function renderRoundsView(warningMessage, editingRoundId) {
   updateTeeSetOptions(roundCourseSelect.value, roundTeeSelect);
   if (editingRound && editingRound.teeSetId) roundTeeSelect.value = editingRound.teeSetId;
   updateRoundTeeInfo();
+  if (!editingRound) applyParDefaults();
+
+  let priorCourseId = roundCourseSelect.value;
+  let priorSide = roundSideSelect.value;
+  let priorTeeSetId = roundTeeSelect.value;
+
+  // Shared by all three selects below: ask before resetting (skipped on the very first course
+  // pick, since there's nothing on the form yet to lose), apply-and-reset on OK, or run `revert`
+  // to put every select back the way it was on Cancel — holes are untouched either way until OK.
+  function confirmResetOrRevert(applyChange, revert) {
+    const hadCourseAlready = priorCourseId !== '';
+    if (hadCourseAlready && !confirm("Changing the course, side, or tee set resets all 9 hole scores to the new selection's par. Continue?")) {
+      revert();
+      return;
+    }
+    applyChange();
+    if (!editingRound) applyParDefaults();
+    priorCourseId = roundCourseSelect.value;
+    priorSide = roundSideSelect.value;
+    priorTeeSetId = roundTeeSelect.value;
+  }
+
   roundCourseSelect.addEventListener('change', () => {
-    updateSideOptions(roundCourseSelect.value, roundSideSelect);
-    updateTeeSetOptions(roundCourseSelect.value, roundTeeSelect);
-    updateRoundTeeInfo();
+    if (editingRound) {
+      updateSideOptions(roundCourseSelect.value, roundSideSelect);
+      updateTeeSetOptions(roundCourseSelect.value, roundTeeSelect);
+      updateRoundTeeInfo();
+      return;
+    }
+    confirmResetOrRevert(
+      () => {
+        updateSideOptions(roundCourseSelect.value, roundSideSelect);
+        updateTeeSetOptions(roundCourseSelect.value, roundTeeSelect);
+        updateRoundTeeInfo();
+      },
+      () => {
+        roundCourseSelect.value = priorCourseId;
+        updateSideOptions(priorCourseId, roundSideSelect);
+        roundSideSelect.value = priorSide;
+        updateTeeSetOptions(priorCourseId, roundTeeSelect);
+        roundTeeSelect.value = priorTeeSetId;
+        updateRoundTeeInfo();
+      }
+    );
   });
-  roundSideSelect.addEventListener('change', updateRoundTeeInfo);
-  roundTeeSelect.addEventListener('change', updateRoundTeeInfo);
-  el.querySelectorAll('#round-holes .hole-input').forEach((input) => {
-    input.addEventListener('input', () => { input.dataset.touched = 'true'; });
+  roundSideSelect.addEventListener('change', () => {
+    if (editingRound) { updateRoundTeeInfo(); return; }
+    confirmResetOrRevert(updateRoundTeeInfo, () => { roundSideSelect.value = priorSide; updateRoundTeeInfo(); });
+  });
+  roundTeeSelect.addEventListener('change', () => {
+    if (editingRound) { updateRoundTeeInfo(); return; }
+    confirmResetOrRevert(updateRoundTeeInfo, () => { roundTeeSelect.value = priorTeeSetId; updateRoundTeeInfo(); });
   });
 
   const cancelBtn = el.querySelector('#btn-cancel-edit');

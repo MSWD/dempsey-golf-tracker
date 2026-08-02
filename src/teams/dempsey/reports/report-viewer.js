@@ -107,7 +107,7 @@ function renderRankings(asOfDate) {
         <tbody>
           ${ranked.map((p) => `
             <tr class="${p.rank != null && p.rank <= (TEAM_CONFIG.rankHighlightCount || 0) ? 'rank-highlight' : ''}">
-              <td>${p.rank ?? '—'}</td>
+              <td>${p.rank != null ? (p.tied ? `T${p.rank}` : p.rank) : '—'}</td>
               <td>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td>
               <td>${escapeHtml(p.grade)}</td>
               <td>${p.rollingAverage != null ? p.rollingAverage.toFixed(1) : 'No rounds yet'}</td>

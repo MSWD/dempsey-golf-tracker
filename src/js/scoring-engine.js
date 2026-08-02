@@ -155,13 +155,32 @@ function rollingAverage(chronologicalAdjustedScores) {
 
 // Ascending sort on rolling average (lower is better). Reference/suggestion only — the coach
 // always manually sets the lineup order for a match; this is never auto-applied.
+//
+// Standard competition ranking ("1224"): players tied on the *displayed* average (1 decimal,
+// matching the .toFixed(1) shown in the UI) share a rank, and the next distinct rank skips ahead
+// by the number tied — e.g. two players tied at rank 2 push the next player to rank 4, not 3.
+// Comparing on the displayed value (rather than the raw float) keeps "tied" matching what a coach
+// actually sees; it also sidesteps spurious non-ties from floating-point rounding noise.
 function rankPlayers(playersWithAverage) {
   const ranked = [...playersWithAverage].filter((p) => p.rollingAverage != null);
   const unranked = [...playersWithAverage].filter((p) => p.rollingAverage == null);
   ranked.sort((a, b) => a.rollingAverage - b.rollingAverage);
+
+  let rank = 0;
+  let lastDisplayed = null;
+  const withRanks = ranked.map((p, i) => {
+    const displayed = Number(p.rollingAverage.toFixed(1));
+    if (displayed !== lastDisplayed) rank = i + 1;
+    lastDisplayed = displayed;
+    return { ...p, rank };
+  });
+
+  const rankCounts = {};
+  withRanks.forEach((p) => { rankCounts[p.rank] = (rankCounts[p.rank] || 0) + 1; });
+
   return [
-    ...ranked.map((p, i) => ({ ...p, rank: i + 1 })),
-    ...unranked.map((p) => ({ ...p, rank: null })),
+    ...withRanks.map((p) => ({ ...p, tied: rankCounts[p.rank] > 1 })),
+    ...unranked.map((p) => ({ ...p, rank: null, tied: false })),
   ];
 }
 

@@ -92,6 +92,7 @@ function renderRoundsView(warningMessage, editingRoundId) {
         <option value="">All types</option>
         <option value="tryout">Tryout</option>
         <option value="practice">Practice</option>
+        <option value="match">Match</option>
       </select>
       <select id="filter-course">
         <option value="">All courses</option>
@@ -202,7 +203,9 @@ function renderRoundsView(warningMessage, editingRoundId) {
             <div class="table-wrap">
               <table><tbody><tr>${detailCells}</tr></tbody></table>
             </div>
-            <button class="admin-only btn-edit-round" data-round-id="${escapeHtml(r.id)}">Edit</button>
+            ${r.type === 'match'
+              ? '<p class="muted admin-only">Derived from a match — edit scores on the Matches page.</p>'
+              : `<button class="admin-only btn-edit-round" data-round-id="${escapeHtml(r.id)}">Edit</button>`}
           </td>
         </tr>
       `;

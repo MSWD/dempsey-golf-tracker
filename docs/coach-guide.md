@@ -108,9 +108,14 @@ Log tryout or practice rounds hole-by-hole. A couple of rules apply automaticall
 Click any row in the rounds table to expand it and see the hole-by-hole scores. In admin mode, the
 expanded row has an **Edit** button that reloads the round into the form above for correction.
 
-The rounds table can be filtered by player, type, course, and/or a date range (from/to) — filters
-combine (all conditions must match) and are visible to everyone, not just admins. Filters reset on
-page reload; they don't persist across visits.
+Match rounds also show up in this table (type "Match") — every own-roster player's score in a
+match is automatically mirrored here as a round, so it counts toward rank and rolling average the
+same as a tryout or practice round, weighted no differently. These rows have no Edit button, since
+the match itself is the source of truth for that score — correct it from the Matches page instead.
+
+The rounds table can be filtered by player, type (including Match), course, and/or a date range
+(from/to) — filters combine (all conditions must match) and are visible to everyone, not just
+admins. Filters reset on page reload; they don't persist across visits.
 
 ### Rank
 
@@ -121,7 +126,9 @@ actual lineup order by hand; nothing here gets auto-applied.
 If a team turns on `extendedRankingStats` in its team config, the rank table (and the matching
 published report) also shows each player's tryout average, personal best, rounds played so far,
 and an estimated 9-hole handicap. The rounds-played cell is shaded red/yellow/green against
-configurable thresholds so a coach can see at a glance who still needs more rounds in.
+configurable thresholds so a coach can see at a glance who still needs more rounds in. Match scores
+count toward rolling average, personal best, and rounds played, but are excluded from the tryout
+average, since that's specifically about tryout performance.
 
 ### Charts
 
@@ -140,6 +147,12 @@ team in the match gets a 🏆 medalist badge.
 The "Season record" shown at the top counts a 3-team match as two separate results — one against
 each opponent — since your team might beat one and lose to the other in the same match. A result
 only counts once both teams being compared have a complete score.
+
+Each own-roster player's score is automatically mirrored to the Rounds page as it's entered (see
+Rounds above) — opposing-team players and free-text guests aren't on your roster, so they're never
+mirrored. "Remove match" deletes the match; if it has any mirrored rounds, you'll be asked whether
+to delete those too, or leave them in place on the Rounds page (you can always delete them
+separately from there afterward).
 
 ### Export / Import (season data)
 

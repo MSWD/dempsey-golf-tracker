@@ -7,6 +7,38 @@ function matchHolePars(match) {
   return resolveHolePars(match, getCourseById);
 }
 
+// Keeps each own-roster player entry's linked `rounds` record in sync with the match, so
+// `playerRankingStats()` (which only reads `rounds`) picks up match scores without needing to know
+// anything about matches. Opponents/guests (no `playerId`) are skipped — they're not on our roster
+// and have nothing to rank. Entries remember their round via `roundId` so a future edit of an
+// existing entry (not possible yet — today's UI only ever appends) would update that round in
+// place rather than creating a duplicate.
+function syncMatchRounds(match) {
+  match.teams.forEach((team) => {
+    team.players.forEach((entry) => {
+      if (!entry.playerId) return;
+      const roundFields = {
+        playerId: entry.playerId,
+        date: match.date,
+        type: 'match',
+        courseId: match.courseId,
+        teeSetId: match.teeSetId,
+        side: match.side,
+        inlineHolePars: match.inlineHolePars,
+        holeScores: entry.holeScores,
+        putts: entry.putts,
+        matchId: match.id,
+      };
+      const existing = entry.roundId ? DataStore.getById('rounds', entry.roundId) : null;
+      if (existing) {
+        DataStore.update('rounds', existing.id, roundFields);
+      } else {
+        entry.roundId = DataStore.add('rounds', newRound(roundFields)).id;
+      }
+    });
+  });
+}
+
 // Own team's season W-L-T. A tri-match counts as two separate decisions — one against each
 // opponent, compared independently — not one decision for the match as a whole, since the own
 // team can beat one opponent and lose to the other in the same match. Only counts a decision once
@@ -157,7 +189,10 @@ function renderMatchCard(match) {
   const medalistScore = computeMedalistScore(match);
   return `
     <div class="card" data-match-id="${escapeHtml(match.id)}">
-      <h3>${escapeHtml(match.date)} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${course && isEighteenHoleCourse(course) ? ` — ${sideLabel(side)}` : ''}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
+      <div class="form-row">
+        <h3>${escapeHtml(match.date)} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${course && isEighteenHoleCourse(course) ? ` — ${sideLabel(side)}` : ''}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
+        <button class="admin-only btn-remove-match">Remove match</button>
+      </div>
       ${holePars == null ? `
         <p class="muted"><span class="badge warn">Course unavailable</span> This match's course
         record can't be found (was it deleted?) — scores below can't be compared to par, and new
@@ -256,9 +291,28 @@ function wireMatchCard(match, card) {
       const capped = capAllHoleScores(rawInputs, holePars);
       const putts = Number(row.querySelector('.putts-input').value) || null;
 
-      team.players.push({ playerId, displayName, holeScores: capped.map((c) => c.value), putts, isStarter });
+      team.players.push({ playerId, displayName, holeScores: capped.map((c) => c.value), putts, isStarter, roundId: null });
+      syncMatchRounds(match);
       DataStore.update('matches', match.id, { teams: match.teams });
       renderMatchesView();
     });
   });
+
+  const removeBtn = card.querySelector('.btn-remove-match');
+  if (removeBtn) {
+    removeBtn.addEventListener('click', () => {
+      if (!confirm('Delete this match?')) return;
+      const linkedRounds = DataStore.getAll('rounds').filter((r) => r.matchId === match.id);
+      if (linkedRounds.length) {
+        const removeRounds = confirm(
+          `This match has ${linkedRounds.length} linked round(s) that count toward rankings. Delete them too?\n\n` +
+          `OK: delete the round(s) as well.\n` +
+          `Cancel: keep them — they'll stay on the Rounds page without a match link. You can delete them separately from there later if you want.`
+        );
+        if (removeRounds) linkedRounds.forEach((r) => DataStore.remove('rounds', r.id));
+      }
+      DataStore.remove('matches', match.id);
+      renderMatchesView();
+    });
+  }
 }

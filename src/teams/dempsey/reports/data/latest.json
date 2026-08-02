@@ -59,20 +59,6 @@
       "active": true
     },
     {
-      "id": "player_19fa8e6d69e_hqgr3j",
-      "firstName": "Gabriel",
-      "lastName": "P",
-      "grade": 7,
-      "active": false
-    },
-    {
-      "id": "player_19fa8e6d69e_fijhdz",
-      "firstName": "Deacon",
-      "lastName": "R",
-      "grade": 7,
-      "active": false
-    },
-    {
       "id": "player_19fa8e6d69e_vvn0fp",
       "firstName": "Benjamin",
       "lastName": "S",
@@ -127,6 +113,108 @@
       "slope": null,
       "rating": null,
       "totalPar": 36,
+      "verified": false
+    },
+    {
+      "id": "course_msbwrsgf_rdov9v",
+      "name": "Champions Golf Course",
+      "holePars": [
+        4,
+        3,
+        4,
+        4,
+        3,
+        4,
+        5,
+        4,
+        4,
+        3,
+        4,
+        4,
+        4,
+        4,
+        5,
+        4,
+        3,
+        4
+      ],
+      "totalPar": 70,
+      "teeSets": [
+        {
+          "id": "tee_msbwweh9_luuzr4",
+          "name": "Orange",
+          "holeYardages": [
+            296,
+            129,
+            257,
+            306,
+            110,
+            300,
+            435,
+            260,
+            375,
+            112,
+            380,
+            285,
+            300,
+            310,
+            401,
+            315,
+            140,
+            335
+          ],
+          "holeParsOverride": [
+            4,
+            3,
+            4,
+            4,
+            3,
+            4,
+            5,
+            4,
+            5,
+            3,
+            5,
+            4,
+            4,
+            4,
+            5,
+            4,
+            3,
+            4
+          ],
+          "slope": 64.9,
+          "rating": 109
+        },
+        {
+          "id": "tee_msbwyncq_jbmi63",
+          "name": "Whte",
+          "holeYardages": [
+            366,
+            135,
+            325,
+            347,
+            123,
+            375,
+            500,
+            323,
+            388,
+            176,
+            401,
+            348,
+            365,
+            370,
+            460,
+            375,
+            147,
+            362
+          ],
+          "holeParsOverride": null,
+          "slope": null,
+          "rating": null
+        }
+      ],
+      "defaultTeeSetId": "tee_msbwweh9_luuzr4",
       "verified": false
     },
     {
@@ -302,7 +390,7 @@
           "rating": 98
         }
       ],
-      "defaultTeeSetId": null,
+      "defaultTeeSetId": "tee_ms6k8jhu_a1q4yc",
       "verified": false
     }
   ],
@@ -711,7 +799,7 @@
         8,
         5,
         7,
-        10,
+        9,
         7,
         6,
         8

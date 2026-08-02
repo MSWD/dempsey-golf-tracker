@@ -154,6 +154,24 @@ mirrored. "Remove match" deletes the match; if it has any mirrored rounds, you'l
 to delete those too, or leave them in place on the Rounds page (you can always delete them
 separately from there afterward).
 
+**Fixing a mistake after the fact:**
+
+- **A score entry** — every row in a team's table has **Edit** and **Remove** buttons. Edit reloads
+  that player, starter flag, hole scores, and putts into the entry form above (button becomes
+  "Update score") so you can correct any of it, including re-designating who's a starter after the
+  fact — say you sent your last two players off first and only want your top 6 scores to count.
+  Updating an entry updates its mirrored round in place rather than creating a second one. Remove
+  deletes just that one row; if it has a mirrored round, you'll get the same keep-or-delete choice
+  as removing a whole match.
+- **The match itself** — "Edit match" lets you correct the date, home/away, course, side, or tee
+  set after creation. Team count can't be changed once the match is created. Since every entry's
+  mirrored round shares the match's course/date/side/tee, editing any of those cascades to every
+  round tied to this match, not just the one you're looking at.
+- **A team's name** — "Rename" next to either team's name (including your own) lets you replace
+  the default "Opponent 1"/"Opponent 2" placeholder with the actual school name, any time after
+  creation — useful since matches get published and "Opponent 1" isn't a great look in a public
+  report.
+
 ### Export / Import (season data)
 
 "Export season" downloads everything as a JSON file — do this regularly as a backup, since your

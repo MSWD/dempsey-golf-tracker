@@ -76,6 +76,10 @@ Add players with first name, last name, and grade. Use the "Active" checkbox to 
 rank/rounds without deleting their history — inactive players keep their past rounds but drop off
 the rank table and round-entry player list.
 
+In admin mode, click a player's row to load them into the form above for editing (typo fixes,
+grade changes as they move up a grade) — the form becomes "Edit player" with Update/Cancel buttons,
+same pattern as editing a round.
+
 ### Courses
 
 Enter each course's hole pars as either a 9-hole card or a full 18-hole card. For an 18-hole
@@ -90,9 +94,20 @@ check "different par on this tee" if that specific tee actually changes par on a
 (rare). Selecting a tee set when logging a round or match shows the resulting par and yardage for
 the selected side.
 
+In admin mode, click a course's name to load it into the top form for editing (name and pars —
+the 9/18-hole layout itself can't be changed once a course exists, since existing tee sets and
+rounds are sized to it). Click a tee set's name the same way to edit its yardages, par override,
+slope, or rating. Both follow the same Update/Cancel pattern as editing a round or player.
+
 Mark one tee set as the default (radio button in the tee sets table) if your team usually plays a
 particular color at that course — it'll be pre-selected next time you log a round or match there.
 Different courses can have different defaults.
+
+Mark one course as your "Home" course (radio button in the courses table, admin-only) if your team
+practices at the same course most of the time — it'll be pre-selected (along with its default tee,
+if it has one) whenever you log a new round, saving you a couple of clicks. Use "Clear home course"
+to go back to requiring an explicit choice every time. This is season data, so it travels with
+export/import, not something you set once in code.
 
 ### Rounds
 
@@ -106,6 +121,27 @@ Log tryout or practice rounds hole-by-hole. A couple of rules apply automaticall
 - **Adjusted score** — scores are normalized to a par-36 baseline so a round on an executive/short
   course compares fairly with a full 9-hole round. Rank and rolling average always use this
   adjusted number, never the raw score.
+- **Course selection** — the course field starts blank and must be explicitly chosen, unless a
+  home course is set (see Courses above), in which case that course is pre-selected but still
+  changeable.
+- **Holes default to par** — once a course (and side/tee, if applicable) is picked, each hole
+  score starts at that hole's par so you can just nudge the number up/down for a bogey or birdie
+  instead of typing every score from scratch. If you change the course, side, or tee set again
+  after one's already selected, you'll get a warning first ("resets all 9 hole scores to the new
+  selection's par") since it wipes out anything entered so far — choosing to cancel puts the
+  course/side/tee selection back exactly as it was, with your scores untouched.
+
+Click any row in the rounds table to expand it and see the hole-by-hole scores. In admin mode, the
+expanded row has an **Edit** button that reloads the round into the form above for correction.
+
+Match rounds also show up in this table (type "Match") — every own-roster player's score in a
+match is automatically mirrored here as a round, so it counts toward rank and rolling average the
+same as a tryout or practice round, weighted no differently. These rows have no Edit button, since
+the match itself is the source of truth for that score — correct it from the Matches page instead.
+
+The rounds table can be filtered by player, type (including Match), course, and/or a date range
+(from/to) — filters combine (all conditions must match) and are visible to everyone, not just
+admins. Filters reset on page reload; they don't persist across visits.
 
 ### Rank
 
@@ -122,16 +158,33 @@ This tab is where the local-vs-published distinction shows up most directly:
   browser almost never has the coach's actual data in it, so showing a "rank table" computed from
   it would just be showing empty or stale numbers.
 
+If a team turns on `extendedRankingStats` in its team config, the rank table (and the matching
+published report) also shows each player's tryout average, personal best, rounds played so far,
+and an estimated 9-hole handicap. The rounds-played cell is shaded red/yellow/green against
+configurable thresholds so a coach can see at a glance who still needs more rounds in. Match scores
+count toward rolling average, personal best, and rounds played, but are excluded from the tryout
+average, since that's specifically about tryout performance.
+
+Players tied on the displayed rolling average (to one decimal place) share a rank, shown as e.g.
+"T2" — the next distinct rank then skips ahead by however many players were tied (two players
+tied at rank 2 push the next player to rank 4, not 3), same convention as competition golf
+leaderboards.
+
 ### Charts
 
 Per-player scoring and putts trends over time, drawn from the same rounds used for rank.
 
 ### Matches
 
-A match card can have 2 or 3 teams. Add each team's players with their hole-by-hole scores;
-uncheck "Starter" for anyone who's just playing an extra round that day and shouldn't count toward
-the team score. Team score is the sum of the 4 lowest scores among the 6 starters who posted a
-valid score — if fewer than 4 have, it shows as "incomplete" rather than guessing a number. The
+A match card can have 2 or 3 teams. Add each team's players with their hole-by-hole scores — like
+the Rounds page, each hole starts at that hole's par so you can nudge it up/down rather than
+typing from scratch; unlike Rounds, changing a match's course/side/tee happens through "Edit
+match" (see below), not inline in the score-entry row, so there's no reset-to-par warning here —
+editing the match header never touches scores you've already entered, only where new entries
+default to. Uncheck "Starter" for anyone who's just playing an extra round that day and shouldn't
+count toward the team score. Team score is the sum of the 4 lowest scores among the 6 starters who
+posted a valid score — if fewer than 4 have, it shows as "incomplete" rather than guessing a
+number. The
 lowest-scoring team in a match is highlighted with a "Winner" badge once at least two teams have a
 complete score. The player (or players, if tied) with the lowest individual score across every
 team in the match gets a 🏆 medalist badge.
@@ -139,6 +192,30 @@ team in the match gets a 🏆 medalist badge.
 The "Season record" shown at the top counts a 3-team match as two separate results — one against
 each opponent — since your team might beat one and lose to the other in the same match. A result
 only counts once both teams being compared have a complete score.
+
+Each own-roster player's score is automatically mirrored to the Rounds page as it's entered (see
+Rounds above) — opposing-team players and free-text guests aren't on your roster, so they're never
+mirrored. "Remove match" deletes the match; if it has any mirrored rounds, you'll be asked whether
+to delete those too, or leave them in place on the Rounds page (you can always delete them
+separately from there afterward).
+
+**Fixing a mistake after the fact:**
+
+- **A score entry** — every row in a team's table has **Edit** and **Remove** buttons. Edit reloads
+  that player, starter flag, hole scores, and putts into the entry form above (button becomes
+  "Update score") so you can correct any of it, including re-designating who's a starter after the
+  fact — say you sent your last two players off first and only want your top 6 scores to count.
+  Updating an entry updates its mirrored round in place rather than creating a second one. Remove
+  deletes just that one row; if it has a mirrored round, you'll get the same keep-or-delete choice
+  as removing a whole match.
+- **The match itself** — "Edit match" lets you correct the date, home/away, course, side, or tee
+  set after creation. Team count can't be changed once the match is created. Since every entry's
+  mirrored round shares the match's course/date/side/tee, editing any of those cascades to every
+  round tied to this match, not just the one you're looking at.
+- **A team's name** — "Rename" next to either team's name (including your own) lets you replace
+  the default "Opponent 1"/"Opponent 2" placeholder with the actual school name, any time after
+  creation — useful since matches get published and "Opponent 1" isn't a great look in a public
+  report.
 
 **Unlike the Rank tab, the Matches tab always shows this browser's local data, to viewers and
 admins alike** — it does not currently redirect viewers to the published report or link out to it.

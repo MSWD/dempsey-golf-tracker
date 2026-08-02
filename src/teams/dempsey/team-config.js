@@ -39,4 +39,13 @@ const TEAM_CONFIG = {
   // Optional — highlights the top N ranked players on the rankings screen (Dempsey always plays
   // its top 3 in matches). Omit this field for teams that don't want the highlight.
   rankHighlightCount: 3,
+
+  // Optional — extra rankings columns (tryout avg, personal best, 9-hole HCP) plus red/yellow/
+  // green shading on the rounds-played count, so the coach can see at a glance who still needs
+  // rounds toward the coach's own 6-round target. Omit this field (or set enabled: false) for
+  // teams that don't want it.
+  extendedRankingStats: {
+    enabled: true,
+    roundsThresholds: { yellow: 4, green: 6 }, // red below yellow, yellow up to (not incl.) green
+  },
 };

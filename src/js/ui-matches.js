@@ -3,8 +3,49 @@
 // model) so team score can be computed from the 6 starters only, per rule 5 — alternates never
 // count toward it even if they post a score.
 
+// Ephemeral "click to edit" state for the Matches page — mirrors the editingRoundId pattern in
+// ui-rounds.js. Only one edit is ever in flight at a time; starting a new one (header, a team's
+// name, or a single score entry) implicitly cancels whatever was in progress, same as every other
+// edit-in-place form in this app. Shapes:
+//   { kind: 'header', matchId }
+//   { kind: 'teamName', matchId, teamId }
+//   { kind: 'entry', matchId, teamId, entryIndex }
+let matchEditState = null;
+
 function matchHolePars(match) {
   return resolveHolePars(match, getCourseById);
+}
+
+// Keeps each own-roster player entry's linked `rounds` record in sync with the match, so
+// `playerRankingStats()` (which only reads `rounds`) picks up match scores without needing to know
+// anything about matches. Opponents/guests (no `playerId`) are skipped — they're not on our roster
+// and have nothing to rank. Entries remember their round via `roundId` so a future edit of an
+// existing entry (not possible yet — today's UI only ever appends) would update that round in
+// place rather than creating a duplicate.
+function syncMatchRounds(match) {
+  match.teams.forEach((team) => {
+    team.players.forEach((entry) => {
+      if (!entry.playerId) return;
+      const roundFields = {
+        playerId: entry.playerId,
+        date: match.date,
+        type: 'match',
+        courseId: match.courseId,
+        teeSetId: match.teeSetId,
+        side: match.side,
+        inlineHolePars: match.inlineHolePars,
+        holeScores: entry.holeScores,
+        putts: entry.putts,
+        matchId: match.id,
+      };
+      const existing = entry.roundId ? DataStore.getById('rounds', entry.roundId) : null;
+      if (existing) {
+        DataStore.update('rounds', existing.id, roundFields);
+      } else {
+        entry.roundId = DataStore.add('rounds', newRound(roundFields)).id;
+      }
+    });
+  });
 }
 
 // Own team's season W-L-T. A tri-match counts as two separate decisions — one against each
@@ -38,29 +79,33 @@ function renderMatchesView() {
   const courses = DataStore.getAll('courses').slice().sort((a, b) => a.name.localeCompare(b.name));
   const matches = DataStore.getAll('matches').slice().sort((a, b) => new Date(b.date) - new Date(a.date));
   const record = computeSeasonRecord(matches);
+  const editingMatch = matchEditState?.kind === 'header' ? DataStore.getById('matches', matchEditState.matchId) : null;
 
   el.innerHTML = `
     <p class="season-record"><strong>Season record:</strong> ${record.wins}-${record.losses}-${record.ties}</p>
     <div class="card admin-only">
-      <h2>New match</h2>
+      <h2>${editingMatch ? 'Edit match' : 'New match'}</h2>
       <div class="form-row">
-        <input type="date" id="match-date" value="${new Date().toISOString().slice(0, 10)}">
+        <input type="date" id="match-date" value="${editingMatch ? escapeHtml(editingMatch.date) : new Date().toISOString().slice(0, 10)}">
         <select id="match-location">
-          <option value="Home">Home</option>
-          <option value="Away">Away</option>
+          <option value="Home" ${editingMatch?.location === 'Home' ? 'selected' : ''}>Home</option>
+          <option value="Away" ${editingMatch?.location === 'Away' ? 'selected' : ''}>Away</option>
         </select>
         <select id="match-course">
-          ${courses.map((c) => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('')}
+          ${courses.map((c) => `<option value="${escapeHtml(c.id)}" ${editingMatch?.courseId === c.id ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}
         </select>
         <select id="match-side"></select>
         <select id="match-tee-set"></select>
-        <select id="match-team-count">
-          <option value="2">2 teams</option>
-          <option value="3">3 teams</option>
-        </select>
+        ${editingMatch
+          ? `<span class="muted">${editingMatch.teams.length} teams (can't change team count once created)</span>`
+          : `<select id="match-team-count">
+               <option value="2">2 teams</option>
+               <option value="3">3 teams</option>
+             </select>`}
       </div>
       <div class="muted" id="match-tee-info"></div>
-      <button class="primary" id="btn-add-match">Create match</button>
+      <button class="primary" id="btn-add-match">${editingMatch ? 'Update match' : 'Create match'}</button>
+      ${editingMatch ? '<button id="btn-cancel-match-edit">Cancel</button>' : ''}
     </div>
     <div id="matches-list"></div>
   `;
@@ -82,7 +127,9 @@ function renderMatchesView() {
       : `${sideText}Par ${teeSetTotalPar(course, null, side)} (course default)`;
   }
   updateSideOptions(matchCourseSelect.value, matchSideSelect);
+  if (editingMatch && editingMatch.side) matchSideSelect.value = editingMatch.side;
   updateTeeSetOptions(matchCourseSelect.value, matchTeeSelect);
+  if (editingMatch && editingMatch.teeSetId) matchTeeSelect.value = editingMatch.teeSetId;
   updateMatchTeeInfo();
   matchCourseSelect.addEventListener('change', () => {
     updateSideOptions(matchCourseSelect.value, matchSideSelect);
@@ -92,6 +139,9 @@ function renderMatchesView() {
   matchSideSelect.addEventListener('change', updateMatchTeeInfo);
   matchTeeSelect.addEventListener('change', updateMatchTeeInfo);
 
+  const cancelMatchEditBtn = el.querySelector('#btn-cancel-match-edit');
+  if (cancelMatchEditBtn) cancelMatchEditBtn.addEventListener('click', () => { matchEditState = null; renderMatchesView(); });
+
   el.querySelector('#btn-add-match').addEventListener('click', () => {
     const date = el.querySelector('#match-date').value;
     const location = el.querySelector('#match-location').value;
@@ -99,15 +149,23 @@ function renderMatchesView() {
     const course = getCourseById(courseId);
     const side = selectedSideForCourse(course, matchSideSelect.value);
     const teeSetId = matchTeeSelect.value || null;
-    const teamCount = Number(el.querySelector('#match-team-count').value);
     if (!date || !location || !courseId) {
       alert('Date, location, and course are required.');
       return;
     }
-    const teams = Array.from({ length: teamCount }, (_, i) =>
-      newMatchTeam({ name: i === 0 ? 'Dempsey' : `Opponent ${i}`, isOwnTeam: i === 0 })
-    );
-    DataStore.add('matches', newMatch({ date, location, courseId, teeSetId, side, teams }));
+    if (editingMatch) {
+      DataStore.update('matches', editingMatch.id, { date, location, courseId, teeSetId, side });
+      // Header fields (course/date/side/tee) are shared by every entry's mirrored round, so an
+      // edit here has to cascade to all of them, not just the most recently added one.
+      syncMatchRounds(editingMatch);
+      matchEditState = null;
+    } else {
+      const teamCount = Number(el.querySelector('#match-team-count').value);
+      const teams = Array.from({ length: teamCount }, (_, i) =>
+        newMatchTeam({ name: i === 0 ? 'Dempsey' : `Opponent ${i}`, isOwnTeam: i === 0 })
+      );
+      DataStore.add('matches', newMatch({ date, location, courseId, teeSetId, side, teams }));
+    }
     renderMatchesView();
   });
 
@@ -157,7 +215,11 @@ function renderMatchCard(match) {
   const medalistScore = computeMedalistScore(match);
   return `
     <div class="card" data-match-id="${escapeHtml(match.id)}">
-      <h3>${escapeHtml(match.date)} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${course && isEighteenHoleCourse(course) ? ` — ${sideLabel(side)}` : ''}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
+      <div class="form-row">
+        <h3>${escapeHtml(match.date)} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${course && isEighteenHoleCourse(course) ? ` — ${sideLabel(side)}` : ''}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
+        <button class="admin-only btn-edit-match">Edit match</button>
+        <button class="admin-only btn-remove-match">Remove match</button>
+      </div>
       ${holePars == null ? `
         <p class="muted"><span class="badge warn">Course unavailable</span> This match's course
         record can't be found (was it deleted?) — scores below can't be compared to par, and new
@@ -172,32 +234,53 @@ function renderMatchCard(match) {
 
 function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistScore) {
   const players = DataStore.getAll('players').slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
+  const renamingTeam = matchEditState?.kind === 'teamName' && matchEditState.matchId === match.id && matchEditState.teamId === team.id;
+  const editingEntryIndex = (matchEditState?.kind === 'entry' && matchEditState.matchId === match.id && matchEditState.teamId === team.id)
+    ? matchEditState.entryIndex
+    : null;
+  const editingEntry = editingEntryIndex != null ? team.players[editingEntryIndex] : null;
 
   return `
     <div class="card team-block${isWinner ? ' winning-team' : ''}" data-team-id="${escapeHtml(team.id)}">
       <div class="form-row">
-        <strong>${escapeHtml(team.name)}</strong>
+        ${renamingTeam ? `
+          <input type="text" class="team-name-input" value="${escapeHtml(team.name)}">
+          <button class="btn-save-team-name">Save</button>
+          <button class="btn-cancel-team-name">Cancel</button>
+        ` : `
+          <strong>${escapeHtml(team.name)}</strong>
+          <button class="admin-only btn-rename-team">Rename</button>
+        `}
         ${team.isOwnTeam ? '<span class="badge">own team</span>' : ''}
         ${isWinner ? '<span class="badge win">Winner</span>' : ''}
       </div>
       <div class="form-row add-player-row admin-only" data-match-id="${escapeHtml(match.id)}" data-team-id="${escapeHtml(team.id)}">
         ${team.isOwnTeam ? `
           <select class="player-select">
-            ${players.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
+            ${players.map((p) => `<option value="${escapeHtml(p.id)}" ${editingEntry && editingEntry.playerId === p.id ? 'selected' : ''}>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
           </select>
         ` : `
-          <input type="text" class="displayname-input" placeholder="Player name">
+          <input type="text" class="displayname-input" placeholder="Player name" value="${editingEntry ? escapeHtml(editingEntry.displayName) : ''}">
         `}
-        <label class="muted"><input type="checkbox" class="starter-checkbox" checked> Starter</label>
-        ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${sideHoleNumber(i, side)}">`).join('')}
-        <input type="number" class="putts-input input-narrow" placeholder="Putts">
-        <button class="btn-add-team-player">Add score</button>
+        <label class="muted"><input type="checkbox" class="starter-checkbox" ${editingEntry ? (editingEntry.isStarter ? 'checked' : '') : 'checked'}> Starter</label>
+        ${Array.from({ length: 9 }, (_, i) => {
+          // New entries default each hole to par so the coach can just nudge the number
+          // up/down for a bogey/birdie instead of typing every score from scratch. Editing an
+          // existing entry always shows what was actually recorded, never a par fallback.
+          const value = editingEntry
+            ? (editingEntry.holeScores[i] != null ? editingEntry.holeScores[i] : '')
+            : (holePars ? holePars[i] : '');
+          return `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${sideHoleNumber(i, side)}" value="${value}">`;
+        }).join('')}
+        <input type="number" class="putts-input input-narrow" placeholder="Putts" value="${editingEntry && editingEntry.putts != null ? editingEntry.putts : ''}">
+        <button class="btn-add-team-player">${editingEntry ? 'Update score' : 'Add score'}</button>
+        ${editingEntry ? '<button class="btn-cancel-entry-edit">Cancel</button>' : ''}
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Player</th><th>Starter</th><th>Score</th><th>Putts</th><th>Front3</th><th>Mid3</th><th>Back3</th><th>To Par</th></tr></thead>
+          <thead><tr><th>Player</th><th>Starter</th><th>Score</th><th>Putts</th><th>Front3</th><th>Mid3</th><th>Back3</th><th>To Par</th><th class="admin-only">Actions</th></tr></thead>
           <tbody>
-            ${team.players.map((p) => {
+            ${team.players.map((p, i) => {
               const raw = rawScoreOrNull(p.holeScores);
               const splits = holeSplits(p.holeScores);
               const par = holePars && raw != null ? toPar(raw, roundTotalPar(holePars)) : null;
@@ -212,6 +295,10 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
                 <td>${splits.mid3 ?? '—'}</td>
                 <td>${splits.back3 ?? '—'}</td>
                 <td>${par != null ? (par > 0 ? `+${par}` : par) : '—'}</td>
+                <td class="admin-only">
+                  <button class="btn-edit-entry" data-entry-index="${i}">Edit</button>
+                  <button class="btn-remove-entry" data-entry-index="${i}">Remove</button>
+                </td>
               </tr>`;
             }).join('')}
           </tbody>
@@ -256,9 +343,114 @@ function wireMatchCard(match, card) {
       const capped = capAllHoleScores(rawInputs, holePars);
       const putts = Number(row.querySelector('.putts-input').value) || null;
 
-      team.players.push({ playerId, displayName, holeScores: capped.map((c) => c.value), putts, isStarter });
+      const editingThisRow = matchEditState?.kind === 'entry' && matchEditState.matchId === match.id && matchEditState.teamId === teamId;
+      if (editingThisRow) {
+        // Mutate the existing entry in place (keeps its `roundId`) rather than replacing it, so
+        // syncMatchRounds below updates the linked round instead of creating a duplicate.
+        Object.assign(team.players[matchEditState.entryIndex], {
+          playerId, displayName, holeScores: capped.map((c) => c.value), putts, isStarter,
+        });
+        matchEditState = null;
+      } else {
+        team.players.push({ playerId, displayName, holeScores: capped.map((c) => c.value), putts, isStarter, roundId: null });
+      }
+      syncMatchRounds(match);
       DataStore.update('matches', match.id, { teams: match.teams });
       renderMatchesView();
     });
+
+    const cancelEntryBtn = row.querySelector('.btn-cancel-entry-edit');
+    if (cancelEntryBtn) cancelEntryBtn.addEventListener('click', () => { matchEditState = null; renderMatchesView(); });
   });
+
+  card.querySelectorAll('.btn-edit-entry').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const teamId = btn.closest('.team-block').dataset.teamId;
+      matchEditState = { kind: 'entry', matchId: match.id, teamId, entryIndex: Number(btn.dataset.entryIndex) };
+      renderMatchesView();
+      document.getElementById('view-matches').querySelector(`.team-block[data-team-id="${teamId}"] .add-player-row`).scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  card.querySelectorAll('.btn-remove-entry').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const teamId = btn.closest('.team-block').dataset.teamId;
+      const team = match.teams.find((t) => t.id === teamId);
+      const index = Number(btn.dataset.entryIndex);
+      const entry = team.players[index];
+      if (!confirm(`Remove ${entry.displayName}'s score?`)) return;
+      const linkedRound = entry.roundId ? DataStore.getById('rounds', entry.roundId) : null;
+      if (linkedRound) {
+        const removeRound = confirm(
+          `This score has a linked round that counts toward rankings. Delete it too?\n\n` +
+          `OK: delete the round as well.\n` +
+          `Cancel: keep it — it'll stay on the Rounds page without a match link.`
+        );
+        if (removeRound) DataStore.remove('rounds', linkedRound.id);
+      }
+      team.players.splice(index, 1);
+      DataStore.update('matches', match.id, { teams: match.teams });
+      // Indices shift after a splice, so any other in-flight entry edit for this match can no
+      // longer be trusted to point at the right row — cancel it rather than risk editing the
+      // wrong one.
+      if (matchEditState?.kind === 'entry' && matchEditState.matchId === match.id) matchEditState = null;
+      renderMatchesView();
+    });
+  });
+
+  card.querySelectorAll('.btn-rename-team').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const teamId = btn.closest('.team-block').dataset.teamId;
+      matchEditState = { kind: 'teamName', matchId: match.id, teamId };
+      renderMatchesView();
+    });
+  });
+
+  card.querySelectorAll('.btn-save-team-name').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const block = btn.closest('.team-block');
+      const name = block.querySelector('.team-name-input').value.trim();
+      if (!name) {
+        alert('Team name is required.');
+        return;
+      }
+      const team = match.teams.find((t) => t.id === block.dataset.teamId);
+      team.name = name;
+      DataStore.update('matches', match.id, { teams: match.teams });
+      matchEditState = null;
+      renderMatchesView();
+    });
+  });
+
+  card.querySelectorAll('.btn-cancel-team-name').forEach((btn) => {
+    btn.addEventListener('click', () => { matchEditState = null; renderMatchesView(); });
+  });
+
+  const editMatchBtn = card.querySelector('.btn-edit-match');
+  if (editMatchBtn) {
+    editMatchBtn.addEventListener('click', () => {
+      matchEditState = { kind: 'header', matchId: match.id };
+      renderMatchesView();
+      document.getElementById('view-matches').querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
+  const removeBtn = card.querySelector('.btn-remove-match');
+  if (removeBtn) {
+    removeBtn.addEventListener('click', () => {
+      if (!confirm('Delete this match?')) return;
+      const linkedRounds = DataStore.getAll('rounds').filter((r) => r.matchId === match.id);
+      if (linkedRounds.length) {
+        const removeRounds = confirm(
+          `This match has ${linkedRounds.length} linked round(s) that count toward rankings. Delete them too?\n\n` +
+          `OK: delete the round(s) as well.\n` +
+          `Cancel: keep them — they'll stay on the Rounds page without a match link. You can delete them separately from there later if you want.`
+        );
+        if (removeRounds) linkedRounds.forEach((r) => DataStore.remove('rounds', r.id));
+      }
+      DataStore.remove('matches', match.id);
+      if (matchEditState?.matchId === match.id) matchEditState = null;
+      renderMatchesView();
+    });
+  }
 }

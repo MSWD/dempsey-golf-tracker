@@ -256,6 +256,31 @@ input[type="text"], input[type="number"], input[type="date"], select {
   font-weight: bold;
 }
 
+.rounds-red { background: #f5c2c2; }
+.rounds-yellow { background: #fbe8a6; }
+.rounds-green { background: #cdeecd; }
+
+.round-row {
+  cursor: pointer;
+}
+
+.round-detail td {
+  background: #fafaf6;
+}
+
+/* Unlike round rows (clickable for everyone, to reveal hole detail), a player row only does
+   something for admins — clicking loads it into the edit form — so the pointer cursor is scoped to
+   admin mode to avoid promising an interaction viewers don't have. */
+body.admin-mode .player-row {
+  cursor: pointer;
+}
+
+.editable-name {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
 /* Hidden by default (safe: viewer mode) until app.js confirms admin and adds .admin-mode to body. */
 .admin-only { display: none; }
 body.admin-mode .admin-only { display: revert; }

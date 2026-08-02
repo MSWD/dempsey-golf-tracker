@@ -81,18 +81,12 @@ function renderRankings(asOfDate) {
 
   const roundsAsOf = asOfDate ? rounds.filter((r) => r.date <= asOfDate) : rounds;
   const activePlayers = players.filter((p) => p.active);
+  const extended = TEAM_CONFIG.extendedRankingStats?.enabled;
 
-  const withAverage = activePlayers.map((p) => {
-    const chrono = roundsAsOf
-      .filter((r) => r.playerId === p.id)
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .map((r) => {
-        const holePars = resolveHolePars(r, getCourseByIdLocal);
-        if (!holePars || !isValidRound(r.holeScores)) return null;
-        return adjustedScore(r.holeScores, holePars);
-      });
-    return { ...p, rollingAverage: rollingAverage(chrono) };
-  });
+  const withAverage = activePlayers.map((p) => ({
+    ...p,
+    ...playerRankingStats(roundsAsOf.filter((r) => r.playerId === p.id), getCourseByIdLocal),
+  }));
 
   const ranked = rankPlayers(withAverage);
 
@@ -103,7 +97,10 @@ function renderRankings(asOfDate) {
     </p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Rank</th><th>Player</th><th>Grade</th><th>Rolling avg (best 4 of last 6)</th></tr></thead>
+        <thead><tr>
+          <th>Rank</th><th>Player</th><th>Grade</th><th>Rolling avg (best 4 of last 6)</th>
+          ${extended ? '<th>Tryout Avg</th><th>Best</th><th>Rounds</th><th>HCP</th>' : ''}
+        </tr></thead>
         <tbody>
           ${ranked.map((p) => `
             <tr class="${p.rank != null && p.rank <= (TEAM_CONFIG.rankHighlightCount || 0) ? 'rank-highlight' : ''}">
@@ -111,12 +108,24 @@ function renderRankings(asOfDate) {
               <td>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td>
               <td>${escapeHtml(p.grade)}</td>
               <td>${p.rollingAverage != null ? p.rollingAverage.toFixed(1) : 'No rounds yet'}</td>
+              ${extended ? `
+                <td>${p.tryoutAverage != null ? p.tryoutAverage.toFixed(1) : ''}</td>
+                <td>${p.personalBest != null ? p.personalBest.toFixed(1) : '—'}</td>
+                <td class="${roundsCountClass(p.validRoundsCount, TEAM_CONFIG.extendedRankingStats.roundsThresholds)}">${p.validRoundsCount}</td>
+                <td>${p.nineHoleHandicap != null ? p.nineHoleHandicap.toFixed(1) : '—'}</td>
+              ` : ''}
             </tr>
           `).join('')}
         </tbody>
       </table>
     </div>
   `;
+}
+
+function roundsCountClass(count, thresholds) {
+  if (count >= thresholds.green) return 'rounds-green';
+  if (count >= thresholds.yellow) return 'rounds-yellow';
+  return 'rounds-red';
 }
 
 // Own team's season W-L-T. A tri-match counts as two separate decisions — one against each

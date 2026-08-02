@@ -263,7 +263,15 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
           <input type="text" class="displayname-input" placeholder="Player name" value="${editingEntry ? escapeHtml(editingEntry.displayName) : ''}">
         `}
         <label class="muted"><input type="checkbox" class="starter-checkbox" ${editingEntry ? (editingEntry.isStarter ? 'checked' : '') : 'checked'}> Starter</label>
-        ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${sideHoleNumber(i, side)}" value="${editingEntry && editingEntry.holeScores[i] != null ? editingEntry.holeScores[i] : ''}">`).join('')}
+        ${Array.from({ length: 9 }, (_, i) => {
+          // New entries default each hole to par so the coach can just nudge the number
+          // up/down for a bogey/birdie instead of typing every score from scratch. Editing an
+          // existing entry always shows what was actually recorded, never a par fallback.
+          const value = editingEntry
+            ? (editingEntry.holeScores[i] != null ? editingEntry.holeScores[i] : '')
+            : (holePars ? holePars[i] : '');
+          return `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${sideHoleNumber(i, side)}" value="${value}">`;
+        }).join('')}
         <input type="number" class="putts-input input-narrow" placeholder="Putts" value="${editingEntry && editingEntry.putts != null ? editingEntry.putts : ''}">
         <button class="btn-add-team-player">${editingEntry ? 'Update score' : 'Add score'}</button>
         ${editingEntry ? '<button class="btn-cancel-entry-edit">Cancel</button>' : ''}

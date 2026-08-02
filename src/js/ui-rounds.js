@@ -129,6 +129,18 @@ function renderRoundsView(warningMessage, editingRoundId) {
       ? `${sideText}Par ${par}${yards != null ? `, ${yards} yds` : ''}${teeSet.holeParsOverride ? ' (par differs on this tee)' : ''}`
       : `${sideText}Par ${teeSetTotalPar(course, null, side)} (course default)`;
     updateHolePlaceholders(el.querySelector('#round-holes'), side);
+    // New rounds default each hole to par so the coach can just nudge the number up/down for a
+    // bogey/birdie instead of typing every score — same as the match-entry form. Editing an
+    // existing round always shows what was actually recorded, never a par fallback. Holes the
+    // coach has already typed into (`data-touched`) are left alone even when the course/side/tee
+    // selection changes afterward, so a mid-entry course correction doesn't wipe real scores.
+    if (!editingRound) {
+      const holePars = teeSetEffectiveHolePars(course, teeSet, side);
+      el.querySelectorAll('#round-holes .hole-input').forEach((input, i) => {
+        if (input.dataset.touched === 'true') return;
+        input.value = holePars[i];
+      });
+    }
   }
 
   if (editingRound) {
@@ -151,6 +163,9 @@ function renderRoundsView(warningMessage, editingRoundId) {
   });
   roundSideSelect.addEventListener('change', updateRoundTeeInfo);
   roundTeeSelect.addEventListener('change', updateRoundTeeInfo);
+  el.querySelectorAll('#round-holes .hole-input').forEach((input) => {
+    input.addEventListener('input', () => { input.dataset.touched = 'true'; });
+  });
 
   const cancelBtn = el.querySelector('#btn-cancel-edit');
   if (cancelBtn) cancelBtn.addEventListener('click', () => renderRoundsView(null, null));

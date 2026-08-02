@@ -1,3 +1,8 @@
+// Lives at module scope (not inside renderRoundsView) so selections survive a re-render — the
+// view gets rebuilt from scratch on every save/edit/cancel, but the filter should feel persistent
+// for the length of the session. Resets on page reload, which is the intended scope.
+const roundsFilterState = { playerId: '', type: '', courseId: '', dateFrom: '', dateTo: '' };
+
 function getCourseById(id) {
   return DataStore.getById('courses', id);
 }
@@ -38,27 +43,20 @@ function updateHolePlaceholders(container, side) {
   });
 }
 
-// Chronological adjusted scores for a player, oldest first (tryouts naturally sort first by date).
-function playerAdjustedScores(playerId) {
-  return DataStore.getAll('rounds')
-    .filter((r) => r.playerId === playerId)
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .map((r) => {
-      const holePars = resolveHolePars(r, getCourseById);
-      if (!holePars || !isValidRound(r.holeScores)) return null;
-      return adjustedScore(r.holeScores, holePars);
-    });
-}
-
-function renderRoundsView(warningMessage) {
+function renderRoundsView(warningMessage, editingRoundId) {
   const el = document.getElementById('view-rounds');
   const players = DataStore.getAll('players').filter((p) => p.active).sort((a, b) => a.lastName.localeCompare(b.lastName));
+  // Unlike the log-round form's player list above, filtering needs every player who could own a
+  // historical round, including ones since marked inactive — otherwise their old rounds become
+  // impossible to isolate in the table.
+  const allPlayers = DataStore.getAll('players').slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
   const courses = DataStore.getAll('courses').slice().sort((a, b) => a.name.localeCompare(b.name));
   const rounds = DataStore.getAll('rounds').slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+  const editingRound = editingRoundId ? DataStore.getById('rounds', editingRoundId) : null;
 
   el.innerHTML = `
     <div class="card admin-only">
-      <h2>Log a round</h2>
+      <h2>${editingRound ? 'Edit a round' : 'Log a round'}</h2>
       <div class="form-row">
         <select id="round-player">
           ${players.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
@@ -68,20 +66,42 @@ function renderRoundsView(warningMessage) {
           <option value="practice">Practice</option>
         </select>
         <select id="round-course">
+          <option value="">— select a course —</option>
           ${courses.map((c) => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('')}
         </select>
         <select id="round-side"></select>
         <select id="round-tee-set"></select>
-        <input type="date" id="round-date" value="${new Date().toISOString().slice(0, 10)}">
+        <input type="date" id="round-date" value="${editingRound ? escapeHtml(editingRound.date) : new Date().toISOString().slice(0, 10)}">
       </div>
       <div class="muted" id="round-tee-info"></div>
       <div class="form-row" id="round-holes">
-        ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${i + 1}">`).join('')}
-        <input type="number" id="round-putts" class="input-narrow" placeholder="Putts">
+        ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${i + 1}" value="${editingRound && editingRound.holeScores[i] != null ? editingRound.holeScores[i] : ''}">`).join('')}
+        <input type="number" id="round-putts" class="input-narrow" placeholder="Putts" value="${editingRound && editingRound.putts != null ? editingRound.putts : ''}">
       </div>
-      <button class="primary" id="btn-add-round">Save round</button>
+      <button class="primary" id="btn-add-round">${editingRound ? 'Update round' : 'Save round'}</button>
+      ${editingRound ? '<button id="btn-cancel-edit">Cancel</button>' : ''}
       <div class="muted" id="round-warning">${warningMessage ?? ''}</div>
     </div>
+    <p class="muted">Click a row to see hole-by-hole detail<span class="admin-only"> and edit</span>.</p>
+    <div class="form-row" id="rounds-filter">
+      <select id="filter-player">
+        <option value="">All players</option>
+        ${allPlayers.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
+      </select>
+      <select id="filter-type">
+        <option value="">All types</option>
+        <option value="tryout">Tryout</option>
+        <option value="practice">Practice</option>
+      </select>
+      <select id="filter-course">
+        <option value="">All courses</option>
+        ${courses.map((c) => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('')}
+      </select>
+      <label class="muted">From <input type="date" id="filter-date-from"></label>
+      <label class="muted">To <input type="date" id="filter-date-to"></label>
+      <button id="btn-clear-filters">Clear filters</button>
+    </div>
+    <p class="muted" id="rounds-filter-count"></p>
     <div class="table-wrap">
       <table>
         <thead>
@@ -109,8 +129,19 @@ function renderRoundsView(warningMessage) {
       : `${sideText}Par ${teeSetTotalPar(course, null, side)} (course default)`;
     updateHolePlaceholders(el.querySelector('#round-holes'), side);
   }
+
+  if (editingRound) {
+    el.querySelector('#round-player').value = editingRound.playerId;
+    el.querySelector('#round-type').value = editingRound.type;
+    roundCourseSelect.value = editingRound.courseId ?? '';
+  } else {
+    const homeCourseId = DataStore.getHomeCourseId();
+    if (homeCourseId && getCourseById(homeCourseId)) roundCourseSelect.value = homeCourseId;
+  }
   updateSideOptions(roundCourseSelect.value, roundSideSelect);
+  if (editingRound && editingRound.side) roundSideSelect.value = editingRound.side;
   updateTeeSetOptions(roundCourseSelect.value, roundTeeSelect);
+  if (editingRound && editingRound.teeSetId) roundTeeSelect.value = editingRound.teeSetId;
   updateRoundTeeInfo();
   roundCourseSelect.addEventListener('change', () => {
     updateSideOptions(roundCourseSelect.value, roundSideSelect);
@@ -120,31 +151,110 @@ function renderRoundsView(warningMessage) {
   roundSideSelect.addEventListener('change', updateRoundTeeInfo);
   roundTeeSelect.addEventListener('change', updateRoundTeeInfo);
 
+  const cancelBtn = el.querySelector('#btn-cancel-edit');
+  if (cancelBtn) cancelBtn.addEventListener('click', () => renderRoundsView(null, null));
+
+  function matchesFilter(r) {
+    if (roundsFilterState.playerId && r.playerId !== roundsFilterState.playerId) return false;
+    if (roundsFilterState.type && r.type !== roundsFilterState.type) return false;
+    if (roundsFilterState.courseId && r.courseId !== roundsFilterState.courseId) return false;
+    if (roundsFilterState.dateFrom && r.date < roundsFilterState.dateFrom) return false;
+    if (roundsFilterState.dateTo && r.date > roundsFilterState.dateTo) return false;
+    return true;
+  }
+
   const rows = el.querySelector('#rounds-rows');
-  rows.innerHTML = rounds.map((r) => {
-    const player = DataStore.getById('players', r.playerId);
-    const course = getCourseById(r.courseId);
-    const teeSet = findTeeSet(course, r.teeSetId);
-    const side = selectedSideForCourse(course, r.side);
-    const holePars = resolveHolePars(r, getCourseById);
-    const raw = rawScoreOrNull(r.holeScores);
-    const holesPlayed = holesPlayedCount(r.holeScores);
-    const valid = isValidRound(r.holeScores);
-    const adj = holePars && valid ? adjustedScore(r.holeScores, holePars) : null;
-    return `
-      <tr>
-        <td>${escapeHtml(r.date)}</td>
-        <td>${player ? `${escapeHtml(player.firstName)} ${escapeHtml(player.lastName)}` : '—'}</td>
-        <td>${escapeHtml(r.type)}</td>
-        <td>${course ? escapeHtml(course.name) : '—'}</td>
-        <td>${course && isEighteenHoleCourse(course) ? sideLabel(side) : '—'}</td>
-        <td>${teeSet ? escapeHtml(teeSet.name) : '—'}</td>
-        <td>${holesPlayed}${!valid ? ' <span class="badge warn">incomplete</span>' : ''}</td>
-        <td>${raw ?? '—'}</td>
-        <td>${adj != null ? adj.toFixed(1) : '—'}</td>
-      </tr>
-    `;
-  }).join('');
+  const filterCount = el.querySelector('#rounds-filter-count');
+
+  function renderFilteredRows() {
+    const filtered = rounds.filter(matchesFilter);
+    filterCount.textContent = filtered.length === rounds.length
+      ? `${rounds.length} round${rounds.length === 1 ? '' : 's'}`
+      : `${filtered.length} of ${rounds.length} rounds shown`;
+
+    rows.innerHTML = filtered.map((r) => {
+      const player = DataStore.getById('players', r.playerId);
+      const course = getCourseById(r.courseId);
+      const teeSet = findTeeSet(course, r.teeSetId);
+      const side = selectedSideForCourse(course, r.side);
+      const holePars = resolveHolePars(r, getCourseById);
+      const raw = rawScoreOrNull(r.holeScores);
+      const holesPlayed = holesPlayedCount(r.holeScores);
+      const valid = isValidRound(r.holeScores);
+      const adj = holePars && valid ? adjustedScore(r.holeScores, holePars) : null;
+      const detailCells = holePars
+        ? r.holeScores.map((s, i) => `<td>H${sideHoleNumber(i, side)}<br>${s ?? '—'}</td>`).join('')
+        : r.holeScores.map((s) => `<td>${s ?? '—'}</td>`).join('');
+      return `
+        <tr class="round-row" data-round-id="${escapeHtml(r.id)}">
+          <td>${escapeHtml(r.date)}</td>
+          <td>${player ? `${escapeHtml(player.firstName)} ${escapeHtml(player.lastName)}` : '—'}</td>
+          <td>${escapeHtml(r.type)}</td>
+          <td>${course ? escapeHtml(course.name) : '—'}</td>
+          <td>${course && isEighteenHoleCourse(course) ? sideLabel(side) : '—'}</td>
+          <td>${teeSet ? escapeHtml(teeSet.name) : '—'}</td>
+          <td>${holesPlayed}${!valid ? ' <span class="badge warn">incomplete</span>' : ''}</td>
+          <td>${raw ?? '—'}</td>
+          <td>${adj != null ? adj.toFixed(1) : '—'}</td>
+        </tr>
+        <tr class="round-detail hidden" data-round-id="${escapeHtml(r.id)}">
+          <td colspan="9">
+            <div class="table-wrap">
+              <table><tbody><tr>${detailCells}</tr></tbody></table>
+            </div>
+            <button class="admin-only btn-edit-round" data-round-id="${escapeHtml(r.id)}">Edit</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  rows.addEventListener('click', (e) => {
+    const editBtn = e.target.closest('.btn-edit-round');
+    if (editBtn) {
+      e.stopPropagation();
+      renderRoundsView(null, editBtn.dataset.roundId);
+      el.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    const row = e.target.closest('tr[data-round-id]');
+    if (!row) return;
+    const detail = rows.querySelector(`.round-detail[data-round-id="${row.dataset.roundId}"]`);
+    if (detail) detail.classList.toggle('hidden');
+  });
+
+  const filterPlayerSelect = el.querySelector('#filter-player');
+  const filterTypeSelect = el.querySelector('#filter-type');
+  const filterCourseSelect = el.querySelector('#filter-course');
+  const filterDateFrom = el.querySelector('#filter-date-from');
+  const filterDateTo = el.querySelector('#filter-date-to');
+
+  filterPlayerSelect.value = roundsFilterState.playerId;
+  filterTypeSelect.value = roundsFilterState.type;
+  filterCourseSelect.value = roundsFilterState.courseId;
+  filterDateFrom.value = roundsFilterState.dateFrom;
+  filterDateTo.value = roundsFilterState.dateTo;
+
+  filterPlayerSelect.addEventListener('change', () => { roundsFilterState.playerId = filterPlayerSelect.value; renderFilteredRows(); });
+  filterTypeSelect.addEventListener('change', () => { roundsFilterState.type = filterTypeSelect.value; renderFilteredRows(); });
+  filterCourseSelect.addEventListener('change', () => { roundsFilterState.courseId = filterCourseSelect.value; renderFilteredRows(); });
+  filterDateFrom.addEventListener('change', () => { roundsFilterState.dateFrom = filterDateFrom.value; renderFilteredRows(); });
+  filterDateTo.addEventListener('change', () => { roundsFilterState.dateTo = filterDateTo.value; renderFilteredRows(); });
+  el.querySelector('#btn-clear-filters').addEventListener('click', () => {
+    roundsFilterState.playerId = '';
+    roundsFilterState.type = '';
+    roundsFilterState.courseId = '';
+    roundsFilterState.dateFrom = '';
+    roundsFilterState.dateTo = '';
+    filterPlayerSelect.value = '';
+    filterTypeSelect.value = '';
+    filterCourseSelect.value = '';
+    filterDateFrom.value = '';
+    filterDateTo.value = '';
+    renderFilteredRows();
+  });
+
+  renderFilteredRows();
 
   el.querySelector('#btn-add-round').addEventListener('click', () => {
     const playerId = el.querySelector('#round-player').value;
@@ -174,9 +284,13 @@ function renderRoundsView(warningMessage) {
     const anyCapped = capped.some((c) => c.wasCapped);
     const holeScores = capped.map((c) => c.value);
 
-    DataStore.add('rounds', newRound({ playerId, date, type, courseId, teeSetId, side, holeScores, putts }));
+    if (editingRound) {
+      DataStore.update('rounds', editingRound.id, { playerId, date, type, courseId, teeSetId, side, holeScores, putts });
+    } else {
+      DataStore.add('rounds', newRound({ playerId, date, type, courseId, teeSetId, side, holeScores, putts }));
+    }
 
-    renderRoundsView(anyCapped ? 'Note: one or more hole scores exceeded double-par and were capped.' : null);
+    renderRoundsView(anyCapped ? 'Note: one or more hole scores exceeded double-par and were capped.' : null, null);
   });
 }
 
@@ -199,10 +313,12 @@ function renderRankView() {
   }
 
   const players = DataStore.getAll('players').filter((p) => p.active);
+  const allRounds = DataStore.getAll('rounds');
+  const extended = TEAM_CONFIG.extendedRankingStats?.enabled;
 
   const withAverage = players.map((p) => ({
     ...p,
-    rollingAverage: rollingAverage(playerAdjustedScores(p.id)),
+    ...playerRankingStats(allRounds.filter((r) => r.playerId === p.id), getCourseById),
   }));
   const ranked = rankPlayers(withAverage);
 
@@ -211,7 +327,10 @@ function renderRankView() {
     <p><a href="reports/index.html" title="See current published report">See current published report</a></p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Rank</th><th>Player</th><th>Grade</th><th>Rolling avg (best 4 of last 6)</th></tr></thead>
+        <thead><tr>
+          <th>Rank</th><th>Player</th><th>Grade</th><th>Rolling avg (best 4 of last 6)</th>
+          ${extended ? '<th>Tryout Avg</th><th>Best</th><th>Rounds</th><th>HCP</th>' : ''}
+        </tr></thead>
         <tbody>
           ${ranked.map((p) => `
             <tr class="${p.rank != null && p.rank <= (TEAM_CONFIG.rankHighlightCount || 0) ? 'rank-highlight' : ''}">
@@ -219,10 +338,22 @@ function renderRankView() {
               <td>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td>
               <td>${escapeHtml(p.grade)}</td>
               <td>${p.rollingAverage != null ? p.rollingAverage.toFixed(1) : 'No rounds yet'}</td>
+              ${extended ? `
+                <td>${p.tryoutAverage != null ? p.tryoutAverage.toFixed(1) : ''}</td>
+                <td>${p.personalBest != null ? p.personalBest.toFixed(1) : '—'}</td>
+                <td class="${roundsCountClass(p.validRoundsCount, TEAM_CONFIG.extendedRankingStats.roundsThresholds)}">${p.validRoundsCount}</td>
+                <td>${p.nineHoleHandicap != null ? p.nineHoleHandicap.toFixed(1) : '—'}</td>
+              ` : ''}
             </tr>
           `).join('')}
         </tbody>
       </table>
     </div>
   `;
+}
+
+function roundsCountClass(count, thresholds) {
+  if (count >= thresholds.green) return 'rounds-green';
+  if (count >= thresholds.yellow) return 'rounds-yellow';
+  return 'rounds-red';
 }

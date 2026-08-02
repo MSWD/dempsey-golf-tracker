@@ -56,6 +56,10 @@ Add players with first name, last name, and grade. Use the "Active" checkbox to 
 rank/rounds without deleting their history — inactive players keep their past rounds but drop off
 the rank table and round-entry player list.
 
+In admin mode, click a player's row to load them into the form above for editing (typo fixes,
+grade changes as they move up a grade) — the form becomes "Edit player" with Update/Cancel buttons,
+same pattern as editing a round.
+
 ### Courses
 
 Enter each course's hole pars as either a 9-hole card or a full 18-hole card. For an 18-hole
@@ -70,9 +74,20 @@ check "different par on this tee" if that specific tee actually changes par on a
 (rare). Selecting a tee set when logging a round or match shows the resulting par and yardage for
 the selected side.
 
+In admin mode, click a course's name to load it into the top form for editing (name and pars —
+the 9/18-hole layout itself can't be changed once a course exists, since existing tee sets and
+rounds are sized to it). Click a tee set's name the same way to edit its yardages, par override,
+slope, or rating. Both follow the same Update/Cancel pattern as editing a round or player.
+
 Mark one tee set as the default (radio button in the tee sets table) if your team usually plays a
 particular color at that course — it'll be pre-selected next time you log a round or match there.
 Different courses can have different defaults.
+
+Mark one course as your "Home" course (radio button in the courses table, admin-only) if your team
+practices at the same course most of the time — it'll be pre-selected (along with its default tee,
+if it has one) whenever you log a new round, saving you a couple of clicks. Use "Clear home course"
+to go back to requiring an explicit choice every time. This is season data, so it travels with
+export/import, not something you set once in code.
 
 ### Rounds
 
@@ -86,12 +101,27 @@ Log tryout or practice rounds hole-by-hole. A couple of rules apply automaticall
 - **Adjusted score** — scores are normalized to a par-36 baseline so a round on an executive/short
   course compares fairly with a full 9-hole round. Rank and rolling average always use this
   adjusted number, never the raw score.
+- **Course selection** — the course field starts blank and must be explicitly chosen, unless a
+  home course is set (see Courses above), in which case that course is pre-selected but still
+  changeable.
+
+Click any row in the rounds table to expand it and see the hole-by-hole scores. In admin mode, the
+expanded row has an **Edit** button that reloads the round into the form above for correction.
+
+The rounds table can be filtered by player, type, course, and/or a date range (from/to) — filters
+combine (all conditions must match) and are visible to everyone, not just admins. Filters reset on
+page reload; they don't persist across visits.
 
 ### Rank
 
 Sorted by rolling average — the best 4 of a player's last 6 valid rounds (adjusted scores),
 tryouts counting as the earliest rounds. This is a **reference only** — the coach always sets the
 actual lineup order by hand; nothing here gets auto-applied.
+
+If a team turns on `extendedRankingStats` in its team config, the rank table (and the matching
+published report) also shows each player's tryout average, personal best, rounds played so far,
+and an estimated 9-hole handicap. The rounds-played cell is shaded red/yellow/green against
+configurable thresholds so a coach can see at a glance who still needs more rounds in.
 
 ### Charts
 

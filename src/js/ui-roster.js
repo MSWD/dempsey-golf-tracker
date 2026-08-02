@@ -1,17 +1,20 @@
-function renderRosterView() {
+function renderRosterView(editingPlayerId) {
   const el = document.getElementById('view-roster');
   const players = DataStore.getAll('players').slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
+  const editingPlayer = editingPlayerId ? DataStore.getById('players', editingPlayerId) : null;
 
   el.innerHTML = `
     <div class="card admin-only">
-      <h2>Add player</h2>
+      <h2>${editingPlayer ? 'Edit player' : 'Add player'}</h2>
       <div class="form-row">
-        <input type="text" id="new-first-name" placeholder="First name">
-        <input type="text" id="new-last-name" placeholder="Last name">
-        <input type="number" id="new-grade" class="input-medium" placeholder="Grade" min="5" max="12">
-        <button class="primary" id="btn-add-player">Add</button>
+        <input type="text" id="new-first-name" placeholder="First name" value="${editingPlayer ? escapeHtml(editingPlayer.firstName) : ''}">
+        <input type="text" id="new-last-name" placeholder="Last name" value="${editingPlayer ? escapeHtml(editingPlayer.lastName) : ''}">
+        <input type="number" id="new-grade" class="input-medium" placeholder="Grade" min="5" max="12" value="${editingPlayer ? escapeHtml(editingPlayer.grade) : ''}">
+        <button class="primary" id="btn-add-player">${editingPlayer ? 'Update' : 'Add'}</button>
+        ${editingPlayer ? '<button id="btn-cancel-edit-player">Cancel</button>' : ''}
       </div>
     </div>
+    <p class="muted admin-only">Click a row to edit a player's name or grade.</p>
     <div class="table-wrap">
       <table>
         <thead>
@@ -24,7 +27,7 @@ function renderRosterView() {
 
   const rows = el.querySelector('#roster-rows');
   rows.innerHTML = players.map((p) => `
-    <tr data-id="${escapeHtml(p.id)}">
+    <tr class="player-row" data-id="${escapeHtml(p.id)}">
       <td>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td>
       <td>${escapeHtml(p.grade)}</td>
       <td>
@@ -38,15 +41,25 @@ function renderRosterView() {
   rows.querySelectorAll('tr').forEach((tr) => {
     const id = tr.dataset.id;
     tr.querySelector('.toggle-active').addEventListener('change', (e) => {
+      e.stopPropagation();
       DataStore.update('players', id, { active: e.target.checked });
     });
-    tr.querySelector('.btn-remove').addEventListener('click', () => {
+    tr.querySelector('.btn-remove').addEventListener('click', (e) => {
+      e.stopPropagation();
       if (confirm('Remove this player?')) {
         DataStore.remove('players', id);
         renderRosterView();
       }
     });
+    tr.addEventListener('click', () => {
+      if (!AppState.isAdmin) return;
+      renderRosterView(id);
+      el.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+    });
   });
+
+  const cancelBtn = el.querySelector('#btn-cancel-edit-player');
+  if (cancelBtn) cancelBtn.addEventListener('click', () => renderRosterView(null));
 
   el.querySelector('#btn-add-player').addEventListener('click', () => {
     const firstName = el.querySelector('#new-first-name').value.trim();
@@ -56,7 +69,11 @@ function renderRosterView() {
       alert('First name, last name, and grade are required.');
       return;
     }
-    DataStore.add('players', newPlayer({ firstName, lastName, grade }));
-    renderRosterView();
+    if (editingPlayer) {
+      DataStore.update('players', editingPlayer.id, { firstName, lastName, grade });
+    } else {
+      DataStore.add('players', newPlayer({ firstName, lastName, grade }));
+    }
+    renderRosterView(null);
   });
 }

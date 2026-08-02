@@ -5,7 +5,7 @@ const STORAGE_KEY = `mstgt:data:${TEAM_CONFIG.teamSlug}`;
 const SEED_DATA_PATH = 'seed_data.json';
 
 function emptyData() {
-  return { seasonName: '', players: [], courses: [], rounds: [], matches: [], tournaments: [] };
+  return { seasonName: '', homeCourseId: null, players: [], courses: [], rounds: [], matches: [], tournaments: [] };
 }
 
 // --- Import/stored-data validation ------------------------------------------------------------
@@ -139,6 +139,9 @@ function validateImportData(parsed) {
   if (parsed.seasonName != null && typeof parsed.seasonName !== 'string') {
     throw new Error('Invalid import file: seasonName must be a string.');
   }
+  if (parsed.homeCourseId != null && typeof parsed.homeCourseId !== 'string') {
+    throw new Error('Invalid import file: homeCourseId must be null or a string.');
+  }
   for (const key of ['players', 'courses', 'rounds', 'matches', 'tournaments']) {
     if (!Array.isArray(parsed[key])) {
       throw new Error(`Invalid import file: missing "${key}" array.`);
@@ -162,6 +165,7 @@ const DataStore = {
         validateImportData(candidate);
         this._data = {
           seasonName: typeof candidate.seasonName === 'string' ? candidate.seasonName : '',
+          homeCourseId: typeof candidate.homeCourseId === 'string' ? candidate.homeCourseId : null,
           players: candidate.players,
           courses: candidate.courses,
           rounds: candidate.rounds,
@@ -180,6 +184,7 @@ const DataStore = {
       const seed = await res.json();
       this._data = {
         seasonName: seed.seasonName ?? '',
+        homeCourseId: seed.homeCourseId ?? null,
         players: seed.players ?? [],
         courses: seed.courses ?? [],
         rounds: seed.rounds ?? [],
@@ -208,6 +213,15 @@ const DataStore = {
 
   setSeasonName(name) {
     this._data.seasonName = name;
+    this._save();
+  },
+
+  getHomeCourseId() {
+    return this._data.homeCourseId ?? null;
+  },
+
+  setHomeCourseId(courseId) {
+    this._data.homeCourseId = courseId ?? null;
     this._save();
   },
 
@@ -261,6 +275,7 @@ const DataStore = {
     validateImportData(parsed);
     this._data = {
       seasonName: typeof parsed.seasonName === 'string' ? parsed.seasonName : '',
+      homeCourseId: typeof parsed.homeCourseId === 'string' ? parsed.homeCourseId : null,
       players: parsed.players,
       courses: parsed.courses,
       rounds: parsed.rounds,

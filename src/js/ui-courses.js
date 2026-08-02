@@ -28,6 +28,13 @@ function courseUsageCounts(courseId) {
   };
 }
 
+function teeSetUsageCounts(teeSetId) {
+  return {
+    rounds: DataStore.getAll('rounds').filter((r) => r.teeSetId === teeSetId).length,
+    matches: DataStore.getAll('matches').filter((m) => m.teeSetId === teeSetId).length,
+  };
+}
+
 function courseParSummary(course) {
   if (isEighteenHoleCourse(course)) {
     return `18 holes · Front ${sideTotal(course.holePars, 'front')} / Back ${sideTotal(course.holePars, 'back')} / Total ${roundTotalPar(course.holePars)}`;
@@ -50,27 +57,45 @@ function teeSetYardageSummary(course, teeSet) {
   return teeSetTotalYardage(teeSet) ?? '—';
 }
 
-function renderCoursesView() {
+// editingCourseId: course loaded into the top "Add/Edit course" form.
+// editingTeeSet: { courseId, teeSetId } for a tee set loaded into its course's "Add/Edit tee set"
+// mini-form — kept separate from editingCourseId since you edit a tee set from within its own
+// course's (already-open) details panel, not from the top-level form.
+function renderCoursesView(editingCourseId, editingTeeSet) {
   const el = document.getElementById('view-courses');
   const courses = DataStore.getAll('courses').slice().sort((a, b) => a.name.localeCompare(b.name));
+  const editingCourse = editingCourseId ? DataStore.getById('courses', editingCourseId) : null;
+
+  // A course's tee-sets <details> is easy to lose track of on re-render (the whole view is
+  // rebuilt from scratch), which would be a jarring UX every time an unrelated field changes —
+  // capture what's open beforehand and restore it below, alongside whichever course a tee-set
+  // edit is targeting (which must be forced open even if it wasn't already).
+  const previouslyOpenIds = new Set(
+    Array.from(el.querySelectorAll('tr.tee-sets-row')).filter((tr) => tr.querySelector('details')?.open).map((tr) => tr.dataset.id)
+  );
+  if (editingTeeSet) previouslyOpenIds.add(editingTeeSet.courseId);
 
   el.innerHTML = `
     <div class="card admin-only">
-      <h2>Add course</h2>
+      <h2>${editingCourse ? 'Edit course' : 'Add course'}</h2>
       <div class="form-row">
-        <input type="text" id="new-course-name" placeholder="Course name">
-        <select id="new-course-hole-count">
-          <option value="9">9 holes</option>
-          <option value="18">18 holes</option>
-        </select>
+        <input type="text" id="new-course-name" placeholder="Course name" value="${editingCourse ? escapeHtml(editingCourse.name) : ''}">
+        ${editingCourse
+          ? `<span class="muted">${courseHoleCount(editingCourse)} holes (layout can't change once tee sets exist)</span>`
+          : `<select id="new-course-hole-count">
+               <option value="9">9 holes</option>
+               <option value="18">18 holes</option>
+             </select>`}
       </div>
       <div id="new-course-pars"></div>
-      <button class="primary" id="btn-add-course">Add course</button>
+      <button class="primary" id="btn-add-course">${editingCourse ? 'Update course' : 'Add course'}</button>
+      ${editingCourse ? '<button id="btn-cancel-edit-course">Cancel</button>' : ''}
     </div>
+    <p class="muted admin-only">Click a course's name to edit it, or a tee set's name to edit that tee.</p>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Course</th><th>Layout</th><th>Hole pars</th><th></th></tr>
+          <tr><th class="admin-only">Home</th><th>Course</th><th>Layout</th><th>Hole pars</th><th></th></tr>
         </thead>
         <tbody id="courses-rows"></tbody>
       </table>
@@ -79,29 +104,42 @@ function renderCoursesView() {
 
   const courseHoleCountSelect = el.querySelector('#new-course-hole-count');
   const courseParsEl = el.querySelector('#new-course-pars');
-  function renderNewCoursePars() {
+  function renderCoursePars() {
     courseParsEl.innerHTML = groupedHoleInputs({
-      length: Number(courseHoleCountSelect.value),
+      length: editingCourse ? courseHoleCount(editingCourse) : Number(courseHoleCountSelect.value),
       className: 'hole-input par-input',
       prefix: 'P',
       min: 3,
       max: 6,
+      values: editingCourse ? editingCourse.holePars : [],
     });
   }
-  renderNewCoursePars();
-  courseHoleCountSelect.addEventListener('change', renderNewCoursePars);
+  renderCoursePars();
+  if (courseHoleCountSelect) courseHoleCountSelect.addEventListener('change', renderCoursePars);
 
+  const cancelCourseBtn = el.querySelector('#btn-cancel-edit-course');
+  if (cancelCourseBtn) cancelCourseBtn.addEventListener('click', () => renderCoursesView(null, null));
+
+  const homeCourseId = DataStore.getHomeCourseId();
   const rows = el.querySelector('#courses-rows');
   rows.innerHTML = courses.map((c) => `
     <tr data-id="${escapeHtml(c.id)}">
-      <td>${escapeHtml(c.name)} ${c.verified ? '' : '<span class="badge warn">unverified</span>'}</td>
+      <td class="admin-only">
+        <input type="radio" class="home-course-radio" name="home-course" ${c.id === homeCourseId ? 'checked' : ''}>
+      </td>
+      <td>
+        <span class="admin-only editable-name btn-edit-course" data-course-id="${escapeHtml(c.id)}">${escapeHtml(c.name)}</span>
+        <span class="viewer-only">${escapeHtml(c.name)}</span>
+        ${c.verified ? '' : ' <span class="badge warn">unverified</span>'}
+        ${c.id === homeCourseId ? ' <span class="badge">home</span>' : ''}
+      </td>
       <td>${courseParSummary(c)}</td>
       <td class="muted">${escapeHtml(c.holePars.join('-'))}</td>
       <td><button class="btn-remove admin-only">Remove</button></td>
     </tr>
     <tr class="tee-sets-row" data-id="${escapeHtml(c.id)}">
-      <td colspan="4">
-        <details>
+      <td colspan="5">
+        <details ${previouslyOpenIds.has(c.id) ? 'open' : ''}>
           <summary>Tee sets (${(c.teeSets || []).length})</summary>
           <div class="table-wrap">
             <table>
@@ -112,7 +150,11 @@ function renderCoursesView() {
                     <td class="admin-only">
                       <input type="radio" class="default-tee-radio" name="default-tee-${escapeHtml(c.id)}" ${t.id === c.defaultTeeSetId ? 'checked' : ''}>
                     </td>
-                    <td>${escapeHtml(t.name)} ${t.id === c.defaultTeeSetId ? '<span class="badge">default</span>' : ''}</td>
+                    <td>
+                      <span class="admin-only editable-name btn-edit-tee-set" data-course-id="${escapeHtml(c.id)}" data-tee-id="${escapeHtml(t.id)}">${escapeHtml(t.name)}</span>
+                      <span class="viewer-only">${escapeHtml(t.name)}</span>
+                      ${t.id === c.defaultTeeSetId ? ' <span class="badge">default</span>' : ''}
+                    </td>
                     <td>${teeSetParSummary(c, t)}${t.holeParsOverride ? ' <span class="badge">override</span>' : ''}</td>
                     <td>${teeSetYardageSummary(c, t)}</td>
                     <td>${t.slope ?? '—'}</td>
@@ -124,26 +166,47 @@ function renderCoursesView() {
             </table>
           </div>
           <div class="admin-only">
+            <h3>${editingTeeSet && editingTeeSet.courseId === c.id ? 'Edit tee set' : 'Add tee set'}</h3>
             <div class="form-row">
-              <input type="text" class="new-tee-name" placeholder="Tee set name (e.g. Gold)">
+              <input type="text" class="new-tee-name" placeholder="Tee set name (e.g. Gold)" value="${editingTeeSet && editingTeeSet.courseId === c.id ? escapeHtml(findTeeSet(c, editingTeeSet.teeSetId)?.name ?? '') : ''}">
             </div>
             <div class="new-tee-yardages">
-              ${groupedHoleInputs({ length: courseHoleCount(c), className: 'hole-input yardage-input', prefix: 'Y' })}
+              ${groupedHoleInputs({
+                length: courseHoleCount(c),
+                className: 'hole-input yardage-input',
+                prefix: 'Y',
+                values: (editingTeeSet && editingTeeSet.courseId === c.id ? findTeeSet(c, editingTeeSet.teeSetId)?.holeYardages : null) ?? [],
+              })}
             </div>
-            <label class="muted"><input type="checkbox" class="tee-par-override-toggle"> Different par on this tee (rare)</label>
-            <div class="new-tee-pars hidden">
-              ${groupedHoleInputs({ length: courseHoleCount(c), className: 'hole-input par-input', prefix: 'P', min: 3, max: 6, values: c.holePars })}
+            <label class="muted"><input type="checkbox" class="tee-par-override-toggle" ${editingTeeSet && editingTeeSet.courseId === c.id && findTeeSet(c, editingTeeSet.teeSetId)?.holeParsOverride ? 'checked' : ''}> Different par on this tee (rare)</label>
+            <div class="new-tee-pars ${editingTeeSet && editingTeeSet.courseId === c.id && findTeeSet(c, editingTeeSet.teeSetId)?.holeParsOverride ? '' : 'hidden'}">
+              ${groupedHoleInputs({
+                length: courseHoleCount(c),
+                className: 'hole-input par-input',
+                prefix: 'P',
+                min: 3,
+                max: 6,
+                values: (editingTeeSet && editingTeeSet.courseId === c.id ? findTeeSet(c, editingTeeSet.teeSetId)?.holeParsOverride : null) ?? c.holePars,
+              })}
             </div>
             <div class="form-row">
-              <input type="number" class="new-tee-slope" placeholder="Slope (optional)">
-              <input type="number" step="0.1" class="new-tee-rating" placeholder="Rating (optional)">
+              <input type="number" class="new-tee-slope" placeholder="Slope (optional)" value="${editingTeeSet && editingTeeSet.courseId === c.id ? (findTeeSet(c, editingTeeSet.teeSetId)?.slope ?? '') : ''}">
+              <input type="number" step="0.1" class="new-tee-rating" placeholder="Rating (optional)" value="${editingTeeSet && editingTeeSet.courseId === c.id ? (findTeeSet(c, editingTeeSet.teeSetId)?.rating ?? '') : ''}">
             </div>
-            <button class="btn-add-tee-set" data-course-id="${escapeHtml(c.id)}">Add tee set</button>
+            <button class="btn-add-tee-set" data-course-id="${escapeHtml(c.id)}">${editingTeeSet && editingTeeSet.courseId === c.id ? 'Update tee set' : 'Add tee set'}</button>
+            ${editingTeeSet && editingTeeSet.courseId === c.id ? '<button class="btn-cancel-edit-tee-set">Cancel</button>' : ''}
           </div>
         </details>
       </td>
     </tr>
   `).join('');
+
+  rows.querySelectorAll('.btn-edit-course').forEach((span) => {
+    span.addEventListener('click', () => {
+      renderCoursesView(span.dataset.courseId, null);
+      el.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
 
   rows.querySelectorAll('.btn-remove').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -154,10 +217,26 @@ function renderCoursesView() {
         : '';
       if (confirm(`Remove this course?${usageNote}`)) {
         DataStore.remove('courses', id);
+        if (DataStore.getHomeCourseId() === id) DataStore.setHomeCourseId(null);
         renderCoursesView();
       }
     });
   });
+
+  rows.querySelectorAll('.home-course-radio').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      DataStore.setHomeCourseId(radio.closest('tr').dataset.id);
+      renderCoursesView();
+    });
+  });
+
+  const clearHomeBtn = el.querySelector('#btn-clear-home-course');
+  if (clearHomeBtn) {
+    clearHomeBtn.addEventListener('click', () => {
+      DataStore.setHomeCourseId(null);
+      renderCoursesView();
+    });
+  }
 
   rows.querySelectorAll('.tee-par-override-toggle').forEach((cb) => {
     cb.addEventListener('change', () => {
@@ -170,7 +249,11 @@ function renderCoursesView() {
       const courseId = btn.closest('tr.tee-sets-row').dataset.id;
       const teeId = btn.closest('tr[data-tee-id]').dataset.teeId;
       const course = DataStore.getById('courses', courseId);
-      if (confirm('Remove this tee set?')) {
+      const { rounds, matches } = teeSetUsageCounts(teeId);
+      const usageNote = (rounds || matches)
+        ? ` This tee set is referenced by ${rounds} round(s) and ${matches} match(es) — removing it won't delete those records, but their yardage/par comparisons will become unavailable.`
+        : '';
+      if (confirm(`Remove this tee set?${usageNote}`)) {
         const patch = { teeSets: course.teeSets.filter((t) => t.id !== teeId) };
         if (course.defaultTeeSetId === teeId) patch.defaultTeeSetId = null;
         DataStore.update('courses', courseId, patch);
@@ -186,6 +269,16 @@ function renderCoursesView() {
       DataStore.update('courses', courseId, { defaultTeeSetId: teeId });
       renderCoursesView();
     });
+  });
+
+  rows.querySelectorAll('.btn-edit-tee-set').forEach((span) => {
+    span.addEventListener('click', () => {
+      renderCoursesView(null, { courseId: span.dataset.courseId, teeSetId: span.dataset.teeId });
+    });
+  });
+
+  rows.querySelectorAll('.btn-cancel-edit-tee-set').forEach((btn) => {
+    btn.addEventListener('click', () => renderCoursesView());
   });
 
   rows.querySelectorAll('.btn-add-tee-set').forEach((btn) => {
@@ -212,21 +305,34 @@ function renderCoursesView() {
         alert(`If "different par" is checked, all ${courseHoleCount(course)} par values are required.`);
         return;
       }
-      DataStore.update('courses', courseId, {
-        teeSets: [...(course.teeSets || []), newTeeSet({ name, holeYardages, holeParsOverride, slope, rating })],
-      });
+
+      const isEditingThisTee = editingTeeSet && editingTeeSet.courseId === courseId;
+      if (isEditingThisTee) {
+        DataStore.update('courses', courseId, {
+          teeSets: course.teeSets.map((t) => (t.id === editingTeeSet.teeSetId ? { ...t, name, holeYardages, holeParsOverride, slope, rating } : t)),
+        });
+      } else {
+        DataStore.update('courses', courseId, {
+          teeSets: [...(course.teeSets || []), newTeeSet({ name, holeYardages, holeParsOverride, slope, rating })],
+        });
+      }
       renderCoursesView();
     });
   });
 
   el.querySelector('#btn-add-course').addEventListener('click', () => {
     const name = el.querySelector('#new-course-name').value.trim();
+    const holeCount = editingCourse ? courseHoleCount(editingCourse) : Number(courseHoleCountSelect.value);
     const holePars = Array.from(el.querySelectorAll('#new-course-pars input')).map((i) => Number(i.value));
     if (!name || holePars.some((p) => !p)) {
-      alert(`Course name and all ${courseHoleCountSelect.value} hole pars are required.`);
+      alert(`Course name and all ${holeCount} hole pars are required.`);
       return;
     }
-    DataStore.add('courses', newCourse({ name, holePars, verified: false }));
+    if (editingCourse) {
+      DataStore.update('courses', editingCourse.id, { name, holePars, totalPar: holePars.reduce((sum, par) => sum + par, 0) });
+    } else {
+      DataStore.add('courses', newCourse({ name, holePars, verified: false }));
+    }
     renderCoursesView();
   });
 }

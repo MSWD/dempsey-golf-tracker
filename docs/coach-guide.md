@@ -35,12 +35,32 @@ competition rules, not something set per team.
 This is the same reference content available from the "Help" tab inside your team's page — handy
 here too if you want to read it before requesting a team, or share it with another coach.
 
+> ### ⚠️ Your data lives only in this browser, on this device — read this first
+>
+> Everything you type into this app — roster, courses, rounds, matches — is saved **only in the
+> local storage of the specific browser and device you typed it into.** Nothing is sent to a
+> server or synced automatically, anywhere, ever. Concretely, that means:
+>
+> - **A different browser on the same computer** (Chrome vs. Safari, or a private/incognito
+>   window) has its **own, separate, empty copy** — it will not show what you entered elsewhere.
+> - **A different computer, tablet, or phone** — same thing: its own separate, empty copy.
+> - **Clearing your browser's data, reinstalling the browser, or getting a new device** will
+>   **permanently delete** everything you've entered, with no way to recover it.
+> - Another coach on your team logging in on *their* computer does **not** see the data you
+>   entered on yours — you're each looking at your own browser's local copy.
+>
+> The **only** ways data leaves your browser are the two covered below: **exporting** a backup
+> file yourself (["Export / Import"](#export--import-season-data)), or an admin clicking
+> **["Publish report"](#publishing-reports-admins-only)**, which pushes a snapshot to a shared page
+> everyone can see. If you do neither, and something happens to this browser/device, that data is
+> gone. **Export a backup regularly** — treat it like saving a document.
+
 ### What this is
 
 The app replaces a spreadsheet for running a middle-school golf team: roster, practice/tryout
 scores, match-day scoring, rolling averages, and trend charts. It runs entirely in your browser —
 there's no server, so your data lives on whichever device and browser you're using unless you
-export it or an admin publishes a report.
+export it or an admin publishes a report (see the warning above).
 
 ### Viewer vs. admin mode
 
@@ -129,12 +149,26 @@ Sorted by rolling average — the best 4 of a player's last 6 valid rounds (adju
 tryouts counting as the earliest rounds. This is a **reference only** — the coach always sets the
 actual lineup order by hand; nothing here gets auto-applied.
 
+This tab is where the local-vs-published distinction shows up most directly:
+
+- **Admins** see a *live* table computed from this browser's local data, plus a link to the
+  currently published report so you can compare the two before publishing.
+- **Viewers** (anyone not logged in as an admin on that device) don't get the live table at all —
+  they're shown a link straight to the published report instead. That's deliberate: a viewer's own
+  browser almost never has the coach's actual data in it, so showing a "rank table" computed from
+  it would just be showing empty or stale numbers.
+
 If a team turns on `extendedRankingStats` in its team config, the rank table (and the matching
 published report) also shows each player's tryout average, personal best, rounds played so far,
 and an estimated 9-hole handicap. The rounds-played cell is shaded red/yellow/green against
 configurable thresholds so a coach can see at a glance who still needs more rounds in. Match scores
 count toward rolling average, personal best, and rounds played, but are excluded from the tryout
 average, since that's specifically about tryout performance.
+
+Players tied on the displayed rolling average (to one decimal place) share a rank, shown as e.g.
+"T2" — the next distinct rank then skips ahead by however many players were tied (two players
+tied at rank 2 push the next player to rank 4, not 3), same convention as competition golf
+leaderboards.
 
 ### Charts
 
@@ -183,6 +217,13 @@ separately from there afterward).
   creation — useful since matches get published and "Opponent 1" isn't a great look in a public
   report.
 
+**Unlike the Rank tab, the Matches tab always shows this browser's local data, to viewers and
+admins alike** — it does not currently redirect viewers to the published report or link out to it.
+So if you're a viewer checking match results from a device that isn't the coach's, what you see
+here (likely blank, or an out-of-date local copy) is **not** the team's real results. To see the
+team's actual published match history, go to the published report directly — reached from the link
+on the Rank tab, or at `reports/index.html` under the team's page — not this tab.
+
 ### Export / Import (season data)
 
 "Export season" downloads everything as a JSON file — do this regularly as a backup, since your
@@ -204,10 +245,31 @@ is published as-is. Use a first-name-and-initial format there too if that player
 
 ### Publishing reports (admins only)
 
-"Publish report" pushes the current roster/rounds/matches to a shared report page anyone can view
-without logging in (linked from the reports viewer). It always reflects the latest publish, but
-the report page has a "View as of" selector that can reconstruct standings as of any earlier date
-from that same data — so you don't need to publish every single week to see week-by-week progress.
+There's one "Publish report" button (in the header, admin-only) — it is not a per-tab or
+per-feature action. Clicking it takes **everything** currently in this browser's local
+data — the full roster, every round, every match — and pushes it as one combined snapshot to a
+shared report page that anyone can view without logging in, no GitHub account needed (linked from
+the reports viewer, and from the Rank tab). There's no way to publish just the roster, or just
+matches, on their own.
+
+Each publish **replaces** the previously published snapshot — the report page always shows the
+latest one. But the report page has a "View as of" selector that can reconstruct standings as of
+any earlier date using that same published data, so you don't need to publish every single week to
+see week-by-week progress — publishing periodically (e.g. after each match) is enough.
+
+The published report has one stable link (`<your-team-domain>/reports/index.html` — shown after
+you publish, and also linked from the Rank tab) that's meant to be **handed out**: share it with
+players' families, the athletic office, local press, whoever wants to follow along. Anyone with the
+link can view current rankings and match results without logging in or needing a GitHub account of
+their own. You only need to share the link once — it's not a snapshot of today's data, it's a page
+that always shows whichever data you *most recently* published, so the same link keeps working as
+the season goes on. Just click "Publish report" again (in the header) whenever you want that link
+to reflect newer results; nothing needs to be re-shared.
+
+Because publishing reads from *this browser's* local data, publish from whichever
+device/browser actually has the up-to-date season on it (see the warning at the top of this
+guide) — publishing from a different, out-of-sync browser will overwrite the shared report with
+stale or incomplete data.
 
 ### Found a bug or have an idea?
 

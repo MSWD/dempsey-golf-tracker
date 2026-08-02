@@ -241,6 +241,16 @@ input[type="text"], input[type="number"], input[type="date"], select {
   color: #7a1f1f;
 }
 
+.card.notice {
+  background: #fff8e6;
+  border: 1px solid #f0d9a0;
+  border-left: 4px solid #c8960c;
+}
+
+.card.notice h2 {
+  margin-top: 0;
+}
+
 .rank-highlight {
   background: #e9f5e9;
   font-weight: bold;

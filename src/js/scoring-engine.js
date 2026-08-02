@@ -153,6 +153,33 @@ function rollingAverage(chronologicalAdjustedScores) {
   return best4.reduce((sum, s) => sum + s, 0) / best4.length;
 }
 
+// Everything the Rankings/Published-report table needs for one player, derived from that
+// player's own rounds. Valid-round filtering matches rollingAverage's own filtering exactly, so
+// "rounds counted" and "score used in the average" never disagree.
+function playerRankingStats(rounds, getCourseById) {
+  const chrono = rounds
+    .slice()
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((r) => {
+      const holePars = resolveHolePars(r, getCourseById);
+      const valid = holePars && isValidRound(r.holeScores);
+      return { type: r.type, adjustedScore: valid ? adjustedScore(r.holeScores, holePars) : null };
+    });
+
+  const allScores = chrono.map((c) => c.adjustedScore);
+  const validScores = allScores.filter((s) => s != null);
+  const tryoutScores = chrono.filter((c) => c.type === 'tryout' && c.adjustedScore != null).map((c) => c.adjustedScore);
+  const avg = rollingAverage(allScores);
+
+  return {
+    rollingAverage: avg,
+    validRoundsCount: validScores.length,
+    personalBest: validScores.length ? Math.min(...validScores) : null,
+    tryoutAverage: tryoutScores.length ? tryoutScores.reduce((s, v) => s + v, 0) / tryoutScores.length : null,
+    nineHoleHandicap: avg != null ? (avg - 36) * 0.85 : null,
+  };
+}
+
 // Ascending sort on rolling average (lower is better). Reference/suggestion only — the coach
 // always manually sets the lineup order for a match; this is never auto-applied.
 function rankPlayers(playersWithAverage) {

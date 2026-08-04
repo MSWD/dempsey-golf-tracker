@@ -388,33 +388,6 @@
           "holeParsOverride": null,
           "slope": 63.6,
           "rating": 98
-        },
-        {
-          "id": "tee_msdz8um1_5qzxeg",
-          "name": "White",
-          "holeYardages": [
-            475,
-            364,
-            151,
-            340,
-            364,
-            506,
-            384,
-            348,
-            140,
-            328,
-            155,
-            420,
-            525,
-            294,
-            470,
-            334,
-            157,
-            340
-          ],
-          "holeParsOverride": null,
-          "slope": 68.6,
-          "rating": 117
         }
       ],
       "defaultTeeSetId": "tee_ms6k8jhu_a1q4yc",
@@ -1019,51 +992,480 @@
       "matchId": null
     },
     {
-      "id": "round_msdzhom6_8os5hx",
-      "playerId": "player_19fa8e6d69e_hucr9l",
-      "date": "2026-08-03",
-      "type": "practice",
-      "courseId": "course_ms6k4cqm_w8kuld",
-      "teeSetId": "tee_msdz8um1_5qzxeg",
+      "id": "round_msen6njz_3bknxp",
+      "playerId": "player_ms5eijsb_i5k4ou",
+      "date": "2026-08-04",
+      "type": "match",
+      "courseId": "course_msbwrsgf_rdov9v",
+      "teeSetId": "tee_msbwweh9_luuzr4",
       "side": "front",
       "inlineHolePars": null,
       "holeScores": [
-        6,
         5,
         4,
-        4,
-        4,
         6,
-        4,
-        4,
-        3
+        7,
+        6,
+        7,
+        7,
+        6,
+        5
       ],
-      "putts": 18,
-      "matchId": null
+      "putts": 20,
+      "matchId": "match_msen4x4z_jyqu15"
     },
     {
-      "id": "round_msdzin8d_gs2onx",
+      "id": "round_msen6tk8_oabqta",
       "playerId": "player_19fa8e6d69e_mtda4r",
-      "date": "2026-08-03",
-      "type": "practice",
-      "courseId": "course_ms6k4cqm_w8kuld",
-      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "date": "2026-08-04",
+      "type": "match",
+      "courseId": "course_msbwrsgf_rdov9v",
+      "teeSetId": "tee_msbwweh9_luuzr4",
       "side": "front",
       "inlineHolePars": null,
       "holeScores": [
         6,
         4,
+        4,
+        7,
+        3,
+        5,
+        5,
+        5,
+        4
+      ],
+      "putts": 21,
+      "matchId": "match_msen4x4z_jyqu15"
+    },
+    {
+      "id": "round_msen71nu_c1w7bk",
+      "playerId": "player_19fa8e6d69e_o2tbsy",
+      "date": "2026-08-04",
+      "type": "match",
+      "courseId": "course_msbwrsgf_rdov9v",
+      "teeSetId": "tee_msbwweh9_luuzr4",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        4,
+        5,
+        5,
         3,
         4,
+        7,
+        6,
+        5
+      ],
+      "putts": 15,
+      "matchId": "match_msen4x4z_jyqu15"
+    },
+    {
+      "id": "round_msen76h1_jg5hzk",
+      "playerId": "player_19fa8e6d69e_b3x0gc",
+      "date": "2026-08-04",
+      "type": "match",
+      "courseId": "course_msbwrsgf_rdov9v",
+      "teeSetId": "tee_msbwweh9_luuzr4",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
         4,
         6,
         5,
         4,
-        3
+        5,
+        7,
+        5,
+        5
       ],
-      "putts": 17,
-      "matchId": null
+      "putts": 19,
+      "matchId": "match_msen4x4z_jyqu15"
+    },
+    {
+      "id": "round_msen7ax5_oka8t8",
+      "playerId": "player_19fa8e6d69e_joly3g",
+      "date": "2026-08-04",
+      "type": "match",
+      "courseId": "course_msbwrsgf_rdov9v",
+      "teeSetId": "tee_msbwweh9_luuzr4",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        4,
+        5,
+        7,
+        3,
+        7,
+        6,
+        7,
+        4
+      ],
+      "putts": 15,
+      "matchId": "match_msen4x4z_jyqu15"
+    },
+    {
+      "id": "round_msen84g6_8m4p4w",
+      "playerId": "player_19fa8e6d69e_rt2fhl",
+      "date": "2026-08-04",
+      "type": "match",
+      "courseId": "course_msbwrsgf_rdov9v",
+      "teeSetId": "tee_msbwweh9_luuzr4",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        6,
+        8,
+        6,
+        4,
+        8,
+        7,
+        6,
+        6
+      ],
+      "putts": null,
+      "matchId": "match_msen4x4z_jyqu15"
+    },
+    {
+      "id": "round_msen8on7_9n1n4p",
+      "playerId": "player_19fa8e6d69e_vscvi3",
+      "date": "2026-08-04",
+      "type": "match",
+      "courseId": "course_msbwrsgf_rdov9v",
+      "teeSetId": "tee_msbwweh9_luuzr4",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        6,
+        7,
+        6,
+        6,
+        7,
+        10,
+        7,
+        8
+      ],
+      "putts": null,
+      "matchId": "match_msen4x4z_jyqu15"
     }
   ],
-  "matches": []
+  "matches": [
+    {
+      "id": "match_msen4x4z_jyqu15",
+      "date": "2026-08-04",
+      "location": "Away",
+      "courseId": "course_msbwrsgf_rdov9v",
+      "teeSetId": "tee_msbwweh9_luuzr4",
+      "side": "front",
+      "inlineHolePars": null,
+      "teams": [
+        {
+          "id": "team_msen4x4z_58qqa2",
+          "name": "Dempsey",
+          "isOwnTeam": true,
+          "players": [
+            {
+              "playerId": "player_ms5eijsb_i5k4ou",
+              "displayName": "Levi L",
+              "holeScores": [
+                5,
+                4,
+                6,
+                7,
+                6,
+                7,
+                7,
+                6,
+                5
+              ],
+              "putts": 20,
+              "isStarter": true,
+              "roundId": "round_msen6njz_3bknxp"
+            },
+            {
+              "playerId": "player_19fa8e6d69e_mtda4r",
+              "displayName": "Grady L",
+              "holeScores": [
+                6,
+                4,
+                4,
+                7,
+                3,
+                5,
+                5,
+                5,
+                4
+              ],
+              "putts": 21,
+              "isStarter": true,
+              "roundId": "round_msen6tk8_oabqta"
+            },
+            {
+              "playerId": "player_19fa8e6d69e_o2tbsy",
+              "displayName": "Theo C",
+              "holeScores": [
+                6,
+                4,
+                5,
+                5,
+                3,
+                4,
+                7,
+                6,
+                5
+              ],
+              "putts": 15,
+              "isStarter": true,
+              "roundId": "round_msen71nu_c1w7bk"
+            },
+            {
+              "playerId": "player_19fa8e6d69e_b3x0gc",
+              "displayName": "Nicholas M",
+              "holeScores": [
+                6,
+                4,
+                6,
+                5,
+                4,
+                5,
+                7,
+                5,
+                5
+              ],
+              "putts": 19,
+              "isStarter": true,
+              "roundId": "round_msen76h1_jg5hzk"
+            },
+            {
+              "playerId": "player_19fa8e6d69e_joly3g",
+              "displayName": "William S",
+              "holeScores": [
+                8,
+                4,
+                5,
+                7,
+                3,
+                7,
+                6,
+                7,
+                4
+              ],
+              "putts": 15,
+              "isStarter": true,
+              "roundId": "round_msen7ax5_oka8t8"
+            },
+            {
+              "playerId": "player_19fa8e6d69e_rt2fhl",
+              "displayName": "Greyson I",
+              "holeScores": [
+                8,
+                6,
+                8,
+                6,
+                4,
+                8,
+                7,
+                6,
+                6
+              ],
+              "putts": null,
+              "isStarter": true,
+              "roundId": "round_msen84g6_8m4p4w"
+            },
+            {
+              "playerId": "player_19fa8e6d69e_vscvi3",
+              "displayName": "Graham B",
+              "holeScores": [
+                8,
+                6,
+                7,
+                6,
+                6,
+                7,
+                10,
+                7,
+                8
+              ],
+              "putts": null,
+              "isStarter": false,
+              "roundId": "round_msen8on7_9n1n4p"
+            }
+          ]
+        },
+        {
+          "id": "team_msen4x4z_pqoy2p",
+          "name": "Worthington",
+          "isOwnTeam": false,
+          "players": [
+            {
+              "playerId": null,
+              "displayName": "Cole D",
+              "holeScores": [
+                7,
+                5,
+                4,
+                6,
+                3,
+                5,
+                10,
+                5,
+                6
+              ],
+              "putts": null,
+              "isStarter": true,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Luke S",
+              "holeScores": [
+                5,
+                5,
+                4,
+                5,
+                4,
+                5,
+                5,
+                5,
+                5
+              ],
+              "putts": null,
+              "isStarter": true,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Brooks C",
+              "holeScores": [
+                6,
+                4,
+                6,
+                5,
+                3,
+                5,
+                7,
+                5,
+                6
+              ],
+              "putts": null,
+              "isStarter": true,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Andrew M",
+              "holeScores": [
+                4,
+                3,
+                8,
+                4,
+                5,
+                5,
+                5,
+                6,
+                6
+              ],
+              "putts": null,
+              "isStarter": true,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Connor T",
+              "holeScores": [
+                6,
+                4,
+                7,
+                7,
+                4,
+                6,
+                7,
+                7,
+                8
+              ],
+              "putts": null,
+              "isStarter": true,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Owen C",
+              "holeScores": [
+                8,
+                4,
+                5,
+                6,
+                4,
+                7,
+                9,
+                8,
+                8
+              ],
+              "putts": null,
+              "isStarter": true,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Patrick O",
+              "holeScores": [
+                5,
+                4,
+                6,
+                6,
+                5,
+                5,
+                7,
+                5,
+                7
+              ],
+              "putts": null,
+              "isStarter": false,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Case R",
+              "holeScores": [
+                6,
+                4,
+                5,
+                4,
+                5,
+                5,
+                8,
+                6,
+                5
+              ],
+              "putts": null,
+              "isStarter": false,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Cooper O",
+              "holeScores": [
+                4,
+                4,
+                8,
+                5,
+                2,
+                4,
+                8,
+                6,
+                8
+              ],
+              "putts": null,
+              "isStarter": false,
+              "roundId": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-02",
+  "publishedAt": "2026-08-04",
   "seasonName": "2026 Dempsey Golf Season",
   "players": [
     {
@@ -388,6 +388,33 @@
           "holeParsOverride": null,
           "slope": 63.6,
           "rating": 98
+        },
+        {
+          "id": "tee_msdz8um1_5qzxeg",
+          "name": "White",
+          "holeYardages": [
+            475,
+            364,
+            151,
+            340,
+            364,
+            506,
+            384,
+            348,
+            140,
+            328,
+            155,
+            420,
+            525,
+            294,
+            470,
+            334,
+            157,
+            340
+          ],
+          "holeParsOverride": null,
+          "slope": 68.6,
+          "rating": 117
         }
       ],
       "defaultTeeSetId": "tee_ms6k8jhu_a1q4yc",
@@ -989,6 +1016,52 @@
         8
       ],
       "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_msdzhom6_8os5hx",
+      "playerId": "player_19fa8e6d69e_hucr9l",
+      "date": "2026-08-03",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_msdz8um1_5qzxeg",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        5,
+        4,
+        4,
+        4,
+        6,
+        4,
+        4,
+        3
+      ],
+      "putts": 18,
+      "matchId": null
+    },
+    {
+      "id": "round_msdzin8d_gs2onx",
+      "playerId": "player_19fa8e6d69e_mtda4r",
+      "date": "2026-08-03",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        4,
+        3,
+        4,
+        4,
+        6,
+        5,
+        4,
+        3
+      ],
+      "putts": 17,
       "matchId": null
     }
   ],

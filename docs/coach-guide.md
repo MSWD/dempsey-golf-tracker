@@ -176,13 +176,15 @@ Per-player scoring and putts trends over time, drawn from the same rounds used f
 
 ### Matches
 
-A match card can have 2 or 3 teams. Add each team's players with their hole-by-hole scores — like
-the Rounds page, each hole starts at that hole's par so you can nudge it up/down rather than
-typing from scratch; unlike Rounds, changing a match's course/side/tee happens through "Edit
-match" (see below), not inline in the score-entry row, so there's no reset-to-par warning here —
-editing the match header never touches scores you've already entered, only where new entries
-default to. Uncheck "Starter" for anyone who's just playing an extra round that day and shouldn't
-count toward the team score. Team score is the sum of the 4 lowest scores among the 6 starters who
+A match card can have 2 or 3 teams. Add each team's players with their hole-by-hole scores.
+Unlike the Rounds page, a new entry's holes start at **double par**, not par — a real score would
+look plausible sitting there unedited, so the default is deliberately an obvious placeholder you
+have to overwrite as you enter real scores, rather than something that could quietly pass for a
+result you forgot to enter. Editing an existing entry always shows what was actually recorded, of
+course. Changing a match's course/side/tee happens through "Edit match" (see below), not inline in
+the score-entry row, so there's no reset-to-default warning here — editing the match header never
+touches scores you've already entered, only where new entries default to. Uncheck "Starter" for
+anyone who's just playing an extra round that day and shouldn't count toward the team score. Team score is the sum of the 4 lowest scores among the 6 starters who
 posted a valid score — if fewer than 4 have, it shows as "incomplete" rather than guessing a
 number. The
 lowest-scoring team in a match is highlighted with a "Winner" badge once at least two teams have a
@@ -223,6 +225,13 @@ So if you're a viewer checking match results from a device that isn't the coach'
 here (likely blank, or an out-of-date local copy) is **not** the team's real results. To see the
 team's actual published match history, go to the published report directly — reached from the link
 on the Rank tab, or at `reports/index.html` under the team's page — not this tab.
+
+**Sharing a single match with an opposing coach:** every match card has a "Copy report link"
+button that copies a link to just that match's published result (not the whole season report) —
+handy for texting or emailing the other team's coach after a match. It copies the link right away,
+before you've published, so it's the URL the match *will* live at — the other coach won't see
+anything until you actually hit "Publish report" (see below). If you edit the match afterward,
+re-publish so the link reflects the latest scores; the link itself doesn't change.
 
 ### Export / Import (season data)
 

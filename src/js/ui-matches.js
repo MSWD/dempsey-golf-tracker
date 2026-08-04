@@ -217,6 +217,7 @@ function renderMatchCard(match) {
     <div class="card" data-match-id="${escapeHtml(match.id)}">
       <div class="form-row">
         <h3>${escapeHtml(match.date)} — ${escapeHtml(match.location)} (${course ? escapeHtml(course.name) : 'unknown course'}${course && isEighteenHoleCourse(course) ? ` — ${sideLabel(side)}` : ''}${teeSet ? ` — ${escapeHtml(teeSet.name)} tees` : ''})</h3>
+        <button class="btn-copy-match-link" data-match-id="${escapeHtml(match.id)}">Copy report link</button>
         <button class="admin-only btn-edit-match">Edit match</button>
         <button class="admin-only btn-remove-match">Remove match</button>
       </div>
@@ -264,12 +265,15 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
         `}
         <label class="muted"><input type="checkbox" class="starter-checkbox" ${editingEntry ? (editingEntry.isStarter ? 'checked' : '') : 'checked'}> Starter</label>
         ${Array.from({ length: 9 }, (_, i) => {
-          // New entries default each hole to par so the coach can just nudge the number
-          // up/down for a bogey/birdie instead of typing every score from scratch. Editing an
-          // existing entry always shows what was actually recorded, never a par fallback.
+          // New entries default each hole to double par (the same cap capAllHoleScores enforces
+          // on submit, see scoring-engine.js) rather than par. A par default reads as a real score
+          // at a glance, so leftover/pre-round defaults were getting mixed in with actual match
+          // scores; double par is unambiguously a placeholder the coach must overwrite as they
+          // enter real scores. Editing an existing entry always shows what was actually recorded,
+          // never a default fallback.
           const value = editingEntry
             ? (editingEntry.holeScores[i] != null ? editingEntry.holeScores[i] : '')
-            : (holePars ? holePars[i] : '');
+            : (holePars ? holePars[i] * 2 : '');
           return `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${sideHoleNumber(i, side)}" value="${value}">`;
         }).join('')}
         <input type="number" class="putts-input input-narrow" placeholder="Putts" value="${editingEntry && editingEntry.putts != null ? editingEntry.putts : ''}">
@@ -310,6 +314,25 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
 }
 
 function wireMatchCard(match, card) {
+  // Copies the URL this match *will* live at on the published static report (reports/match.html,
+  // see src/teams/<team>/reports/match-viewer.js) — not a guarantee it's live yet. The coach
+  // typically grabs this right after entering a match to text/email the opposing coach, then
+  // publishes separately; if they haven't published yet, the link 404s/shows "not published" until
+  // they do.
+  const copyLinkBtn = card.querySelector('.btn-copy-match-link');
+  if (copyLinkBtn) {
+    copyLinkBtn.addEventListener('click', async () => {
+      const url = `${TEAM_CONFIG.domain}/reports/match.html?id=${encodeURIComponent(match.id)}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        copyLinkBtn.textContent = 'Copied!';
+      } catch {
+        copyLinkBtn.textContent = 'Copy failed — select manually';
+      }
+      setTimeout(() => { copyLinkBtn.textContent = 'Copy report link'; }, 2000);
+    });
+  }
+
   card.querySelectorAll('.add-player-row').forEach((row) => {
     const teamId = row.dataset.teamId;
     row.querySelector('.btn-add-team-player').addEventListener('click', () => {

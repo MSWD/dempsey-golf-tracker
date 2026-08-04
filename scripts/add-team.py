@@ -143,14 +143,24 @@ REPORTS_INDEX_HTML = """<!doctype html>
     <a class="btn" href="../index.html">Back to app</a>
   </header>
 
+  <nav class="tabs">
+    <button data-view="rank" class="active">Rankings</button>
+    <button data-view="matches">Matches</button>
+  </nav>
+
   <main>
-    <div class="card">
-      <div class="form-row">
-        <label for="report-date-select">View as of:</label>
-        <select id="report-date-select"></select>
+    <section class="view active" id="view-report-rank">
+      <div class="card">
+        <div class="form-row">
+          <label for="report-date-select">View as of:</label>
+          <select id="report-date-select"></select>
+        </div>
       </div>
-    </div>
-    <div id="report-content"></div>
+      <div id="report-content"></div>
+    </section>
+    <section class="view" id="view-report-matches">
+      <div id="report-matches-content"></div>
+    </section>
   </main>
 
   <footer id="app-footer" class="app-footer"></footer>
@@ -159,7 +169,43 @@ REPORTS_INDEX_HTML = """<!doctype html>
   <script src="../../../version.js"></script>
   <script src="../../../js/html-utils.js"></script>
   <script src="../../../js/scoring-engine.js"></script>
+  <script src="match-render.js"></script>
   <script src="report-viewer.js"></script>
+</body>
+</html>
+"""
+
+MATCH_HTML = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
+  <title>{site_title} &mdash; Match Report</title>
+  <link rel="icon" type="image/svg+xml" href="../../../assets/favicon.svg">
+  <link rel="stylesheet" href="../../../css/styles.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <a href="index.html" class="back-link">&larr; Full report</a>
+    <img class="logo" id="team-logo" alt="">
+    <h1 id="team-title"></h1>
+  </header>
+
+  <main>
+    <div id="match-content"></div>
+  </main>
+
+  <footer id="app-footer" class="app-footer"></footer>
+
+  <script src="../team-config.js"></script>
+  <script src="../../../version.js"></script>
+  <script src="../../../js/html-utils.js"></script>
+  <script src="../../../js/scoring-engine.js"></script>
+  <script src="match-render.js"></script>
+  <script src="match-viewer.js"></script>
 </body>
 </html>
 """
@@ -211,11 +257,18 @@ def main():
     reports_dir = team_dir / "reports" / "data"
     reports_dir.mkdir(parents=True)
     (team_dir / "reports" / "index.html").write_text(REPORTS_INDEX_HTML.format(site_title=site_title))
-    report_viewer_src = SRC / "teams" / "dempsey" / "reports" / "report-viewer.js"
-    if report_viewer_src.exists():
-        (team_dir / "reports" / "report-viewer.js").write_text(report_viewer_src.read_text())
-    else:
-        print("Warning: could not find an existing report-viewer.js to copy — add one manually.")
+    (team_dir / "reports" / "match.html").write_text(MATCH_HTML.format(site_title=site_title))
+
+    # report-viewer.js, match-render.js, and match-viewer.js carry no per-team data (everything
+    # team-specific comes from team-config.js / fetched JSON at runtime), so every team's copy is
+    # byte-identical to dempsey's canonical one — check-team-templates.py enforces that in CI.
+    canonical_reports_dir = SRC / "teams" / "dempsey" / "reports"
+    for shared_script in ("report-viewer.js", "match-render.js", "match-viewer.js"):
+        src_file = canonical_reports_dir / shared_script
+        if src_file.exists():
+            (team_dir / "reports" / shared_script).write_text(src_file.read_text())
+        else:
+            print(f"Warning: could not find an existing {shared_script} to copy — add one manually.")
 
     teams_json_path = SRC / "teams.json"
     teams = json.loads(teams_json_path.read_text()) if teams_json_path.exists() else {}

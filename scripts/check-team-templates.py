@@ -5,7 +5,9 @@ add-team.py writes each team's files once, at creation time; nothing re-applies 
 afterward. Per-team customization (title, colors, admin list, ...) is expected and fine — what
 this checks is the small set of things a security fix depends on: every team must vendor
 chart.js locally (not load it from a CDN) and carry the CSP meta tag, and every team's
-report-viewer.js must match the canonical copy add-team.py duplicates it from.
+report-viewer.js/match-render.js/match-viewer.js must match the canonical copies add-team.py
+duplicates them from (none of the three carry per-team data — anything team-specific comes from
+team-config.js or the fetched report JSON at runtime).
 
 Usage: scripts/check-team-templates.py
 """
@@ -15,7 +17,8 @@ import sys
 from pathlib import Path
 
 SRC = Path(__file__).resolve().parent.parent / "src"
-CANONICAL_REPORT_VIEWER = SRC / "teams" / "dempsey" / "reports" / "report-viewer.js"
+CANONICAL_REPORTS_DIR = SRC / "teams" / "dempsey" / "reports"
+CANONICAL_SHARED_SCRIPTS = ["report-viewer.js", "match-render.js", "match-viewer.js"]
 
 VENDORED_CHART_SCRIPT = '<script src="../../assets/vendor/chart.min.js"></script>'
 CSP_META_PATTERN = re.compile(r'<meta http-equiv="Content-Security-Policy"')
@@ -37,21 +40,27 @@ def check_html(path: Path, mismatches: list, require_vendored_chart: bool):
 
 def main():
     teams = json.loads((SRC / "teams.json").read_text())
-    canonical_viewer = CANONICAL_REPORT_VIEWER.read_text()
+    canonical_scripts = {
+        name: (CANONICAL_REPORTS_DIR / name).read_text() for name in CANONICAL_SHARED_SCRIPTS
+    }
     mismatches = []
 
     for slug in teams:
         team_dir = SRC / "teams" / slug
         check_html(team_dir / "index.html", mismatches, require_vendored_chart=True)
         check_html(team_dir / "reports" / "index.html", mismatches, require_vendored_chart=False)
+        check_html(team_dir / "reports" / "match.html", mismatches, require_vendored_chart=False)
 
-        viewer_path = team_dir / "reports" / "report-viewer.js"
-        if viewer_path != CANONICAL_REPORT_VIEWER:
-            if not viewer_path.exists():
-                mismatches.append(f"{viewer_path} does not exist")
-            elif viewer_path.read_text() != canonical_viewer:
+        for name, canonical_text in canonical_scripts.items():
+            script_path = team_dir / "reports" / name
+            canonical_path = CANONICAL_REPORTS_DIR / name
+            if script_path == canonical_path:
+                continue
+            if not script_path.exists():
+                mismatches.append(f"{script_path} does not exist")
+            elif script_path.read_text() != canonical_text:
                 mismatches.append(
-                    f"{viewer_path} has drifted from the canonical copy at {CANONICAL_REPORT_VIEWER}"
+                    f"{script_path} has drifted from the canonical copy at {canonical_path}"
                 )
 
     if mismatches:

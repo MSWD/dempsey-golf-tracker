@@ -165,12 +165,15 @@ function renderHelpView() {
     <div class="card">
       <h2>Matches</h2>
       <p>A match card can have 2 or 3 teams. Add each team's players with their hole-by-hole
-      scores — like the Rounds page, each hole starts at that hole's par so you can nudge it
-      up/down rather than typing from scratch; unlike Rounds, changing a match's course/side/tee
-      happens through "Edit match" (see below), not inline in the score-entry row, so there's no
-      reset-to-par warning here — editing the match header never touches scores you've already
-      entered, only where new entries default to. Uncheck "Starter" for anyone who's just playing
-      an extra round that day and shouldn't count toward the team score. Team score is the sum of
+      scores. Unlike the Rounds page, a new entry's holes start at <strong>double par</strong>, not
+      par — a real score would look plausible sitting there unedited, so the default is
+      deliberately an obvious placeholder you have to overwrite as you enter real scores. Editing
+      an existing entry always shows what was actually recorded. Changing a match's
+      course/side/tee happens through "Edit match" (see below), not inline in the score-entry row,
+      so there's no reset-to-default warning here — editing the match header never touches scores
+      you've already entered, only where new entries default to. Uncheck "Starter" for anyone
+      who's just playing an extra round that day and shouldn't count toward the team score. Team
+      score is the sum of
       the 4 lowest scores among the 6 starters who posted a valid score — if fewer than 4 have, it
       shows as "incomplete" rather than guessing a number. The lowest-scoring team in a match is
       highlighted with a "Winner" badge once at least two teams have a complete score. The player
@@ -214,6 +217,12 @@ function renderHelpView() {
       <strong>not</strong> the team's real results. To see the team's actual published match
       history, go to the published report directly — reached from the link on the Rank tab, or at
       <code>reports/index.html</code> — not this tab.</p>
+      <p>Every match card also has a <strong>"Copy report link"</strong> button that copies a link
+      to just that one match's published result — handy for sending to an opposing coach. It
+      copies the link right away, even before you've published, so it's the URL the match
+      <em>will</em> live at; the other coach won't see anything there until you actually publish.
+      If you edit the match afterward, publish again so the link reflects the latest scores — the
+      link itself doesn't change.</p>
     </div>
 
     <div class="card">

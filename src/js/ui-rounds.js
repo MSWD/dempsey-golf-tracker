@@ -75,7 +75,12 @@ function renderRoundsView(warningMessage, editingRoundId) {
       </div>
       <div class="muted" id="round-tee-info"></div>
       <div class="form-row" id="round-holes">
-        ${Array.from({ length: 9 }, (_, i) => `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${i + 1}" value="${editingRound && editingRound.holeScores[i] != null ? editingRound.holeScores[i] : ''}">`).join('')}
+        <div class="hole-scores">
+          ${Array.from({ length: 9 }, (_, i) => renderStepperInput({
+            className: 'hole-input', dataAttrs: `data-hole="${i}"`, placeholder: `H${i + 1}`,
+            value: editingRound && editingRound.holeScores[i] != null ? editingRound.holeScores[i] : '', min: 1,
+          })).join('')}
+        </div>
         <input type="number" id="round-putts" class="input-narrow" placeholder="Putts" value="${editingRound && editingRound.putts != null ? editingRound.putts : ''}">
       </div>
       <button class="primary" id="btn-add-round">${editingRound ? 'Update round' : 'Save round'}</button>
@@ -112,6 +117,8 @@ function renderRoundsView(warningMessage, editingRoundId) {
       </table>
     </div>
   `;
+
+  wireStepperButtons(el.querySelector('#round-holes'));
 
   const roundCourseSelect = el.querySelector('#round-course');
   const roundSideSelect = el.querySelector('#round-side');

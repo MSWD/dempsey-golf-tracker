@@ -158,6 +158,14 @@ main {
   margin: 0 auto;
 }
 
+/* Tablet range (bigger than the phone breakpoint below, at or under iPad's widest landscape) gets
+   tighter side padding so there's more real width for the .hole-scores row (9 fields fixed at
+   ~112px each = ~1070px) to fit without horizontal scrolling — see GitHub issue #33. */
+@media (min-width: 601px) and (max-width: 1366px) {
+  main { padding: 20px 8px; }
+  .card { padding: 16px 10px; }
+}
+
 .view { display: none; }
 .view.active { display: block; }
 
@@ -319,6 +327,82 @@ body.admin-mode .viewer-only { display: none; }
    injected into #icon-sprite via innerHTML (app.js) — hide the container instead. */
 #icon-sprite { display: none; }
 .hole-input { width: 56px; }
+
+/* +/- buttons flanking a number input — the only increment/decrement affordance on iOS/iPadOS
+   browsers, which never show a native spinner on <input type="number"> (see GitHub issue #33).
+   The group is one inline-flex unit so .form-row's flex-wrap wraps whole hole/putts groups onto a
+   new line together, never splitting a button from its input. */
+.stepper {
+  display: inline-flex;
+  align-items: stretch;
+  white-space: nowrap;
+}
+
+.stepper input[type="number"] {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
+.stepper-btn {
+  width: 28px;
+  min-width: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.stepper-btn.stepper-minus { border-radius: 4px 0 0 4px; }
+.stepper-btn.stepper-plus { border-radius: 0 4px 4px 0; }
+
+/* Bigger, easier-to-read entry fields on the round-log row specifically — scoped to #round-holes
+   so it doesn't spill onto the match-entry row (ui-matches.js) or any table cell that happens to
+   share .hole-input/.input-narrow elsewhere. */
+#round-holes input[type="number"] {
+  font-size: 1.2rem;
+  padding: 8px 6px;
+}
+#round-holes .stepper-btn {
+  font-size: 1.2rem;
+}
+/* Narrowed just enough (measured against the tablet-range padding above) to fit all 9 fields on
+   one line without horizontal scrolling on iPad. Rounds and Matches carry slightly different
+   values since Matches' hole-score row has the same 9 fields plus a longer preceding row (name +
+   Starter) sharing the card's width budget. */
+#round-holes .hole-input { width: 53px; }
+
+/* Matches page: same reasoning as #round-holes above, applied via .add-player-row since match
+   entry has no shared container id (each team's entry row is its own instance). */
+.add-player-row .hole-input { width: 49px; }
+
+/* Forces the match-entry row's flex-wrap to start a new line here, right after the Starter
+   checkbox, so hole-score entry always begins on its own line instead of wherever it happens to
+   wrap on a given screen width. */
+.row-break {
+  flex-basis: 100%;
+  height: 0;
+}
+
+/* All 9 hole-score fields stay together on one line — entering a round/match hole-by-hole reads
+   left-to-right as one sequence, so wrapping mid-sequence onto a second line is more confusing
+   than helpful. flex-wrap: nowrap keeps them from breaking; overflow-x: auto is the fallback on
+   screens too narrow to fit all 9 (scrolls instead of squeezing digits unreadably). Putts is a
+   sibling outside this group, so .form-row's own wrap is still free to drop it to the next line. */
+.hole-scores {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
 .yardage-input { width: 76px; }
 .input-narrow { width: 70px; }
 .input-medium { width: 80px; }

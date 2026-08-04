@@ -33,7 +33,10 @@ src/
       seed_data.json           # this team's starter roster/courses (new teams start empty)
       reports/
         index.html
-        report-viewer.js
+        report-viewer.js       # season report: rankings + all matches
+        match.html
+        match-viewer.js        # single-match share page (?id=<matchId>)
+        match-render.js         # match-card rendering shared by report-viewer.js and match-viewer.js
         data/latest.json       # single always-current published dataset
   css/, js/, assets/           # shared across every team
 worker/
@@ -109,6 +112,15 @@ Every round/match already carries a date, so `report-viewer.js` reconstructs "st
 past date" dynamically from the full history using the same `scoring-engine.js` the live app uses,
 via a "View as of" date selector — see `docs/decisions.md` for why this replaced the earlier
 dated-snapshot-per-publish design.
+
+**Sharing a single match**: `reports/match.html?id=<matchId>` renders just one match's card (same
+markup as a match's section within the full report), fetching the same `data/latest.json` and
+finding the match by id client-side — there's no separate per-match JSON file. Match ids
+(`match_<ts36>_<random>`, from `makeId()` in `models.js`) are stable and safe to put in a URL. On
+the live match entry screen, each match card has a "Copy report link" button
+(`src/js/ui-matches.js`) that copies this URL ahead of time, using `TEAM_CONFIG.domain` — the link
+only resolves once the coach has actually published, so it's an *expected* URL, not a guarantee
+the match is live yet.
 
 ## Onboarding a new team
 

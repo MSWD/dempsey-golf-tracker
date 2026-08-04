@@ -101,6 +101,9 @@ and the caller's own token in `Authorization`. The Worker:
 
 `reports/index.html`/`report-viewer.js` reads `reports/data/latest.json` and reconstructs
 standings as of any past date dynamically — no per-publish snapshot files, no manifest.
+`reports/match.html`/`match-viewer.js` reads that same file client-side to render one match by id
+(see `docs/architecture.md`'s "Sharing a single match") — there's no separate publish step or
+per-match file for it.
 
 ## `teams.json` — who can edit it
 

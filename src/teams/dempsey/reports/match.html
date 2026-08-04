@@ -5,37 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
-  <title>Dempsey Golf Reports</title>
+  <title>Dempsey Golf Tracker — Match Report</title>
   <link rel="icon" type="image/svg+xml" href="../../../assets/favicon.svg">
   <link rel="stylesheet" href="../../../css/styles.css">
 </head>
 <body>
 
   <header class="app-header">
-    <a href="../../../index.html" class="back-link">&larr; All teams</a>
+    <a href="index.html" class="back-link">&larr; Full report</a>
     <img class="logo" id="team-logo" alt="">
     <h1 id="team-title"></h1>
-    <a class="btn" href="../index.html">Back to app</a>
   </header>
 
-  <nav class="tabs">
-    <button data-view="rank" class="active">Rankings</button>
-    <button data-view="matches">Matches</button>
-  </nav>
-
   <main>
-    <section class="view active" id="view-report-rank">
-      <div class="card">
-        <div class="form-row">
-          <label for="report-date-select">View as of:</label>
-          <select id="report-date-select"></select>
-        </div>
-      </div>
-      <div id="report-content"></div>
-    </section>
-    <section class="view" id="view-report-matches">
-      <div id="report-matches-content"></div>
-    </section>
+    <div id="match-content"></div>
   </main>
 
   <footer id="app-footer" class="app-footer"></footer>
@@ -45,6 +28,6 @@
   <script src="../../../js/html-utils.js"></script>
   <script src="../../../js/scoring-engine.js"></script>
   <script src="match-render.js"></script>
-  <script src="report-viewer.js"></script>
+  <script src="match-viewer.js"></script>
 </body>
 </html>

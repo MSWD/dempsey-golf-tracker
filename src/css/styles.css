@@ -12,6 +12,17 @@
 
 * { box-sizing: border-box; }
 
+/* Android Chrome's "font boosting" can silently inflate text (and anything sized around it) past
+   what the same CSS renders as on desktop — it's tuned for readability on unstyled/text-heavy
+   pages, not a deliberately-sized layout like this one. Without this reset, that inflation is
+   invisible in desktop devtools' viewport emulation (it's a real-device-only behavior) but can
+   push fixed/min-width elements (header controls, stepper buttons) wide enough to force page-level
+   horizontal scroll on an actual phone. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -25,6 +36,12 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  /* Safety net: nothing in this layout is meant to make the whole page scroll sideways — every
+     intentionally-wide element (the rounds/matches tables, nav.tabs, .hole-scores) already has its
+     own dedicated overflow-x:auto wrapper. This just guarantees a stray future overflow can't drag
+     the entire viewport with it; it doesn't hide anything, since nothing should be relying on
+     body-level scroll to reach content. */
+  overflow-x: hidden;
 }
 
 main { flex: 1; }
@@ -156,6 +173,14 @@ main {
   padding: 20px;
   max-width: 1100px;
   margin: 0 auto;
+}
+
+/* Tablet range (bigger than the phone breakpoint below, at or under iPad's widest landscape) gets
+   tighter side padding so there's more real width for the .hole-scores row (9 fields fixed at
+   ~112px each = ~1070px) to fit without horizontal scrolling — see GitHub issue #33. */
+@media (min-width: 601px) and (max-width: 1366px) {
+  main { padding: 20px 8px; }
+  .card { padding: 16px 10px; }
 }
 
 .view { display: none; }
@@ -319,6 +344,110 @@ body.admin-mode .viewer-only { display: none; }
    injected into #icon-sprite via innerHTML (app.js) — hide the container instead. */
 #icon-sprite { display: none; }
 .hole-input { width: 56px; }
+
+/* +/- buttons flanking a number input — the only increment/decrement affordance on iOS/iPadOS
+   browsers, which never show a native spinner on <input type="number"> (see GitHub issue #33).
+   The group is one inline-flex unit so .form-row's flex-wrap wraps whole hole/putts groups onto a
+   new line together, never splitting a button from its input. */
+.stepper {
+  display: inline-flex;
+  align-items: stretch;
+  white-space: nowrap;
+}
+
+.stepper input[type="number"] {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
+.stepper-btn {
+  width: 28px;
+  min-width: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.stepper-btn.stepper-minus { border-radius: 4px 0 0 4px; }
+.stepper-btn.stepper-plus { border-radius: 0 4px 4px 0; }
+
+/* Bigger, easier-to-read entry fields on the round-log row specifically — scoped to #round-holes
+   so it doesn't spill onto the match-entry row (ui-matches.js) or any table cell that happens to
+   share .hole-input/.input-narrow elsewhere. */
+#round-holes input[type="number"] {
+  font-size: 1.2rem;
+  padding: 8px 6px;
+}
+#round-holes .stepper-btn {
+  font-size: 1.2rem;
+}
+/* Narrowed just enough to fit all 9 fields on one line without horizontal scrolling — confirmed
+   working on an actual iPad at this size. Rounds and Matches carry slightly different values since
+   Matches' hole-score row shares its card's width budget with a longer preceding row (name +
+   Starter). This is also the value inherited below the 1100px grid-wrap breakpoint (phones and
+   portrait tablets), where the exact width doesn't affect scrolling — grid wrap always fits 3 per
+   row regardless — so no separate narrow-width value is needed there. */
+#round-holes .hole-input { width: 53px; }
+.add-player-row .hole-input { width: 49px; }
+
+/* Above the grid-wrap breakpoint, some iPads in landscape (Air 11", Pro 11", Pro 12.9" — all
+   1180px+) share this single-line layout with desktop Chrome, so the iPad-tuned width above and
+   desktop's own narrower need can't both be a single unscoped value — desktop Chrome needed these
+   3-4px narrower to avoid scrolling at its own measured width. */
+@media (min-width: 1101px) {
+  #round-holes .hole-input { width: 50px; }
+  .add-player-row .hole-input { width: 47px; }
+}
+
+/* Forces the match-entry row's flex-wrap to start a new line here, right after the Starter
+   checkbox, so hole-score entry always begins on its own line instead of wherever it happens to
+   wrap on a given screen width. */
+.row-break {
+  flex-basis: 100%;
+  height: 0;
+}
+
+/* All 9 hole-score fields stay together on one line — entering a round/match hole-by-hole reads
+   left-to-right as one sequence, so wrapping mid-sequence onto a second line is more confusing
+   than helpful. flex-wrap: nowrap keeps them from breaking; overflow-x: auto is the fallback on
+   screens too narrow to fit all 9 (scrolls instead of squeezing digits unreadably). Putts is a
+   sibling outside this group, so .form-row's own wrap is still free to drop it to the next line. */
+.hole-scores {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+/* Below ~1100px there isn't room for all 9 fields plus surrounding chrome even with the narrowed
+   per-page .hole-input widths above (measured: Rounds needs ~1080px, Matches ~1045px) — that's
+   every phone in either orientation and any tablet in portrait. A horizontal scrollbar there is
+   worse than just wrapping, so switch to a fixed 3-per-row grid instead (9 holes / 3 = exactly 3
+   full rows, no partial row). Landscape tablets above this width keep the single-line layout. */
+@media (max-width: 1100px) {
+  .hole-scores {
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
+    justify-content: center;
+    overflow-x: visible;
+    padding-bottom: 0;
+    /* Claims the full row in the surrounding flex container (#round-holes / .add-player-row), the
+       same trick .row-break uses — otherwise Putts (the next flex item) sits in whatever space is
+       left beside the grid, vertically centered next to one of its rows instead of below all of
+       them. */
+    flex-basis: 100%;
+  }
+}
+
 .yardage-input { width: 76px; }
 .input-narrow { width: 70px; }
 .input-medium { width: 80px; }

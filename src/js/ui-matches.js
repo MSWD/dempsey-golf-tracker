@@ -264,18 +264,24 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
           <input type="text" class="displayname-input" placeholder="Player name" value="${editingEntry ? escapeHtml(editingEntry.displayName) : ''}">
         `}
         <label class="muted"><input type="checkbox" class="starter-checkbox" ${editingEntry ? (editingEntry.isStarter ? 'checked' : '') : 'checked'}> Starter</label>
-        ${Array.from({ length: 9 }, (_, i) => {
-          // New entries default each hole to double par (the same cap capAllHoleScores enforces
-          // on submit, see scoring-engine.js) rather than par. A par default reads as a real score
-          // at a glance, so leftover/pre-round defaults were getting mixed in with actual match
-          // scores; double par is unambiguously a placeholder the coach must overwrite as they
-          // enter real scores. Editing an existing entry always shows what was actually recorded,
-          // never a default fallback.
-          const value = editingEntry
-            ? (editingEntry.holeScores[i] != null ? editingEntry.holeScores[i] : '')
-            : (holePars ? holePars[i] * 2 : '');
-          return `<input type="number" class="hole-input" data-hole="${i}" placeholder="H${sideHoleNumber(i, side)}" value="${value}">`;
-        }).join('')}
+        <span class="row-break"></span>
+        <div class="hole-scores">
+          ${Array.from({ length: 9 }, (_, i) => {
+            // New entries default each hole to double par (the same cap capAllHoleScores enforces
+            // on submit, see scoring-engine.js) rather than par. A par default reads as a real score
+            // at a glance, so leftover/pre-round defaults were getting mixed in with actual match
+            // scores; double par is unambiguously a placeholder the coach must overwrite as they
+            // enter real scores. Editing an existing entry always shows what was actually recorded,
+            // never a default fallback.
+            const value = editingEntry
+              ? (editingEntry.holeScores[i] != null ? editingEntry.holeScores[i] : '')
+              : (holePars ? holePars[i] * 2 : '');
+            return renderStepperInput({
+              className: 'hole-input', dataAttrs: `data-hole="${i}"`,
+              placeholder: `H${sideHoleNumber(i, side)}`, value, min: 1,
+            });
+          }).join('')}
+        </div>
         <input type="number" class="putts-input input-narrow" placeholder="Putts" value="${editingEntry && editingEntry.putts != null ? editingEntry.putts : ''}">
         <button class="btn-add-team-player">${editingEntry ? 'Update score' : 'Add score'}</button>
         ${editingEntry ? '<button class="btn-cancel-entry-edit">Cancel</button>' : ''}
@@ -314,6 +320,8 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
 }
 
 function wireMatchCard(match, card) {
+  wireStepperButtons(card);
+
   // Copies the URL this match *will* live at on the published static report (reports/match.html,
   // see src/teams/<team>/reports/match-viewer.js) — not a guarantee it's live yet. The coach
   // typically grabs this right after entering a match to text/email the opposing coach, then

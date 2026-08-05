@@ -244,6 +244,28 @@ For 18-hole courses, the round/match stores a small additive `side` field (`fron
 exports do not need migration: a missing `side` defaults to the historical 9-hole/front behavior,
 and existing 9-value course/tee arrays continue to resolve as-is.
 
+## iPad and Pixel 10 layout pass
+
+Landscape/portrait layouts were measured and tuned against an actual iPad (Air/Pro-class, 1180px+
+landscape) and a Pixel 10 (portrait and landscape), not just breakpoint guesses — see the
+`#round-holes`/`.hole-scores`/`.add-player-row` comments in `styles.css` for the specific widths
+and why Rounds and Matches need slightly different hole-input widths (Matches' row shares its
+card's width budget with a longer preceding name+Starter row, Rounds' doesn't). Below ~1100px
+(every phone in either orientation, and any tablet in portrait) the 9 hole-score fields switch from
+a single scrollable line to a fixed 3-per-row grid instead, since a horizontal scrollbar there is
+worse than wrapping; landscape tablets above that width keep the single-line layout. Safari itself
+still hasn't been tested — coach is fine running Chrome on iPad for now, but wants to verify Safari
+behavior in a later iteration.
+
+## Highlighting the winning team on match cards
+
+`renderMatchCard` (`ui-matches.js`) now adds a `winning-team` class to whichever team block has the
+lowest *complete* team score (`scoring-engine.js`'s `teamScore()`). A winner is only ever declared
+once at least 2 teams have posted a complete score — with fewer than that there's nothing to
+compare, so no highlight rather than a premature or misleading one. This is separate from the
+existing medalist badge, which is an individual (not team) stroke-play award computed across every
+player in the match regardless of team or starter status.
+
 ## Backlog / deliberately deferred
 
 - **Exact minimum-holes-for-valid-round number.** Currently `5` in `scoring-engine.js`
@@ -255,10 +277,6 @@ and existing 9-value course/tee arrays continue to resolve as-is.
 - **Scorecard photo scan (stretch).** Auto-fill a Course's hole pars/yardages/slope/rating by
   calling Claude's vision API from the browser, with the coach supplying his own API key stored
   only in localStorage. Not started.
-- **Safari/iPad testing.** Layout has been checked against iPad Air (landscape horizontal-scroll
-  fix applied) and Pixel 10 (portrait/landscape) in Chrome. Safari itself hasn't been tested yet —
-  coach is fine running Chrome on iPad for now, but wants to verify Safari behavior in a later
-  iteration.
 - **Putts stat skewed by picked-up holes — needs design.** `Round.putts` is a single total for the
   whole round (see `models.js`/`ui-rounds.js`), not per-hole. Once a player hits the double-par cap
   on a hole they often pick up rather than finish holing out, so the true putt count for that hole
@@ -273,6 +291,3 @@ and existing 9-value course/tee arrays continue to resolve as-is.
   in the UI? something else?). Needs a real design pass before building — bundle with
   `MIN_HOLES_FOR_VALID_ROUND` / incomplete-round logic since it's the same "how much of this round
   actually counts" problem.
-- **Highlight the winning team on match cards.** On the Matches view, visually highlight whichever
-  team's container has the lowest *complete* team score (`scoring-engine.js`'s `teamScore()`) —
-  purely a display/UI change, no new data needed. Not started.

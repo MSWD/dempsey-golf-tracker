@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-04",
+  "publishedAt": "2026-08-08",
   "seasonName": "2026 Dempsey Golf Season",
   "players": [
     {
@@ -1196,6 +1196,98 @@
         3
       ],
       "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_msfhcrca_mav6hb",
+      "playerId": "player_19fa8e6d69e_dye45a",
+      "date": "2026-08-04",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "back",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        4,
+        8,
+        7,
+        4,
+        5,
+        8,
+        6,
+        8
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_msg3w8og_6xny0s",
+      "playerId": "player_19fa8e6d69e_q6e747",
+      "date": "2026-08-04",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "back",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        4,
+        6,
+        10,
+        6,
+        8,
+        7,
+        5,
+        7
+      ],
+      "putts": 24,
+      "matchId": null
+    },
+    {
+      "id": "round_msjp65pk_2wmqh5",
+      "playerId": "player_19fa8e6d69e_b3x0gc",
+      "date": "2026-08-06",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        5,
+        4,
+        4,
+        6,
+        7,
+        8,
+        5,
+        3
+      ],
+      "putts": 19,
+      "matchId": null
+    },
+    {
+      "id": "round_msjpf0nr_idgebm",
+      "playerId": "player_19fa8e6d69e_joly3g",
+      "date": "2026-08-07",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        7,
+        5,
+        4,
+        6,
+        7,
+        6,
+        6,
+        3
+      ],
+      "putts": 23,
       "matchId": null
     }
   ],

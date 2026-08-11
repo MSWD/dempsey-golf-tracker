@@ -1,10 +1,40 @@
-// Bootstraps the app: loads team branding, initializes the data store, wires up nav/export/import/
-// auth, and delegates each view's rendering to its own ui-*.js module.
+// Bootstraps the app: loads team branding, initializes the data store, wires up nav/auth, and
+// delegates each view's rendering to its own ui-*.js module. Export/Import live in
+// ui-maintenance.js's Data Maintenance view, not here — see showView()/views below.
 const AppState = { isAdmin: false };
 
 function currentView() {
   const active = document.querySelector('.view.active');
   return active ? active.id.replace('view-', '') : null;
+}
+
+// Hoisted to top level (rather than living inside main()) so ui-maintenance.js can call these
+// after Import/Restore, the same way it needs to refresh the header and switch tabs that every
+// other admin action already does from inside main()'s own closure.
+const views = {
+  roster: renderRosterView,
+  courses: renderCoursesView,
+  rounds: renderRoundsView,
+  rank: renderRankView,
+  charts: renderChartsView,
+  matches: renderMatchesView,
+  maintenance: renderMaintenanceView,
+  help: renderHelpView,
+};
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach((el) => el.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach((btn) => btn.classList.remove('active'));
+  document.getElementById(`view-${name}`).classList.add('active');
+  const tab = document.querySelector(`nav.tabs button[data-view="${name}"]`);
+  if (tab) tab.classList.add('active');
+  if (views[name]) views[name]();
+}
+
+function updateSeasonNameUI() {
+  const name = DataStore.getSeasonName();
+  document.getElementById('season-name-input').value = name;
+  document.getElementById('season-name-display').textContent = name || 'No season name set';
 }
 
 function renderFooter() {
@@ -34,13 +64,6 @@ async function main() {
   await DataStore.init();
 
   const seasonNameInput = document.getElementById('season-name-input');
-  const seasonNameDisplay = document.getElementById('season-name-display');
-
-  function updateSeasonNameUI() {
-    const name = DataStore.getSeasonName();
-    seasonNameInput.value = name;
-    seasonNameDisplay.textContent = name || 'No season name set';
-  }
 
   seasonNameInput.addEventListener('change', () => {
     DataStore.setSeasonName(seasonNameInput.value.trim());
@@ -49,59 +72,8 @@ async function main() {
 
   updateSeasonNameUI();
 
-  const views = {
-    roster: renderRosterView,
-    courses: renderCoursesView,
-    rounds: renderRoundsView,
-    rank: renderRankView,
-    charts: renderChartsView,
-    matches: renderMatchesView,
-    help: renderHelpView,
-  };
-
-  function showView(name) {
-    document.querySelectorAll('.view').forEach((el) => el.classList.remove('active'));
-    document.querySelectorAll('nav.tabs button').forEach((btn) => btn.classList.remove('active'));
-    document.getElementById(`view-${name}`).classList.add('active');
-    const tab = document.querySelector(`nav.tabs button[data-view="${name}"]`);
-    if (tab) tab.classList.add('active');
-    if (views[name]) views[name]();
-  }
-
   document.querySelectorAll('nav.tabs button').forEach((btn) => {
     btn.addEventListener('click', () => showView(btn.dataset.view));
-  });
-
-  document.getElementById('btn-export').addEventListener('click', () => {
-    if (!AppState.isAdmin) return;
-    DataStore.exportJSON();
-  });
-  document.getElementById('btn-import').addEventListener('click', () => {
-    if (!AppState.isAdmin) return;
-    document.getElementById('file-import').click();
-  });
-  document.getElementById('file-import').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file || !AppState.isAdmin) return;
-    const confirmed = confirm(
-      `Importing a season replaces ALL current data in this browser (roster, rounds, matches) ` +
-      `with the contents of "${file.name}" — this cannot be undone. ` +
-      `Make sure you've exported the current season first if you want to keep it. Continue?`
-    );
-    if (!confirmed) {
-      e.target.value = '';
-      return;
-    }
-    try {
-      await DataStore.importJSON(file);
-      updateSeasonNameUI();
-      alert('Import successful.');
-      showView('roster');
-    } catch (err) {
-      alert(`Import failed: ${err.message}`);
-    } finally {
-      e.target.value = '';
-    }
   });
 
   const loginBtn = document.getElementById('btn-login');
@@ -134,7 +106,10 @@ async function main() {
       }
       AppState.isAdmin = false;
       updateAuthUI();
-      showView(currentView() ?? 'roster');
+      // The Maintenance tab is admin-only and about to disappear from the nav — don't strand the
+      // now-logged-out viewer on a tab whose button just vanished.
+      const landingView = currentView() === 'maintenance' ? 'roster' : (currentView() ?? 'roster');
+      showView(landingView);
       return;
     }
 

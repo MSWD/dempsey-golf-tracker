@@ -3,6 +3,10 @@
 // browsers scope localStorage by origin, not path, so two teams' data would otherwise collide.
 const STORAGE_KEY = `mstgt:data:${TEAM_CONFIG.teamSlug}`;
 const SEED_DATA_PATH = 'seed_data.json';
+// Separate key from STORAGE_KEY so a corrupt/missing snapshot history never affects loading the
+// live season document, and vice versa. See issue #30.
+const SNAPSHOTS_KEY = `mstgt:snapshots:${TEAM_CONFIG.teamSlug}`;
+const SNAPSHOT_CAP = 20;
 
 function emptyData() {
   return { seasonName: '', homeCourseId: null, players: [], courses: [], rounds: [], matches: [], tournaments: [] };
@@ -203,6 +207,71 @@ const DataStore = {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(this._data));
   },
 
+  // --- Local snapshot history (issue #30) -----------------------------------------------------
+  // A rolling, local-browser-only safety net: right before importJSON()/reset()/restoreSnapshot()
+  // replace the whole document, the outgoing state is pushed here first, so a bad import or a
+  // fat-fingered restore can be undone from the Data Maintenance page.
+
+  _loadSnapshots() {
+    try {
+      const raw = localStorage.getItem(SNAPSHOTS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (err) {
+      console.error('Stored snapshot history is corrupt — ignoring it.', err);
+      return [];
+    }
+  },
+
+  // The one localStorage write in this file that can plausibly fail (e.g. QuotaExceededError) —
+  // wrapped so a storage hiccup here never breaks the import/reset/restore it's piggybacking on.
+  _saveSnapshots(list) {
+    try {
+      localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(list));
+    } catch (err) {
+      console.error('Could not save snapshot history (storage may be full) — continuing without it.', err);
+    }
+  },
+
+  // Captures the CURRENT `this._data` (before the caller mutates it) as a new snapshot, oldest
+  // stored first. No deep-clone here is needed: _saveSnapshots() synchronously JSON.stringifies
+  // the whole list before this returns, and that string round-trip through localStorage is what
+  // decouples the stored copy from `this._data` — don't "fix" this by adding a redundant clone.
+  _snapshot(reason) {
+    const list = this._loadSnapshots();
+    list.push({
+      id: makeId('snapshot'),
+      version: 1, // bump if the snapshot wrapper shape ever changes
+      timestamp: new Date().toISOString(),
+      reason,
+      data: this._data,
+    });
+    this._saveSnapshots(list.slice(-SNAPSHOT_CAP));
+  },
+
+  // Newest-first, for display. Returns full {id, version, timestamp, reason, data} entries — a
+  // season document is only a few KB, so no separate summary/pagination API is needed.
+  listSnapshots() {
+    return this._loadSnapshots().slice().reverse();
+  },
+
+  // Restoring is itself non-destructive: the state immediately prior to the restore is snapshotted
+  // first, so restoring is reversible the same way importJSON()/reset() are.
+  restoreSnapshot(id) {
+    const list = this._loadSnapshots();
+    const found = list.find((s) => s.id === id);
+    if (!found) throw new Error('Snapshot not found.');
+    // Capture `found` before snapshotting — _snapshot() below does its own independent
+    // load/evict/save cycle and could otherwise evict this exact entry if the list is already at
+    // SNAPSHOT_CAP. found.data needs no re-validation: it can only have entered the list already
+    // having passed validateImportData() at some earlier point.
+    this._snapshot('before-restore');
+    this._data = found.data;
+    this._save();
+    return this._data;
+  },
+
   getAll(entity) {
     return this._data[entity];
   },
@@ -273,6 +342,7 @@ const DataStore = {
       throw new Error('Invalid import file: not valid JSON.');
     }
     validateImportData(parsed);
+    this._snapshot('before-import');
     this._data = {
       seasonName: typeof parsed.seasonName === 'string' ? parsed.seasonName : '',
       homeCourseId: typeof parsed.homeCourseId === 'string' ? parsed.homeCourseId : null,
@@ -293,6 +363,7 @@ const DataStore = {
   // data would itself look like an unexpected data change, not a clean recovery. Clearing to
   // empty mirrors init()'s own fallback when no usable data exists at all.
   reset() {
+    this._snapshot('before-reset');
     this._data = emptyData();
     this._save();
     return this._data;

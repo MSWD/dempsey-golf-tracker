@@ -1,5 +1,18 @@
 function renderRosterView(editingPlayerId) {
   const el = document.getElementById('view-roster');
+
+  // See viewerRedirectNotice (html-utils.js) / GitHub issue #39 — a viewer's local roster is
+  // essentially never the team's actual roster. The published Rankings table already lists every
+  // player by name and grade, so it's a reasonable stand-in even though it isn't a roster page.
+  if (!AppState.isAdmin) {
+    el.innerHTML = viewerRedirectNotice(
+      "The roster shown here is only meaningful from the coach's own browser — this device's " +
+      'local data likely isn\'t in sync with the team\'s. The published report lists every ' +
+      'player by name and grade.'
+    );
+    return;
+  }
+
   const players = DataStore.getAll('players').slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
   const editingPlayer = editingPlayerId ? DataStore.getById('players', editingPlayerId) : null;
 

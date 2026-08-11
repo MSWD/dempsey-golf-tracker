@@ -63,6 +63,19 @@ function teeSetYardageSummary(course, teeSet) {
 // course's (already-open) details panel, not from the top-level form.
 function renderCoursesView(editingCourseId, editingTeeSet) {
   const el = document.getElementById('view-courses');
+
+  // See viewerRedirectNotice (html-utils.js) / GitHub issue #39. Courses exists purely to feed
+  // data entry (pars, yardages, tee sets used when logging rounds/matches) — a viewer has no
+  // independent use for it, and there's no published-report equivalent to point at either, so this
+  // is just a plain "nothing to see here" rather than a link to a matching public view.
+  if (!AppState.isAdmin) {
+    el.innerHTML = viewerRedirectNotice(
+      'Course setup is only used for entering rounds and matches — there\'s nothing here for a ' +
+      "viewer to see. Check the published report for the team's actual results."
+    );
+    return;
+  }
+
   const courses = DataStore.getAll('courses').slice().sort((a, b) => a.name.localeCompare(b.name));
   const editingCourse = editingCourseId ? DataStore.getById('courses', editingCourseId) : null;
 

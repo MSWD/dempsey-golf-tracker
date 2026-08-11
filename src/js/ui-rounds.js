@@ -45,6 +45,17 @@ function updateHolePlaceholders(container, side) {
 
 function renderRoundsView(warningMessage, editingRoundId) {
   const el = document.getElementById('view-rounds');
+
+  // See viewerRedirectNotice (html-utils.js) / GitHub issue #39 — same reasoning as renderRankView
+  // below: a viewer's local rounds are essentially never the team's actual rounds.
+  if (!AppState.isAdmin) {
+    el.innerHTML = viewerRedirectNotice(
+      "Rounds shown here are only meaningful from the coach's own browser — this device's local " +
+      "data likely isn't in sync with the team's."
+    );
+    return;
+  }
+
   const players = DataStore.getAll('players').filter((p) => p.active).sort((a, b) => a.lastName.localeCompare(b.lastName));
   // Unlike the log-round form's player list above, filtering needs every player who could own a
   // historical round, including ones since marked inactive — otherwise their old rounds become
@@ -373,13 +384,14 @@ function renderRankView() {
   // Computing a rank table from that would be misleading rather than just unhelpful, so send
   // viewers straight to the published report instead, which reflects the actual season data
   // regardless of whose browser they're on. Admins still get the live local table below, since
-  // that's the coach's own browser and the whole point is checking it before publishing.
+  // that's the coach's own browser and the whole point is checking it before publishing. This was
+  // the original instance of this pattern — see viewerRedirectNotice (html-utils.js) / GitHub
+  // issue #39 for where it got generalized to the other local-data tabs.
   if (!AppState.isAdmin) {
-    el.innerHTML = `
-      <p class="muted">Rankings are only meaningful from the coach's own browser — this device's
-      local data likely isn't in sync with the team's.</p>
-      <p><a href="reports/index.html">View published rankings report</a></p>
-    `;
+    el.innerHTML = viewerRedirectNotice(
+      "Rankings are only meaningful from the coach's own browser — this device's local data " +
+      "likely isn't in sync with the team's."
+    );
     return;
   }
 

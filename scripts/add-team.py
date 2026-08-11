@@ -42,9 +42,6 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
     <input type="text" id="season-name-input" class="admin-only" placeholder="Season name (e.g. 2026 Dempsey Golf Season)">
     <span id="season-name-display" class="viewer-only muted"></span>
     <div class="header-actions">
-      <button id="btn-export" class="admin-only">Export season</button>
-      <button id="btn-import" class="admin-only">Import season</button>
-      <input type="file" id="file-import" accept="application/json" class="hidden">
       <button id="btn-publish" class="admin-only">Publish report</button>
       <button id="btn-login">Login with GitHub</button>
     </div>
@@ -59,6 +56,7 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
     <button data-view="charts">Charts</button>
     <button data-view="matches">Matches</button>
     <button data-view="help">Help</button>
+    <button data-view="maintenance" class="admin-only">Data Maintenance</button>
   </nav>
 
   <main>
@@ -69,6 +67,7 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
     <section class="view" id="view-charts"></section>
     <section class="view" id="view-matches"></section>
     <section class="view" id="view-help"></section>
+    <section class="view" id="view-maintenance"></section>
   </main>
 
   <footer id="app-footer" class="app-footer"></footer>
@@ -85,6 +84,7 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
   <script src="../../js/ui-charts.js"></script>
   <script src="../../js/ui-matches.js"></script>
   <script src="../../js/ui-help.js"></script>
+  <script src="../../js/ui-maintenance.js"></script>
   <script src="../../js/github-auth.js"></script>
   <script src="../../js/github-publish.js"></script>
   <script src="../../js/app.js"></script>

@@ -25,11 +25,11 @@ function renderHelpView() {
         <strong>not</strong> see the data you entered on yours — you're each looking at your own
         browser's local copy.</li>
       </ul>
-      <p>The <strong>only</strong> ways data leaves your browser are "Export data" below (a backup
-      file you save yourself), or an admin clicking <strong>"Publish report"</strong>, which pushes
-      a snapshot to a shared page everyone can see. If you do neither, and something happens to
-      this browser/device, that data is gone. <strong>Export a backup regularly</strong> — treat it
-      like saving a document.</p>
+      <p>The <strong>only</strong> ways data leaves your browser are "Export season" on the Data
+      Maintenance tab (a backup file you save yourself), or an admin clicking
+      <strong>"Publish report"</strong>, which pushes a snapshot to a shared page everyone can see.
+      If you do neither, and something happens to this browser/device, that data is gone.
+      <strong>Export a backup regularly</strong> — treat it like saving a document.</p>
     </div>
 
     <div class="card">
@@ -227,9 +227,12 @@ function renderHelpView() {
 
     <div class="card">
       <h2>Export / Import</h2>
-      <p>"Export data" downloads everything as a JSON file — do this regularly as a backup, since
-      your data lives only in this browser until it's exported or published. "Import data" replaces
-      the current data with a previously exported file.</p>
+      <p class="admin-only">"Export season" and "Import season" have moved to the <strong>Data
+      Maintenance</strong> tab (admin-only). Export downloads everything as a JSON file — do this
+      regularly as a backup, since your data lives only in this browser until it's exported or
+      published. Import replaces the current data with a previously exported file — the data
+      being replaced is automatically saved as a snapshot on that same page first, so a mistaken
+      Import can be undone from there without a full reset below.</p>
       <p class="admin-only">If this browser's data ever becomes corrupted or unusable, use
       <strong>"Reset local data"</strong> to clear it back to a blank season. This cannot be undone
       and will <strong>not</strong> restore this team's original starter roster or courses — export

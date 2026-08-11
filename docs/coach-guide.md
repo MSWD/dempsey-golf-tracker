@@ -235,10 +235,11 @@ re-publish so the link reflects the latest scores; the link itself doesn't chang
 
 ### Export / Import (season data)
 
-"Export season" downloads everything as a JSON file — do this regularly as a backup, since your
-data lives only in this browser until it's exported or published. "Import season" replaces the
-current data with a previously exported file, so it's a good habit to export first if you're about
-to import over live data.
+Found on the admin-only **Data Maintenance** tab. "Export season" downloads everything as a JSON
+file — do this regularly as a backup, since your data lives only in this browser until it's
+exported or published. "Import season" replaces the current data with a previously exported file.
+The data being replaced is automatically saved as a snapshot on that same page first, so a
+mistaken import can be undone — see the "Restore" button next to each snapshot in the list there.
 
 ### Privacy — this data can become public
 

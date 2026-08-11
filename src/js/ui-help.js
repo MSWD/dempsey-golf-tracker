@@ -45,12 +45,12 @@ function renderHelpView() {
       <h2>Viewer vs. admin mode</h2>
       <p>Anyone visiting this site is a <strong>viewer</strong> by default — you can look around,
       but "Add player," "Log a round," and similar forms are hidden. Clicking
-      <strong>"Login with GitHub"</strong> and signing in with a GitHub account that's listed as an
-      admin for this team unlocks editing and the "Publish report" button. Any GitHub account can
+      <strong>"Login with Google"</strong> and signing in with a Google account that's listed as an
+      admin for this team unlocks editing and the "Publish report" button. Any Google account can
       attempt to log in; whether it becomes an admin depends on whether it's on this team's admin
       list, not on anything you can change yourself.</p>
       <p class="muted">If login isn't working yet, the platform operator may not have finished
-      setting up GitHub/Cloudflare for this team — ask them.</p>
+      setting up Google/Cloudflare for this team — ask them.</p>
       <p>Roster, Courses, Rounds, Rank, Charts, and Matches all show the same short note and a link
       to the published report instead of their normal content when you're a viewer. That's
       deliberate, not a bug: everything on those tabs lives only in <em>this</em> browser's local
@@ -266,7 +266,7 @@ function renderHelpView() {
       <p>There's one "Publish report" button (in the header, admin-only) — it is not a per-tab or
       per-feature action. Clicking it takes <strong>everything</strong> currently in this browser's
       local data — the full roster, every round, every match — and pushes it as one combined
-      snapshot to a shared report page that anyone can view without logging in, no GitHub account
+      snapshot to a shared report page that anyone can view without logging in, no Google account
       needed (linked from the reports viewer, and from the Rank tab). There's no way to publish
       just the roster, or just matches, on their own.</p>
       <p>Each publish <strong>replaces</strong> the previously published snapshot — the report page
@@ -278,7 +278,7 @@ function renderHelpView() {
       — shown after you publish, and also linked from the Rank tab) that's meant to be
       <strong>handed out</strong>: share it with players' families, the athletic office, local
       press, whoever wants to follow along. Anyone with the link can view current rankings and
-      match results without logging in or needing a GitHub account of their own. You only need to
+      match results without logging in or needing a Google account of their own. You only need to
       share the link once — it's not a snapshot of today's data, it's a page that always shows
       whichever data you <em>most recently</em> published, so the same link keeps working as the
       season goes on. Just click "Publish report" again (in the header) whenever you want that

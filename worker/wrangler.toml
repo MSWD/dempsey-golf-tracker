@@ -6,18 +6,22 @@ compatibility_date = "2025-01-01"
 GITHUB_OWNER = "MSWD"
 GITHUB_REPO = "dempsey-golf-tracker"
 GITHUB_BRANCH = "main"
-# The one GitHub App this relay brokers device-flow logins for — public, safe in [vars] (it
-# already ships in every team's team-config.js). /device/code and /token reject any other
-# client_id, so this relay can't be used as a free CORS bridge for someone else's GitHub App.
-GITHUB_CLIENT_ID = "Iv23lihwcQrIGaTeMaO4"
+# The one Google OAuth Client this relay brokers device-flow logins for — public, safe in [vars]
+# (it already ships in every team's team-config.js). /device/code and /token reject any other
+# client_id, so this relay can't be used as a free CORS bridge for someone else's OAuth Client.
+# REPLACE_ prefix means "not configured yet" (matches google-auth.js's isConfigured() check).
+GOOGLE_CLIENT_ID = "109861280365-iv2isv7funavdp8bllqhqjg5p2noq91v.apps.googleusercontent.com"
 
 # GITHUB_PAT is a secret, not set here — run: wrangler secret put GITHUB_PAT
+# Unrelated to login — this is the Worker's own write credential for committing published reports,
+# not tied to whichever identity provider gates who's allowed to trigger that commit.
 
-# GITHUB_APP_CLIENT_SECRET is a secret, not set here — run:
-#   wrangler secret put GITHUB_APP_CLIENT_SECRET
-# Needed for refreshing an access token (grant_type=refresh_token) and revoking a token on logout
-# (DELETE /applications/{client_id}/token) — the initial device-code exchange doesn't need this.
-# Generate it in the GitHub App's settings: General → "Generate a new client secret."
+# GOOGLE_CLIENT_SECRET is a secret, not set here — run: wrangler secret put GOOGLE_CLIENT_SECRET
+# Needed on EVERY token-poll call to /token, not just the refresh grant (unlike GitHub, which only
+# needed a secret for refresh) — see handleToken's comment in cloudflare-device-flow-relay.js.
+# Revoking a token on logout needs no secret at all with Google. Generate it in Google Cloud
+# Console: APIs & Services -> Credentials -> the OAuth Client (type "TVs and Limited Input
+# devices") -> Client secret.
 
 # Applies to every POST endpoint (device flow relay + /whoami + /publish), keyed by caller IP —
 # a flat per-IP cap across the whole Worker, not tuned per-endpoint. Cloudflare's native binding,
@@ -26,4 +30,28 @@ GITHUB_CLIENT_ID = "Iv23lihwcQrIGaTeMaO4"
 [[ratelimits]]
 name = "RATE_LIMITER"
 namespace_id = "1001"
+simple = { limit = 30, period = 60 }
+
+# --- Staging environment (issue #26 testing) ---------------------------------------------------
+# A fully separate Worker deployment (own name -> own *.workers.dev URL, own independently-set
+# secrets) so the Google-OAuth rewrite could be tested end-to-end without ever touching the
+# production Worker the coach's real daily GitHub login depends on. Deploy with
+# `wrangler deploy --env staging`; set secrets with `wrangler secret put KEY --env staging`.
+# Every binding below is explicitly redeclared rather than relying on inheritance from the
+# top-level config, to remove any ambiguity about what staging actually shares with production —
+# notably [[ratelimits]] uses a different namespace_id so the two environments don't share a
+# rate-limit counter either. Remove this whole [env.staging] block once cutover is complete and
+# staging is no longer needed.
+[env.staging]
+name = "middle-school-golf-tracker-auth-staging"
+
+[env.staging.vars]
+GITHUB_OWNER = "MSWD"
+GITHUB_REPO = "dempsey-golf-tracker"
+GITHUB_BRANCH = "main"
+GOOGLE_CLIENT_ID = "109861280365-iv2isv7funavdp8bllqhqjg5p2noq91v.apps.googleusercontent.com"
+
+[[env.staging.ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1002"
 simple = { limit = 30, period = 60 }

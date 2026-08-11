@@ -83,14 +83,14 @@ async function main() {
     document.body.classList.toggle('admin-mode', AppState.isAdmin);
     document.body.classList.toggle('viewer-mode', !AppState.isAdmin);
     loginBtn.textContent = AppState.isAdmin
-      ? `Logout${GitHubAuth.username ? ` (${GitHubAuth.username})` : ''}`
-      : 'Login with GitHub';
+      ? `Logout${GoogleAuth.email ? ` (${GoogleAuth.email})` : ''}`
+      : 'Login with Google';
   }
 
   async function refreshAdminStatus() {
-    AppState.isAdmin = await GitHubAuth.isAdmin();
+    AppState.isAdmin = await GoogleAuth.isAdmin();
     updateAuthUI();
-    if (!AppState.isAdmin && GitHubAuth.sessionExpired) {
+    if (!AppState.isAdmin && GoogleAuth.sessionExpired) {
       loginStatus.classList.remove('login-active');
       loginStatus.textContent = 'Your session expired — please log in again.';
     }
@@ -100,7 +100,7 @@ async function main() {
     if (AppState.isAdmin) {
       loginBtn.disabled = true;
       try {
-        await GitHubAuth.logout();
+        await GoogleAuth.logout();
       } finally {
         loginBtn.disabled = false;
       }
@@ -113,51 +113,51 @@ async function main() {
       return;
     }
 
-    if (!GitHubAuth.isConfigured()) {
+    if (!GoogleAuth.isConfigured()) {
       loginStatus.classList.remove('login-active');
-      loginStatus.textContent = 'GitHub login is not configured yet — see docs/auth-and-publishing.md.';
+      loginStatus.textContent = 'Google login is not configured yet — see docs/auth-and-publishing.md.';
       return;
     }
 
-    // GitHub's device-verification page is always this fixed URL — knowing that lets us open it
+    // Google's device-verification page is always this fixed URL — knowing that lets us open it
     // synchronously, in the same tick as the click, so the browser still treats it as a direct
     // user gesture and won't block it as a popup. Waiting for the device-code fetch to resolve
     // first (even briefly) loses that direct-gesture window in most browsers, so the popup can't
     // be opened automatically once the code is ready — only right now, before we even have it.
-    const GITHUB_DEVICE_VERIFICATION_URL = 'https://github.com/login/device';
+    const GOOGLE_DEVICE_VERIFICATION_URL = 'https://www.google.com/device';
     const popupWidth = 520;
     const popupHeight = 650;
     const popupLeft = window.screenX + (window.outerWidth - popupWidth) / 2;
     const popupTop = window.screenY + (window.outerHeight - popupHeight) / 2;
-    // No noopener/noreferrer here (unlike the "Open GitHub's login page" fallback link below,
-    // which keeps them) — this popup only ever navigates to github.com: the fixed
-    // device-verification URL it's opened with, and then whatever verification_uri GitHub's own
-    // response returns, which is always github.com too. A real window handle is what lets the
+    // No noopener/noreferrer here (unlike the "Open Google's login page" fallback link below,
+    // which keeps them) — this popup only ever navigates to google.com: the fixed
+    // device-verification URL it's opened with, and then whatever verification_uri Google's own
+    // response returns, which is always google.com too. A real window handle is what lets the
     // code below redirect it to that verification_uri and auto-close it on success/failure;
     // noopener would silence both by making loginPopup always null. The reverse-tabnabbing risk
     // noopener normally guards against — an opened page rewriting window.opener.location to
     // something malicious — doesn't apply to a destination already fully trusted with the login
     // credentials themselves.
     let loginPopup = window.open(
-      GITHUB_DEVICE_VERIFICATION_URL,
-      'github-login',
+      GOOGLE_DEVICE_VERIFICATION_URL,
+      'google-login',
       `width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop}`
     );
 
     try {
       loginStatus.classList.add('login-active');
       loginStatus.textContent = 'Starting login…';
-      await GitHubAuth.login((userCode, verificationUri) => {
-        // Belt-and-suspenders: point the already-open popup at whatever GitHub actually returned,
+      await GoogleAuth.login((userCode, verificationUri) => {
+        // Belt-and-suspenders: point the already-open popup at whatever Google actually returned,
         // in case it ever differs from the well-known URL used to open it above.
-        if (loginPopup && !loginPopup.closed && verificationUri !== GITHUB_DEVICE_VERIFICATION_URL) {
+        if (loginPopup && !loginPopup.closed && verificationUri !== GOOGLE_DEVICE_VERIFICATION_URL) {
           loginPopup.location.href = verificationUri;
         }
         navigator.clipboard.writeText(userCode).catch(() => {});
         loginStatus.innerHTML = `
           Code <span id="login-code">${userCode}</span> copied — paste it into the popup window.
           <button type="button" id="copy-login-code">Copy again</button><br>
-          No popup? <a href="${verificationUri}" id="login-verify-link" target="_blank" rel="noopener">Open GitHub's login page</a>
+          No popup? <a href="${verificationUri}" id="login-verify-link" target="_blank" rel="noopener">Open Google's login page</a>
           and keep this tab open — login finishes automatically here once you approve.
         `;
         document.getElementById('copy-login-code').addEventListener('click', async () => {
@@ -191,7 +191,7 @@ async function main() {
       loginStatus.innerHTML = `Published: <a href="${url}" target="_blank" rel="noopener">${url}</a>`;
     } catch (err) {
       loginStatus.textContent = `Publish failed: ${err.message}`;
-      if (GitHubAuth.sessionExpired) {
+      if (GoogleAuth.sessionExpired) {
         AppState.isAdmin = false;
         updateAuthUI();
       }

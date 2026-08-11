@@ -20,8 +20,8 @@ const TEAM_CONFIG = {
 
   github: {'owner': 'MSWD', 'repo': 'dempsey-golf-tracker', 'defaultBranch': 'main'},
 
-  githubApp: {
-    clientId: 'Iv23lihwcQrIGaTeMaO4',
+  googleAuth: {
+    clientId: '109861280365-iv2isv7funavdp8bllqhqjg5p2noq91v.apps.googleusercontent.com',
     deviceFlowWorkerUrl: 'https://middle-school-golf-tracker-auth.montgomery-software-and-web-development-account.workers.dev',
   },
 

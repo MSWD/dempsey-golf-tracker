@@ -75,10 +75,47 @@ GitHub Apps' device flow is a public-client flow, gated only by the public Clien
 did later pick up a client secret for two narrower flows — token refresh and logout revocation —
 see the session-lifecycle entry below; that's unrelated to the device-code exchange itself.)
 
+This device-flow *shape* (short code, verify on a separate page, poll for a token) was later kept
+when the identity provider itself was swapped — see the next entry.
+
+## Why Google device-flow login replaced GitHub's, and why Testing mode (issue #26)
+
+GitHub's device-flow login worked, but asked a non-technical coach to understand what a GitHub
+account is — a real barrier before rolling this out to coaches who aren't developers. Google
+supports the same category of flow ("OAuth 2.0 for TV and Limited-Input Device Applications" in
+their terms, same underlying RFC 8628 device-flow shape as GitHub's), so the swap kept
+`google-auth.js`'s session-lifecycle shape (read/write/clear session, transparent refresh, revoke on
+logout) essentially unchanged from `github-auth.js`'s — only the provider endpoints, and how caller
+identity is resolved, actually changed:
+
+- **Identity resolution changed from an API call to local verification.** GitHub resolved a caller's
+  identity with a live `GET /user` call using their access token. Google instead issues a signed
+  **ID token** (a JWT) alongside the access token; the Worker verifies its signature locally against
+  Google's public keys (JWKS) rather than making an outbound identity API call on every admin check
+  — faster, and one less external dependency in the hot path. `teams.json`'s `adminUsernames`
+  (GitHub logins) became `adminEmails` (Google account emails, from the ID token's verified `email`
+  claim) accordingly.
+- **Google requires its client secret on every `/token` call**, not just the refresh grant the way
+  GitHub's App did — a real behavioral difference in the Worker's `handleToken`, not just a
+  find-and-replace of provider names.
+- **Testing mode, not full app verification.** Google's OAuth apps default to a "Testing" publishing
+  status: capped at 100 explicitly-added test users, with an "unverified app" warning shown on the
+  consent screen, but skipping Google's full verification review (a process built for public
+  consumer apps requesting broad data access). For a small, single-operator admin allowlist —
+  structurally the same shape as `teams.json` itself — Testing mode's cap and warning are an
+  accepted tradeoff, not a gap to fix; pursuing full verification for ~2 admins would trade a
+  days-to-weeks review process for a benefit that doesn't apply here.
+- **Any Google account works, including school-district Workspace accounts the operator doesn't
+  administer.** Trust is still purely an email-allowlist decision in `teams.json` — no Google
+  Workspace directory access, no domain-wide delegation, no coordination with a school's IT
+  department needed on this app's side. (A school's own Workspace "App access control" policy could
+  independently block its users from authorizing any third-party OAuth app at all — outside this
+  app's control either way, not something Google account trust here can route around.)
+
 ## Why admin/viewer mode is gated on a live check, not just "a token exists"
 
 A stale or revoked token sitting in localStorage should silently fall back to viewer mode, not
-throw errors in the coach's face. `GitHubAuth.isAdmin()` re-checks live every time, rather than
+throw errors in the coach's face. `GoogleAuth.isAdmin()` re-checks live every time, rather than
 trusting a cached "logged in" flag. What it checks against changed with the move to path-based
 hosting — see the next entry.
 
@@ -100,8 +137,8 @@ something weird" (GitHub issue #11):
   device-code exchange — see the previous entry. The Worker now holds a second secret,
   `GITHUB_APP_CLIENT_SECRET`, alongside `GITHUB_PAT`.
 
-Unlike `DataStore`'s `STORAGE_KEY`, `github-auth.js`'s `AUTH_STORAGE_KEY` is deliberately the same
-key regardless of which team path the coach is currently on — a GitHub token identifies the same
+Unlike `DataStore`'s `STORAGE_KEY`, `google-auth.js`'s `AUTH_STORAGE_KEY` is deliberately the same
+key regardless of which team path the coach is currently on — a login session identifies the same
 account no matter which team's page it was obtained on, so one login covers every team that
 account happens to administer. Namespacing it per team would just force the same coach to log in
 again on every team path, for no benefit.

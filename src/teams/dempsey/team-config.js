@@ -26,11 +26,12 @@ const TEAM_CONFIG = {
     defaultBranch: 'main',
   },
 
-  // Filled in once the GitHub App + Cloudflare Worker relay are set up — see
+  // Filled in once the Google OAuth Client + Cloudflare Worker relay are set up — see
   // docs/auth-and-publishing.md. Until then, admin login/publishing is unavailable and the app
-  // stays in viewer mode, which is the safe default.
-  githubApp: {
-    clientId: 'Iv23lihwcQrIGaTeMaO4',
+  // stays in viewer mode, which is the safe default. REPLACE_ prefix means "not configured yet"
+  // (see google-auth.js's isConfigured()).
+  googleAuth: {
+    clientId: '109861280365-iv2isv7funavdp8bllqhqjg5p2noq91v.apps.googleusercontent.com',
     deviceFlowWorkerUrl: 'https://middle-school-golf-tracker-auth.montgomery-software-and-web-development-account.workers.dev',
   },
 

@@ -1,0 +1,8 @@
+{
+  "name": "middle-school-golf-tracker-auth",
+  "private": true,
+  "description": "Cloudflare Worker: Google OAuth device-flow relay + report-publish gatekeeping. See cloudflare-device-flow-relay.js.",
+  "dependencies": {
+    "jose": "^6.2.8"
+  }
+}

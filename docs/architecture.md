@@ -23,7 +23,7 @@ normal git commit — no code path in the app writes to it.
   deploy-pages.yml            # Actions-based Pages deploy (see below), triggered on a Release
 src/
   index.html                 # root landing page: lists active teams from teams.json
-  teams.json                 # slug -> { name, adminUsernames: [...] } — operator-edited only
+  teams.json                 # slug -> { name, adminEmails: [...] } — operator-edited only
   version.js                 # APP_VERSION constant, bumped per release/tag
   CNAME                      # "middle-school-golf-tracker.mswd.us"
   teams/

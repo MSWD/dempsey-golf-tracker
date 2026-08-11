@@ -13,9 +13,9 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parent.parent / "src"
 
 # Shared across every team — keep this in sync with an existing team's team-config.js if these
-# ever change (one GitHub App + one Worker serve every team under this platform).
+# ever change (one Google OAuth Client + one Worker serve every team under this platform).
 PLATFORM_GITHUB = {"owner": "MSWD", "repo": "dempsey-golf-tracker", "defaultBranch": "main"}
-PLATFORM_GITHUB_APP_CLIENT_ID = "Iv23lihwcQrIGaTeMaO4"
+PLATFORM_GOOGLE_CLIENT_ID = "109861280365-iv2isv7funavdp8bllqhqjg5p2noq91v.apps.googleusercontent.com"
 PLATFORM_WORKER_URL = "https://middle-school-golf-tracker-auth.montgomery-software-and-web-development-account.workers.dev"
 PLATFORM_DOMAIN = "https://middle-school-golf-tracker.mswd.us"
 
@@ -43,7 +43,7 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
     <span id="season-name-display" class="viewer-only muted"></span>
     <div class="header-actions">
       <button id="btn-publish" class="admin-only">Publish report</button>
-      <button id="btn-login">Login with GitHub</button>
+      <button id="btn-login">Login with Google</button>
     </div>
     <div id="login-status" class="muted full-width"></div>
   </header>
@@ -85,7 +85,7 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
   <script src="../../js/ui-matches.js"></script>
   <script src="../../js/ui-help.js"></script>
   <script src="../../js/ui-maintenance.js"></script>
-  <script src="../../js/github-auth.js"></script>
+  <script src="../../js/google-auth.js"></script>
   <script src="../../js/github-publish.js"></script>
   <script src="../../js/app.js"></script>
 </body>
@@ -114,7 +114,7 @@ const TEAM_CONFIG = {{
 
   github: {platform_github},
 
-  githubApp: {{
+  googleAuth: {{
     clientId: '{client_id}',
     deviceFlowWorkerUrl: '{worker_url}',
   }},
@@ -226,15 +226,17 @@ def main():
     if not name:
         sys.exit("Display name is required.")
 
-    # Matched case-insensitively by the Worker, but still matched by username, not GitHub's
-    # permanent numeric user ID — see docs/auth-and-publishing.md's "teams.json — who can edit it"
-    # section. If an admin later renames their GitHub handle, teams.json must be updated to the
-    # new handle in the same change, or the old (now-available-to-anyone) handle keeps admin
-    # rights here.
-    admins_raw = input("Admin GitHub username(s), comma-separated: ").strip()
-    admin_usernames = [u.strip() for u in admins_raw.split(",") if u.strip()]
-    if not admin_usernames:
-        sys.exit("At least one admin GitHub username is required.")
+    # Matched case-insensitively by the Worker, against the caller's verified Google account email
+    # (from a locally-verified ID token, not any Google directory/group lookup) — see
+    # docs/auth-and-publishing.md's "teams.json — who can edit it" section. Unlike a GitHub handle,
+    # an email doesn't become squattable if abandoned, but a deprovisioned/deleted Google Workspace
+    # account is the rough equivalent gotcha: if an admin's school account gets deactivated,
+    # teams.json must be updated to their new email in the same change, or they simply lose access
+    # (fails safe, unlike the GitHub-handle-rename case).
+    admins_raw = input("Admin Google account email(s), comma-separated: ").strip()
+    admin_emails = [e.strip() for e in admins_raw.split(",") if e.strip()]
+    if not admin_emails:
+        sys.exit("At least one admin Google account email is required.")
 
     site_title = f"{name} Golf Tracker"
 
@@ -248,7 +250,7 @@ def main():
         name=name,
         site_title=site_title,
         platform_github=json.dumps(PLATFORM_GITHUB).replace('"', "'"),
-        client_id=PLATFORM_GITHUB_APP_CLIENT_ID,
+        client_id=PLATFORM_GOOGLE_CLIENT_ID,
         worker_url=PLATFORM_WORKER_URL,
         domain=PLATFORM_DOMAIN,
     ))
@@ -272,7 +274,7 @@ def main():
 
     teams_json_path = SRC / "teams.json"
     teams = json.loads(teams_json_path.read_text()) if teams_json_path.exists() else {}
-    teams[slug] = {"name": name, "adminUsernames": admin_usernames}
+    teams[slug] = {"name": name, "adminEmails": admin_emails}
     teams_json_path.write_text(json.dumps(teams, indent=2) + "\n")
 
     print(f"\nCreated src/teams/{slug}/ and added it to src/teams.json.")

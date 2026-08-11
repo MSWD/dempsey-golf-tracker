@@ -35,21 +35,27 @@ domain verification/cert issuance.
 
 ## Cloudflare Worker deploy
 
-`worker/wrangler.toml` + `worker/cloudflare-device-flow-relay.js`. Deploy with `wrangler deploy`
-from `worker/`. It gets its own `*.workers.dev` URL — no custom domain/DNS record needed, since
-it's only ever called via `fetch()` from the site's JS, never visited directly.
+`worker/wrangler.toml` + `worker/cloudflare-device-flow-relay.js`. This Worker has one npm
+dependency (`jose`, for local Google ID-token verification) — run `npm install` inside `worker/`
+once before the first deploy (or after a fresh clone); Quick Edit dashboard paste-in is no longer
+viable once there's an import to bundle. Deploy with `wrangler deploy` from `worker/`. It gets its
+own `*.workers.dev` URL — no custom domain/DNS record needed, since it's only ever called via
+`fetch()` from the site's JS, never visited directly.
 
-The Worker needs one secret, **not** set in `wrangler.toml`:
+The Worker needs two secrets, **not** set in `wrangler.toml`:
 
 ```
 wrangler secret put GITHUB_PAT
+wrangler secret put GOOGLE_CLIENT_SECRET
 ```
 
-This is a fine-grained personal access token scoped to just this one repo (`contents: read/write`)
-— distinct from the GITHUB_TOKEN used one-time by `bootstrap-platform.sh` to configure Pages. The
-Worker uses this PAT to make the actual commit once it's verified (via `teams.json`) that the
-caller is authorized — see `docs/auth-and-publishing.md`. Fine-grained PATs expire after at most a
-year; set a calendar reminder to rotate it.
+`GITHUB_PAT` is a fine-grained personal access token scoped to just this one repo (`contents:
+read/write`) — distinct from the GITHUB_TOKEN used one-time by `bootstrap-platform.sh` to configure
+Pages. The Worker uses this PAT to make the actual commit once it's verified (via `teams.json`) that
+the caller is authorized — see `docs/auth-and-publishing.md`. Fine-grained PATs expire after at most
+a year; set a calendar reminder to rotate it. `GOOGLE_CLIENT_SECRET` is unrelated to that write
+path — it's for the Google OAuth device-flow login itself; see `docs/auth-and-publishing.md` for how
+to generate it.
 
 `worker/wrangler.toml`'s `[vars]` section (`GITHUB_OWNER`, `GITHUB_REPO`, `GITHUB_BRANCH`) points
 at this one shared repo — update it there if the repo is ever renamed or moved.

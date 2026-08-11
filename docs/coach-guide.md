@@ -11,13 +11,10 @@ setup on your end — email **Kendal Montgomery** at **montgoke1@delawarecitysch
 
 1. **Team/school name** — e.g. "Riverside Middle School Golf." Used as the display name
    throughout the app.
-2. **A GitHub username for every coach who needs admin access** (editing roster/rounds/matches and
-   publishing reports). Admin access is tied to a GitHub account, not a separate password or
-   login Kendal creates for you.
-   - No GitHub account yet? It's free and takes a minute — go to
-     [github.com/join](https://github.com/join), pick a username, verify your email. Any personal
-     account works; you don't need to be added as a collaborator on this repository or have any
-     prior GitHub experience beyond logging in when asked.
+2. **A Google account email for every coach who needs admin access** (editing roster/rounds/matches
+   and publishing reports). Admin access is tied to a Google account, not a separate password or
+   login Kendal creates for you — any Google account works, personal or school-issued, no signup
+   needed if you already have one.
 3. **(Optional) A logo image** — if you'd like your team's own logo in the header instead of the
    default golf-flag icon.
 4. **(Optional) Team colors** — if you have specific school colors you'd like used for interface
@@ -26,7 +23,7 @@ setup on your end — email **Kendal Montgomery** at **montgoke1@delawarecitysch
 Once set up, your team gets its own page at
 `middle-school-golf-tracker.mswd.us/teams/<your-team>/`, starting with an empty roster, and works
 exactly like every other team on the platform — you (and any coaches you listed) use "Login with
-GitHub" for edit access; anyone else can view scores/reports read-only. Scoring rules (double-par
+Google" for edit access; anyone else can view scores/reports read-only. Scoring rules (double-par
 cap, rolling-average window, team-score formula) are the same for every team — they're fixed
 competition rules, not something set per team.
 
@@ -65,9 +62,9 @@ export it or an admin publishes a report (see the warning above).
 ### Viewer vs. admin mode
 
 Anyone visiting a team's page is a **viewer** by default — you can look around, but "Add player,"
-"Log a round," and similar forms are hidden. Clicking **"Login with GitHub"** and signing in with a
-GitHub account that's listed as an admin for that team unlocks editing and the "Publish report"
-button. Any GitHub account can attempt to log in; whether it becomes an admin depends on whether
+"Log a round," and similar forms are hidden. Clicking **"Login with Google"** and signing in with a
+Google account that's listed as an admin for that team unlocks editing and the "Publish report"
+button. Any Google account can attempt to log in; whether it becomes an admin depends on whether
 it's on that team's admin list, not on anything you can change yourself.
 
 ### Roster
@@ -258,7 +255,7 @@ is published as-is. Use a first-name-and-initial format there too if that player
 There's one "Publish report" button (in the header, admin-only) — it is not a per-tab or
 per-feature action. Clicking it takes **everything** currently in this browser's local
 data — the full roster, every round, every match — and pushes it as one combined snapshot to a
-shared report page that anyone can view without logging in, no GitHub account needed (linked from
+shared report page that anyone can view without logging in, no Google account needed (linked from
 the reports viewer, and from the Rank tab). There's no way to publish just the roster, or just
 matches, on their own.
 
@@ -270,7 +267,7 @@ see week-by-week progress — publishing periodically (e.g. after each match) is
 The published report has one stable link (`<your-team-domain>/reports/index.html` — shown after
 you publish, and also linked from the Rank tab) that's meant to be **handed out**: share it with
 players' families, the athletic office, local press, whoever wants to follow along. Anyone with the
-link can view current rankings and match results without logging in or needing a GitHub account of
+link can view current rankings and match results without logging in or needing a Google account of
 their own. You only need to share the link once — it's not a snapshot of today's data, it's a page
 that always shows whichever data you *most recently* published, so the same link keeps working as
 the season goes on. Just click "Publish report" again (in the header) whenever you want that link

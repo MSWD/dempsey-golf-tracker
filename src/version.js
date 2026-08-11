@@ -1,2 +1,2 @@
 // Bumped by hand alongside a git tag/GitHub Release per shipped feature.
-const APP_VERSION = '1.1.3';
+const APP_VERSION = '1.1.4';

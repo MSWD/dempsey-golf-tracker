@@ -3,12 +3,20 @@
     "name": "Delaware Dempsey Pacers Golf",
     "adminUsernames": [
       "theWizK"
+    ],
+    "adminEmails": [
+      "theWizK@gmail.com",
+      "montgoke1@delawarecityschools.net"
     ]
   },
   "test-team": {
     "name": "Test MS Team 01",
     "adminUsernames": [
       "theWizK"
+    ],
+    "adminEmails": [
+      "theWizK@gmail.com",
+      "montgoke1@delawarecityschools.net"
     ]
   }
 }

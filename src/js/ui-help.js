@@ -51,6 +51,13 @@ function renderHelpView() {
       list, not on anything you can change yourself.</p>
       <p class="muted">If login isn't working yet, the platform operator may not have finished
       setting up GitHub/Cloudflare for this team — ask them.</p>
+      <p>Roster, Courses, Rounds, Rank, Charts, and Matches all show the same short note and a link
+      to the published report instead of their normal content when you're a viewer. That's
+      deliberate, not a bug: everything on those tabs lives only in <em>this</em> browser's local
+      storage (see the warning at the top of this page), which is almost never the coach's actual
+      data unless you happen to be on the coach's own device — so showing it to a viewer would be
+      misleading rather than just unhelpful. The published report reflects the team's real season
+      data regardless of whose browser you're on.</p>
     </div>
 
     <div class="card">
@@ -134,7 +141,8 @@ function renderHelpView() {
       <p>Sorted by rolling average — the best 4 of a player's last 6 valid rounds (adjusted
       scores), tryouts counting as the earliest rounds. This is a <strong>reference only</strong> —
       the coach always sets the actual lineup order by hand; nothing here gets auto-applied.</p>
-      <p>This tab is where the local-vs-published distinction shows up most directly:</p>
+      <p>This tab is where the local-vs-published distinction was first introduced (see "Viewer
+      vs. admin mode" above, which now applies to most other data tabs too):</p>
       <ul>
         <li><strong>Admins</strong> see a <em>live</em> table computed from this browser's local
         data, plus a link to the currently published report so you can compare the two before
@@ -210,13 +218,12 @@ function renderHelpView() {
           "Opponent 1" isn't a great look in a public report.</li>
         </ul>
       </div>
-      <p><strong>Unlike the Rank tab, the Matches tab always shows this browser's local data, to
-      viewers and admins alike</strong> — it does not currently redirect viewers to the published
-      report or link out to it. So if you're a viewer checking match results from a device that
-      isn't the coach's, what you see here (likely blank, or an out-of-date local copy) is
-      <strong>not</strong> the team's real results. To see the team's actual published match
-      history, go to the published report directly — reached from the link on the Rank tab, or at
-      <code>reports/index.html</code> — not this tab.</p>
+      <p>Like Roster, Courses, Rounds, Rank, and Charts, this tab shows a link to the published
+      report instead of local match data when you're a viewer (see "Viewer vs. admin mode" above)
+      — a viewer's browser almost never has the coach's actual match results in it, so showing
+      what's here (likely blank, or an out-of-date local copy) as if it were real would be
+      misleading. To see the team's actual published match history, go to the published report
+      directly — <code>reports/index.html</code> — and switch to its Matches tab.</p>
       <p>Every match card also has a <strong>"Copy report link"</strong> button that copies a link
       to just that one match's published result — handy for sending to an opposing coach. It
       copies the link right away, even before you've published, so it's the URL the match

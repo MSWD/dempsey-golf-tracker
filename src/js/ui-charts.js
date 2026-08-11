@@ -5,6 +5,16 @@ function renderChartsView() {
   _chartInstances.forEach((c) => c.destroy());
   _chartInstances = [];
 
+  // See viewerRedirectNotice (html-utils.js) / GitHub issue #39 — charts are drawn from the same
+  // local rounds as Rank/Rounds, so they're subject to the same "not the team's real data" issue.
+  if (!AppState.isAdmin) {
+    el.innerHTML = viewerRedirectNotice(
+      "Trends shown here are drawn from this browser's local data, which is only meaningful on " +
+      "the coach's own browser."
+    );
+    return;
+  }
+
   const players = DataStore.getAll('players').filter((p) => p.active).sort((a, b) => a.lastName.localeCompare(b.lastName));
 
   el.innerHTML = `<div class="charts-grid">${players.map((p) => `

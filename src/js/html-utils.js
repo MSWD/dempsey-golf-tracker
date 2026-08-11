@@ -27,6 +27,20 @@ function escapeHtml(str) {
 // count); it's deliberately not enforced as an upper bound here — the existing double-par cap
 // (scoring-engine.js) already handles that at submit time, with its own warning, and this input
 // still accepts direct typing/pasting above it same as before.
+// Non-admin ("viewer") fallback for any tab whose primary content is this browser's own local
+// DataStore data. Originated in renderRankView (ui-rounds.js) and generalized here for the other
+// local-data tabs (Roster, Courses, Rounds, Charts, Matches) — see GitHub issue #39. Only the
+// coach ever signs in and edits data, so a viewer's local store is essentially never the team's
+// real data (usually empty, occasionally stale) — rendering it would be misleading rather than
+// just unhelpful. Send viewers to the published report instead, which reflects the actual season
+// data regardless of whose browser they're on.
+function viewerRedirectNotice(message) {
+  return `
+    <p class="muted">${message}</p>
+    <p><a href="reports/index.html">View published report</a></p>
+  `;
+}
+
 function renderStepperInput({ className = '', dataAttrs = '', placeholder = '', value = '', min = 0 } = {}) {
   return `
     <span class="stepper">

@@ -76,6 +76,20 @@ function computeSeasonRecord(matches) {
 
 function renderMatchesView() {
   const el = document.getElementById('view-matches');
+
+  // See viewerRedirectNotice (html-utils.js) / GitHub issue #39 — this closes a gap that used to
+  // be documented as an explicit inconsistency in ui-help.js: unlike Rank, this tab used to show
+  // local match data to viewers and admins alike, so a viewer checking match results from a
+  // device that isn't the coach's would see local data (likely blank, or an out-of-date local
+  // copy) that isn't the team's real results.
+  if (!AppState.isAdmin) {
+    el.innerHTML = viewerRedirectNotice(
+      "Match results shown here are only meaningful from the coach's own browser — this device's " +
+      "local data likely isn't in sync with the team's."
+    );
+    return;
+  }
+
   const courses = DataStore.getAll('courses').slice().sort((a, b) => a.name.localeCompare(b.name));
   const matches = DataStore.getAll('matches').slice().sort((a, b) => new Date(b.date) - new Date(a.date));
   const record = computeSeasonRecord(matches);

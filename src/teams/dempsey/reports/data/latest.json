@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-11",
+  "publishedAt": "2026-08-15",
   "seasonName": "2026 Dempsey Golf Season",
   "players": [
     {
@@ -255,7 +255,27 @@
       "slope": null,
       "rating": null,
       "totalPar": 28,
-      "verified": false
+      "verified": false,
+      "teeSets": [
+        {
+          "id": "tee_mstq5vez_gdiakg",
+          "name": "Yellow",
+          "holeYardages": [
+            130,
+            115,
+            165,
+            325,
+            140,
+            135,
+            115,
+            175,
+            110
+          ],
+          "holeParsOverride": null,
+          "slope": null,
+          "rating": null
+        }
+      ]
     },
     {
       "id": "millcreek",
@@ -1270,7 +1290,7 @@
     {
       "id": "round_msjpf0nr_idgebm",
       "playerId": "player_19fa8e6d69e_joly3g",
-      "date": "2026-08-07",
+      "date": "2026-08-06",
       "type": "practice",
       "courseId": "course_ms6k4cqm_w8kuld",
       "teeSetId": "tee_ms6k8jhu_a1q4yc",
@@ -1449,6 +1469,75 @@
         4
       ],
       "putts": 15,
+      "matchId": null
+    },
+    {
+      "id": "round_mstpzkw5_6snwwj",
+      "playerId": "player_19fa8e6d69e_b3x0gc",
+      "date": "2026-08-14",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        6,
+        5,
+        6,
+        4
+      ],
+      "putts": 21,
+      "matchId": null
+    },
+    {
+      "id": "round_mstq79lv_u6i6m0",
+      "playerId": "player_ms5eijsb_i5k4ou",
+      "date": "2026-08-09",
+      "type": "practice",
+      "courseId": "hiddenvalley",
+      "teeSetId": "tee_mstq5vez_gdiakg",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        4,
+        4,
+        4,
+        5,
+        4,
+        4,
+        5,
+        4,
+        4
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mstqrhqi_jhkee5",
+      "playerId": "player_ms5eijsb_i5k4ou",
+      "date": "2026-08-10",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        5,
+        3,
+        5,
+        5,
+        8,
+        4,
+        5,
+        4
+      ],
+      "putts": 18,
       "matchId": null
     }
   ],

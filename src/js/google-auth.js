@@ -277,12 +277,21 @@ const GoogleAuth = {
       const tokenData = await tokenRes.json();
 
       if (tokenData.access_token) {
-        // Store the session regardless of admin status — a logged-in-but-not-listed user is a
-        // known visitor, not an error. isAdmin() re-checks against teams.json on every load.
         const session = buildSessionFromTokenResponse(tokenData);
         writeSession(session);
         const isAdmin = await this.checkAdmin(session.idToken);
-        if (!isAdmin) throw new Error('Logged in, but this account is not listed as an admin for this team.');
+        if (!isAdmin) {
+          // Don't leave a non-admin account's session sitting in localStorage — it can never
+          // grant anything (every admin check re-verifies live against the Worker regardless of
+          // what's stored), so a stored-but-unusable token is just dead credential material with
+          // no UI affordance to log it out. Clear it, and best-effort revoke it server-side, the
+          // same as a real logout would — matches the "not admin" result to actually being logged
+          // out, rather than a hidden logged-in state the button never reflects.
+          clearSession();
+          this.email = null;
+          if (session.accessToken) await revokeToken(session.accessToken);
+          throw new Error('Logged in, but this account is not listed as an admin for this team.');
+        }
         return true;
       }
       // Google returns HTTP 403/428 for slow_down/authorization_pending (GitHub used a flat 200

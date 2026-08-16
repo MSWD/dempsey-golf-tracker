@@ -139,13 +139,13 @@ function resolveHolePars(entity, getCourseById) {
 }
 
 // Best 4 of the player's last 6 rounds (chronologically, tryouts count as the earliest entries),
-// using adjusted scores. Fewer than 6 rounds → average whatever exists, no drops.
+// using adjusted scores. Fewer than 4 rounds → average whatever exists, no drops.
 function rollingAverage(chronologicalAdjustedScores) {
   const scored = chronologicalAdjustedScores.filter((s) => s != null);
   if (scored.length === 0) return null;
 
   const lastSix = scored.slice(-6);
-  if (lastSix.length < 6) {
+  if (lastSix.length < 4) {
     return lastSix.reduce((sum, s) => sum + s, 0) / lastSix.length;
   }
 

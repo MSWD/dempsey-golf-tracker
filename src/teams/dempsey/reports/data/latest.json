@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-16",
+  "publishedAt": "2026-08-17",
   "seasonName": "2026 Dempsey Golf Season",
   "players": [
     {
@@ -1584,6 +1584,29 @@
         5
       ],
       "putts": 21,
+      "matchId": null
+    },
+    {
+      "id": "round_msxbm0d8_xe7zai",
+      "playerId": "player_ms5eijsb_i5k4ou",
+      "date": "2026-08-16",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "back",
+      "inlineHolePars": null,
+      "holeScores": [
+        4,
+        4,
+        8,
+        6,
+        5,
+        6,
+        5,
+        3,
+        6
+      ],
+      "putts": 16,
       "matchId": null
     }
   ],

@@ -240,6 +240,10 @@ mistaken import can be undone — see the "Restore" button next to each snapshot
 
 ### Privacy — this data can become public
 
+*This is about published **season data** — roster, scores, match results. For what's collected
+when you **sign in with Google**, see the ["Privacy Policy"](#privacy-policy) section at the end of
+this guide instead — the two are separate concerns.*
+
 This app's code and published reports live in a public GitHub repository, so anything that gets
 **published** is visible to anyone on the internet, not just people you share a link with. Roster
 names are abbreviated automatically when you publish (first name + last initial, e.g. "Graham B" —
@@ -282,3 +286,55 @@ stale or incomplete data.
 
 Feedback and bug reports go through GitHub Issues:
 [github.com/MSWD/dempsey-golf-tracker/issues](https://github.com/MSWD/dempsey-golf-tracker/issues)
+
+## Privacy Policy
+
+*Last updated: 2026-08-18.*
+
+This section is specifically about signing in with **Google** — for how **published report data**
+(roster, scores, match results) becomes public once a coach publishes it, see "Privacy — this data
+can become public" earlier in this guide instead. The two are separate concerns: one is about your
+Google identity, the other is about season data you choose to make public.
+
+### What's collected, and why
+
+When you click **"Login with Google"** and sign in, this app receives your **verified Google
+account email address** — nothing else. That email is checked, on every page load, against the
+specific team's admin list in [`src/teams.json`](../src/teams.json) to decide whether you get
+**admin** access (editing roster/rounds/matches, publishing reports) or stay in read-only **viewer**
+mode for the team you're currently viewing. That's the only reason this app asks for anything at
+all: to answer one question — "is this Google account an admin for this team?"
+
+### What's NOT collected or accessed
+
+- **No access to Google Drive, Calendar, Contacts, or any Workspace directory.** Signing in only
+  requests your basic identity (`openid`, `email`, `profile` — Google's own "non-sensitive" scope
+  category), never access to your actual Google data.
+- **No roster, round, or match data is sent anywhere by signing in.** That data lives only in your
+  browser's local storage, exactly as described in the "Your data lives only in this browser" note
+  near the top of this guide, whether or not you're signed in. Signing in only unlocks the
+  *ability* to edit and publish — it doesn't change where your data lives or send anything extra to
+  a server.
+- **No password is ever seen or stored by this app.** Sign-in happens entirely on Google's own
+  login screen; this app never sees your Google password.
+
+### Where the admin list lives
+
+The list of which Google account emails are admins for which team
+([`src/teams.json`](../src/teams.json)) is a plain-text file in this project's public GitHub
+repository, editable only by the platform operator directly via git — no code in this app or its
+Cloudflare Worker relay ever writes to it. Your email stays on that list for as long as you're an
+active admin for your team; sign-ins themselves aren't separately logged or stored anywhere beyond
+that.
+
+### Requesting removal
+
+Email **Kendal Montgomery** at **montgoke1@delawarecityschools.net** to be removed from a team's
+admin list at any time — for example, if you're no longer coaching. Once removed, that Google
+account reverts to ordinary read-only viewer access, same as anyone else.
+
+### Contact
+
+Questions about this policy or how sign-in works: **Kendal Montgomery**,
+**montgoke1@delawarecityschools.net** — same contact as [requesting a new
+team](#requesting-a-new-team).

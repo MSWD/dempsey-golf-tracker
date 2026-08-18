@@ -9,7 +9,7 @@ async function main() {
   const year = new Date().getFullYear();
   document.getElementById('app-footer').innerHTML = `
     <p><strong>&copy; ${year} MSWD &mdash; Montgomery's Software &amp; Web Development</strong></p>
-    <p class="muted">Middle School Golf Tracker &middot; Built with Claude (AI-assisted) &middot; v${APP_VERSION}</p>
+    <p class="muted">School Golf Tracker &middot; Built with Claude (AI-assisted) &middot; v${APP_VERSION} &middot; <a href="privacy.html">Privacy Policy</a></p>
   `;
 }
 main();

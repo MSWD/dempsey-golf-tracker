@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
-  <title>Middle School Golf Tracker</title>
+  <title>School Golf Tracker</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -13,10 +13,21 @@
 
   <header class="app-header">
     <img class="logo" src="assets/favicon.svg" alt="">
-    <h1>Middle School Golf Tracker</h1>
+    <h1>School Golf Tracker</h1>
   </header>
 
   <main>
+    <div class="card">
+      <p>
+        A free tool for running a school golf team: roster, practice/tryout scores, match-day
+        scoring, rolling averages, and shareable rank reports — replacing an Excel-based workflow.
+        Each team below gets its own page; scores and rosters are entered by that team's coach and
+        stay in the coach's own browser unless a report is published. See the
+        <a href="https://github.com/MSWD/dempsey-golf-tracker/blob/main/docs/coach-guide.md" target="_blank" rel="noopener">Coach Guide</a>
+        for a full walkthrough, or the <a href="privacy.html">Privacy Policy</a> for what's
+        collected when a coach signs in.
+      </p>
+    </div>
     <div class="card">
       <h2>Teams</h2>
       <ul id="team-list"></ul>

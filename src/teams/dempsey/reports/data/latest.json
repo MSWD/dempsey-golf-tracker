@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-18",
+  "publishedAt": "2026-08-24",
   "seasonName": "2026 Dempsey Golf Season",
   "players": [
     {
@@ -1819,6 +1819,52 @@
         3
       ],
       "putts": 14,
+      "matchId": null
+    },
+    {
+      "id": "round_mt6knry2_1xkmj5",
+      "playerId": "player_19fa8e6d69e_hucr9l",
+      "date": "2026-08-23",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        4,
+        2,
+        5,
+        6,
+        6,
+        6,
+        4,
+        4
+      ],
+      "putts": 21,
+      "matchId": null
+    },
+    {
+      "id": "round_mt6kp6e8_6pq63y",
+      "playerId": "player_19fa8e6d69e_mtda4r",
+      "date": "2026-08-22",
+      "type": "practice",
+      "courseId": "hiddenvalley",
+      "teeSetId": "tee_mstq5vez_gdiakg",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        4,
+        4,
+        4,
+        4,
+        3,
+        3,
+        3,
+        4,
+        3
+      ],
+      "putts": 18,
       "matchId": null
     }
   ],

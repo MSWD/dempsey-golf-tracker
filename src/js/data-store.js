@@ -108,7 +108,14 @@ function validateMatchPlayerEntry(entry, path) {
   if (typeof entry !== 'object' || entry === null) fail(path, 'must be an object');
   if (entry.playerId != null && !isPlainString(entry.playerId)) fail(path, 'playerId must be null or a string');
   if (!isPlainString(entry.displayName)) fail(path, 'displayName must be a non-empty string');
-  if (!isHoleScoresArray(entry.holeScores)) fail(path, 'holeScores must be an array of 9 numbers-or-null');
+  // Score Only entries (MatchTeam.scoringMode) carry a single totalScore instead of 9 holeScores —
+  // exactly one of the two is present, never both, never neither.
+  if (entry.holeScores != null) {
+    if (!isHoleScoresArray(entry.holeScores)) fail(path, 'holeScores must be an array of 9 numbers-or-null');
+    if (entry.totalScore != null) fail(path, 'totalScore must be null when holeScores is set');
+  } else if (!isFiniteNumber(entry.totalScore)) {
+    fail(path, 'must have either holeScores (array of 9 numbers-or-null) or a numeric totalScore');
+  }
   if (entry.putts != null && !isFiniteNumber(entry.putts)) fail(path, 'putts must be null or a number');
   if (typeof entry.isStarter !== 'boolean') fail(path, 'isStarter must be a boolean');
 }
@@ -119,6 +126,11 @@ function validateMatchTeam(team, matchPath, ti) {
   if (!isPlainString(team.id)) fail(path, 'id must be a non-empty string');
   if (!isPlainString(team.name)) fail(path, 'name must be a non-empty string');
   if (typeof team.isOwnTeam !== 'boolean') fail(path, 'isOwnTeam must be a boolean');
+  // Older exports predate scoringMode entirely — treated as "byHole" at read time (see
+  // renderTeamBlock), so it's optional here rather than required.
+  if (team.scoringMode != null && !['byHole', 'scoreOnly'].includes(team.scoringMode)) {
+    fail(path, 'scoringMode must be null, "byHole", or "scoreOnly"');
+  }
   if (!Array.isArray(team.players)) fail(path, 'players must be an array');
   team.players.forEach((entry, pi) => validateMatchPlayerEntry(entry, `${path}.players[${pi}]`));
 }

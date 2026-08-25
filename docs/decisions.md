@@ -205,6 +205,26 @@ just to play — those scores should never count toward team score (rule 5) even
 recorded. `isStarter` (default true, toggle-able per player added to a match team) makes that
 distinction explicit instead of inferring it from array position.
 
+## Why match teams got a `scoringMode` toggle instead of a global "entry style" setting
+
+Coaches don't always have an opponent's hole-by-hole card — sometimes the only number they get
+after a match is a final total. Forcing hole-by-hole entry in that case meant either inventing 9
+numbers that summed to the real total (misleading Front3/Mid3/Back3 splits) or not recording the
+opponent's score at all. `scoringMode: 'byHole' | 'scoreOnly'` lives on the match *team*, not the
+match or a global setting, because the need is per-opponent: a 3-team match could have one
+opponent whose card the coach filled in hole-by-hole and another they only got a final score from.
+It's set at the team level rather than per-entry so the add-score form only asks for what the
+coach can actually supply, without a mode selector cluttering every single player row.
+
+`entryRawScore`/`entryIsValid` (`scoring-engine.js`) read whichever shape (`holeScores` or
+`totalScore`) an entry actually has, so team score, medalist, and to-par all work identically
+regardless of which mode produced a given score — the fixed scoring rules (see "Why scoring rules
+aren't part of the white-label team-config" above) are untouched, this only changes what a coach
+has to type in to invoke them. This is deliberately opt-in per opponent and never available for
+the own team: own-roster entries feed player rankings through `syncMatchRounds`' mirrored `Round`
+records, which need real hole-level data (`isValidRound`'s minimum-holes check, `Charts`), so
+allowing Score Only there would silently break rank/charts for anyone the coach entered that way.
+
 ## Why player names are abbreviated to first name + last initial before anything public
 
 Making the repo public (required for GitHub Pages on this org's free plan — see the private-repo

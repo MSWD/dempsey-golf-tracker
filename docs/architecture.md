@@ -73,14 +73,25 @@ Course  { id, name, holePars[9|18], totalPar, verified, defaultTeeSetId?,
 Round   { id, playerId, date, type: 'tryout'|'practice'|'match', courseId|inlineHolePars, teeSetId?,
           side?: 'front'|'back', holeScores[9], putts, matchId? }
 Match   { id, date, location: 'Home'|'Away', courseId|inlineHolePars, teeSetId?,
-          side?: 'front'|'back', teams: [{ id, name, isOwnTeam,
-                                           players: [{ playerId?, displayName, holeScores[9],
+          side?: 'front'|'back', teams: [{ id, name, isOwnTeam, scoringMode: 'byHole'|'scoreOnly',
+                                           players: [{ playerId?, displayName,
+                                                       holeScores[9]|null, totalScore|null,
                                                        putts, isStarter }] }] }
 ```
 
 `isStarter` on a match team's player entry distinguishes the 6 official starters from
 alternates/extra players who tee off and post a score just to play, but never count toward team
 score (rule below).
+
+A match team's `scoringMode` picks how its players' entries get scored: `'byHole'` (default) is 9
+individual `holeScores`, same as a Round; `'scoreOnly'` is a single `totalScore` with no per-hole
+detail — for when a coach only knows an opponent's final score, not their card. Exactly one of
+`holeScores`/`totalScore` is set per entry, and it's fixed at entry time — flipping a team's
+`scoringMode` later only changes what the entry form offers for new entries, never rewrites
+existing ones. `entryRawScore`/`entryIsValid` (`scoring-engine.js`) read either shape so team
+score, medalist, and to-par don't need to care which mode produced a given entry. Only opponent
+teams offer the toggle — the own team's entries also feed player rankings via each entry's mirrored
+`Round`, which needs real hole-by-hole data, so it's always `'byHole'`.
 
 Courses may store either a 9-hole card or a full 18-hole card. Rounds and matches are still
 9-hole scoring records; for an 18-hole course, `side` selects whether holes 1-9 (`front`) or

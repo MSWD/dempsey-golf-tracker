@@ -195,20 +195,21 @@ function renderMatchesView() {
 function computeTeamScore(team) {
   const starterRaws = team.players
     .filter((p) => p.isStarter)
-    .map((p) => (isValidRound(p.holeScores) ? rawScoreOrNull(p.holeScores) : null));
+    .map((p) => (entryIsValid(p) ? entryRawScore(p) : null));
   return teamScore(starterRaws);
 }
 
 // The lowest individual valid raw score across every player in the match, regardless of team or
 // starter status — medalist is an individual stroke-play award, separate from the team-score
 // mechanic (which only counts starters). Ties are co-medalists: every player at that score gets
-// the badge, not just the first found.
+// the badge, not just the first found. Score Only entries (entryRawScore/entryIsValid,
+// scoring-engine.js) are just as eligible as By Hole ones.
 function computeMedalistScore(match) {
   let lowest = null;
   match.teams.forEach((team) => {
     team.players.forEach((p) => {
-      if (!isValidRound(p.holeScores)) return;
-      const raw = rawScoreOrNull(p.holeScores);
+      if (!entryIsValid(p)) return;
+      const raw = entryRawScore(p);
       if (raw == null) return;
       if (lowest == null || raw < lowest) lowest = raw;
     });
@@ -254,6 +255,13 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
     ? matchEditState.entryIndex
     : null;
   const editingEntry = editingEntryIndex != null ? team.players[editingEntryIndex] : null;
+  // The add/edit form's shape follows the entry being edited (so an old By Hole entry is still
+  // editable as such even if the team's mode was switched to Score Only since), or the team's
+  // current mode for a brand-new entry. Own team never offers Score Only (see newMatchTeam), so it
+  // always resolves to 'byHole' here regardless of what's stored.
+  const formMode = editingEntry
+    ? (editingEntry.holeScores ? 'byHole' : 'scoreOnly')
+    : (!team.isOwnTeam && team.scoringMode === 'scoreOnly' ? 'scoreOnly' : 'byHole');
 
   return `
     <div class="card team-block${isWinner ? ' winning-team' : ''}" data-team-id="${escapeHtml(team.id)}">
@@ -267,7 +275,16 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
           <button class="admin-only btn-rename-team">Rename</button>
         `}
         ${team.isOwnTeam ? '<span class="badge">own team</span>' : ''}
+        ${!team.isOwnTeam && team.scoringMode === 'scoreOnly' ? '<span class="badge">score only</span>' : ''}
         ${isWinner ? '<span class="badge win">Winner</span>' : ''}
+        ${!team.isOwnTeam ? `
+          <label class="muted admin-only">Scoring:
+            <select class="team-scoring-mode-select" data-team-id="${escapeHtml(team.id)}">
+              <option value="byHole" ${team.scoringMode !== 'scoreOnly' ? 'selected' : ''}>By Hole</option>
+              <option value="scoreOnly" ${team.scoringMode === 'scoreOnly' ? 'selected' : ''}>Score Only</option>
+            </select>
+          </label>
+        ` : ''}
       </div>
       <div class="form-row add-player-row admin-only" data-match-id="${escapeHtml(match.id)}" data-team-id="${escapeHtml(team.id)}">
         ${team.isOwnTeam ? `
@@ -279,23 +296,32 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
         `}
         <label class="muted"><input type="checkbox" class="starter-checkbox" ${editingEntry ? (editingEntry.isStarter ? 'checked' : '') : 'checked'}> Starter</label>
         <span class="row-break"></span>
-        <div class="hole-scores">
-          ${Array.from({ length: 9 }, (_, i) => {
-            // New entries default each hole to double par (the same cap capAllHoleScores enforces
-            // on submit, see scoring-engine.js) rather than par. A par default reads as a real score
-            // at a glance, so leftover/pre-round defaults were getting mixed in with actual match
-            // scores; double par is unambiguously a placeholder the coach must overwrite as they
-            // enter real scores. Editing an existing entry always shows what was actually recorded,
-            // never a default fallback.
-            const value = editingEntry
-              ? (editingEntry.holeScores[i] != null ? editingEntry.holeScores[i] : '')
-              : (holePars ? holePars[i] * 2 : '');
-            return renderStepperInput({
-              className: 'hole-input', dataAttrs: `data-hole="${i}"`,
-              placeholder: `H${sideHoleNumber(i, side)}`, value, min: 1,
-            });
-          }).join('')}
-        </div>
+        ${formMode === 'byHole' ? `
+          <div class="hole-scores">
+            ${Array.from({ length: 9 }, (_, i) => {
+              // New entries default each hole to double par (the same cap capAllHoleScores enforces
+              // on submit, see scoring-engine.js) rather than par. A par default reads as a real score
+              // at a glance, so leftover/pre-round defaults were getting mixed in with actual match
+              // scores; double par is unambiguously a placeholder the coach must overwrite as they
+              // enter real scores. Editing an existing entry always shows what was actually recorded,
+              // never a default fallback.
+              const value = editingEntry
+                ? (editingEntry.holeScores[i] != null ? editingEntry.holeScores[i] : '')
+                : (holePars ? holePars[i] * 2 : '');
+              return renderStepperInput({
+                className: 'hole-input', dataAttrs: `data-hole="${i}"`,
+                placeholder: `H${sideHoleNumber(i, side)}`, value, min: 1,
+              });
+            }).join('')}
+          </div>
+        ` : `
+          ${renderStepperInput({
+            className: 'total-score-input',
+            placeholder: 'Score',
+            value: editingEntry && editingEntry.totalScore != null ? editingEntry.totalScore : (holePars ? roundTotalPar(holePars) * 2 : ''),
+            min: 1,
+          })}
+        `}
         <input type="number" class="putts-input input-narrow" placeholder="Putts" value="${editingEntry && editingEntry.putts != null ? editingEntry.putts : ''}">
         <button class="btn-add-team-player">${editingEntry ? 'Update score' : 'Add score'}</button>
         ${editingEntry ? '<button class="btn-cancel-entry-edit">Cancel</button>' : ''}
@@ -305,10 +331,10 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
           <thead><tr><th>Player</th><th>Starter</th><th>Score</th><th>Putts</th><th>Front3</th><th>Mid3</th><th>Back3</th><th>To Par</th><th class="admin-only">Actions</th></tr></thead>
           <tbody>
             ${team.players.map((p, i) => {
-              const raw = rawScoreOrNull(p.holeScores);
-              const splits = holeSplits(p.holeScores);
+              const raw = entryRawScore(p);
+              const splits = p.holeScores ? holeSplits(p.holeScores) : { front3: null, mid3: null, back3: null };
               const par = holePars && raw != null ? toPar(raw, roundTotalPar(holePars)) : null;
-              const valid = isValidRound(p.holeScores);
+              const valid = entryIsValid(p);
               const isMedalist = valid && raw != null && medalistScore != null && raw === medalistScore;
               return `<tr>
                 <td>${escapeHtml(p.displayName)}${isMedalist ? ' <span class="badge medalist" title="Match medalist">🏆</span>' : ''}</td>
@@ -375,17 +401,32 @@ function wireMatchCard(match, card) {
         }
       }
 
-      const rawInputs = Array.from(row.querySelectorAll('.hole-input')).map((i) => (i.value === '' ? null : Number(i.value)));
-      if (!hasAnyHoleScore(rawInputs)) {
-        alert('Enter at least one hole score.');
-        return;
-      }
       const holePars = matchHolePars(match);
       if (!holePars) {
         alert("This match's course record is missing (was it deleted?), so new scores can't be capped to par. Existing recorded scores are unaffected, but new scores can't be added until this is resolved.");
         return;
       }
-      const capped = capAllHoleScores(rawInputs, holePars);
+
+      // Which form is showing follows renderTeamBlock's formMode — Score Only when this row has a
+      // total-score-input, By Hole when it has the 9 hole-input steppers instead. Exactly one of
+      // holeScores/totalScore ends up set, per the entry shape validateMatchPlayerEntry expects.
+      const scoreOnlyInput = row.querySelector('.total-score-input');
+      let holeScores = null;
+      let totalScore = null;
+      if (scoreOnlyInput) {
+        if (scoreOnlyInput.value === '') {
+          alert('Enter a score.');
+          return;
+        }
+        totalScore = capTotalScore(Number(scoreOnlyInput.value), holePars).value;
+      } else {
+        const rawInputs = Array.from(row.querySelectorAll('.hole-input')).map((i) => (i.value === '' ? null : Number(i.value)));
+        if (!hasAnyHoleScore(rawInputs)) {
+          alert('Enter at least one hole score.');
+          return;
+        }
+        holeScores = capAllHoleScores(rawInputs, holePars).map((c) => c.value);
+      }
       const putts = Number(row.querySelector('.putts-input').value) || null;
 
       const editingThisRow = matchEditState?.kind === 'entry' && matchEditState.matchId === match.id && matchEditState.teamId === teamId;
@@ -393,11 +434,11 @@ function wireMatchCard(match, card) {
         // Mutate the existing entry in place (keeps its `roundId`) rather than replacing it, so
         // syncMatchRounds below updates the linked round instead of creating a duplicate.
         Object.assign(team.players[matchEditState.entryIndex], {
-          playerId, displayName, holeScores: capped.map((c) => c.value), putts, isStarter,
+          playerId, displayName, holeScores, totalScore, putts, isStarter,
         });
         matchEditState = null;
       } else {
-        team.players.push({ playerId, displayName, holeScores: capped.map((c) => c.value), putts, isStarter, roundId: null });
+        team.players.push({ playerId, displayName, holeScores, totalScore, putts, isStarter, roundId: null });
       }
       syncMatchRounds(match);
       DataStore.update('matches', match.id, { teams: match.teams });
@@ -439,6 +480,18 @@ function wireMatchCard(match, card) {
       // longer be trusted to point at the right row — cancel it rather than risk editing the
       // wrong one.
       if (matchEditState?.kind === 'entry' && matchEditState.matchId === match.id) matchEditState = null;
+      renderMatchesView();
+    });
+  });
+
+  card.querySelectorAll('.team-scoring-mode-select').forEach((select) => {
+    select.addEventListener('change', () => {
+      const team = match.teams.find((t) => t.id === select.dataset.teamId);
+      team.scoringMode = select.value;
+      DataStore.update('matches', match.id, { teams: match.teams });
+      // Only changes what the add/edit form offers for *new* entries going forward — existing
+      // entries keep whatever shape (holeScores or totalScore) they were entered with, and any
+      // in-flight edit of one of them (formMode in renderTeamBlock) is unaffected.
       renderMatchesView();
     });
   });

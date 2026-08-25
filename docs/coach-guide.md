@@ -188,6 +188,14 @@ lowest-scoring team in a match is highlighted with a "Winner" badge once at leas
 complete score. The player (or players, if tied) with the lowest individual score across every
 team in the match gets a 🏆 medalist badge.
 
+Each opponent team has a **Scoring** mode: **By Hole** (the default, described above) or **Score
+Only**, which swaps the 9 hole-score fields for a single total — useful when you only know an
+opponent's final score, not their hole-by-hole card. A Score Only player's Front3/Mid3/Back3
+columns show "—" since there's no per-hole data, but their score still counts toward team score
+and medalist exactly like a By Hole entry. Switching the mode only changes what the entry form
+offers going forward — scores already entered keep whichever form they were entered with. Your own
+team is always By Hole, since those scores also feed player rankings on the Rank page.
+
 The "Season record" shown at the top counts a 3-team match as two separate results — one against
 each opponent — since your team might beat one and lose to the other in the same match. A result
 only counts once both teams being compared have a complete score.

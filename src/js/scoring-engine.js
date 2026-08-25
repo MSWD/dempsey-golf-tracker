@@ -109,6 +109,17 @@ function capAllHoleScores(holeScores, holePars) {
   );
 }
 
+// Same double-par protection as capHoleScore, but for a Score Only match entry (see
+// MatchTeam.scoringMode) — there are no individual holes to cap, so the whole total is capped
+// against 2x the round's total par instead.
+function capTotalScore(total, holePars) {
+  const max = roundTotalPar(holePars) * 2;
+  return {
+    value: Math.min(total, max),
+    wasCapped: total > max,
+  };
+}
+
 function hasAnyHoleScore(holeScores) {
   return holeScores.some((score) => score != null);
 }
@@ -118,6 +129,23 @@ function hasAnyHoleScore(holeScores) {
 function rawScoreOrNull(holeScores) {
   if (!hasAnyHoleScore(holeScores)) return null;
   return holeScores.reduce((sum, score) => sum + (score ?? 0), 0);
+}
+
+// A match-team player entry (ui-matches.js) is either "By Hole" (9 holeScores, the original
+// behavior) or "Score Only" (a single totalScore, no per-hole detail) — see MatchTeam.scoringMode.
+// These two helpers let every scoring computation (team score, medalist, to-par) treat both shapes
+// identically instead of branching at every call site. Plain rounds (Round, from ui-rounds.js)
+// always carry holeScores and go through rawScoreOrNull/isValidRound directly — Score Only is a
+// match-entry-only concept.
+function entryRawScore(entry) {
+  return entry.holeScores ? rawScoreOrNull(entry.holeScores) : entry.totalScore;
+}
+
+// A Score Only entry has no hole-level data to run the minimum-holes check against — there's no
+// way to tell how many holes a bare total covers — so entering any total at all is what "counts"
+// in that mode. Only By Hole entries go through the real MIN_HOLES_FOR_VALID_ROUND check.
+function entryIsValid(entry) {
+  return entry.holeScores ? isValidRound(entry.holeScores) : entry.totalScore != null;
 }
 
 // adjusted_score = raw_score + (36 - round_total_par). Normalizes any 9-hole par card to a

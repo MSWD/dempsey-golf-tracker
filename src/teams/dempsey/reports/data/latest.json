@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-26",
+  "publishedAt": "2026-08-30",
   "seasonName": "2026 Dempsey Golf Season",
   "players": [
     {
@@ -276,26 +276,6 @@
           "rating": null
         }
       ]
-    },
-    {
-      "id": "royalamerican",
-      "name": "Royal American",
-      "holePars": [
-        5,
-        4,
-        3,
-        4,
-        5,
-        4,
-        3,
-        4,
-        4
-      ],
-      "holeYardages": null,
-      "slope": null,
-      "rating": null,
-      "totalPar": 36,
-      "verified": false
     },
     {
       "id": "rollingmeadows",
@@ -613,6 +593,100 @@
         }
       ],
       "defaultTeeSetId": null,
+      "verified": false
+    },
+    {
+      "id": "course_mtf3bg0q_mng97j",
+      "name": "Gahanna Municipal Golf Course",
+      "holePars": [
+        4,
+        4,
+        4,
+        4,
+        3,
+        4,
+        5,
+        3,
+        4
+      ],
+      "totalPar": 35,
+      "teeSets": [
+        {
+          "id": "tee_mtf3d2lp_l6sw6b",
+          "name": "Gold",
+          "holeYardages": [
+            339,
+            350,
+            345,
+            350,
+            135,
+            330,
+            460,
+            164,
+            380
+          ],
+          "holeParsOverride": null,
+          "slope": 117,
+          "rating": 33.9
+        }
+      ],
+      "defaultTeeSetId": "tee_mtf3d2lp_l6sw6b",
+      "verified": false
+    },
+    {
+      "id": "course_mtf4qqmw_aorpcr",
+      "name": "Royal American Links",
+      "holePars": [
+        5,
+        4,
+        3,
+        4,
+        5,
+        4,
+        3,
+        4,
+        4,
+        5,
+        4,
+        4,
+        3,
+        4,
+        4,
+        4,
+        3,
+        5
+      ],
+      "totalPar": 72,
+      "teeSets": [
+        {
+          "id": "tee_mtf4usqb_8q8g93",
+          "name": "Gold",
+          "holeYardages": [
+            471,
+            369,
+            151,
+            383,
+            557,
+            323,
+            158,
+            283,
+            396,
+            454,
+            299,
+            281,
+            158,
+            315,
+            364,
+            387,
+            174,
+            471
+          ],
+          "holeParsOverride": null,
+          "slope": 127,
+          "rating": 68.6
+        }
+      ],
+      "defaultTeeSetId": "tee_mtf4usqb_8q8g93",
       "verified": false
     }
   ],
@@ -2178,6 +2252,52 @@
       ],
       "putts": null,
       "matchId": "match_mt94e1ez_ct1cl3"
+    },
+    {
+      "id": "round_mtf3143y_hefddo",
+      "playerId": "player_19fa8e6d69e_vscvi3",
+      "date": "2026-08-29",
+      "type": "practice",
+      "courseId": "course_mt946ryc_6rzsad",
+      "teeSetId": null,
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        10,
+        8,
+        6,
+        8,
+        7,
+        5,
+        4,
+        7,
+        8
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mtf3eqcp_4s4ri8",
+      "playerId": "player_19fa8e6d69e_rt2fhl",
+      "date": "2026-08-29",
+      "type": "practice",
+      "courseId": "course_mtf3bg0q_mng97j",
+      "teeSetId": "tee_mtf3d2lp_l6sw6b",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        7,
+        7,
+        5,
+        5,
+        5,
+        6,
+        8,
+        4,
+        6
+      ],
+      "putts": 19,
+      "matchId": null
     }
   ],
   "matches": [

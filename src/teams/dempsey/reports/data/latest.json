@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-30",
+  "publishedAt": "2026-08-31",
   "seasonName": "2026 Dempsey Golf Season",
   "players": [
     {
@@ -634,7 +634,7 @@
       "verified": false
     },
     {
-      "id": "course_mtf4qqmw_aorpcr",
+      "id": "course_mthhiz6t_a7xmr1",
       "name": "Royal American Links",
       "holePars": [
         5,
@@ -659,7 +659,61 @@
       "totalPar": 72,
       "teeSets": [
         {
-          "id": "tee_mtf4usqb_8q8g93",
+          "id": "tee_mthhiz6t_le3njl",
+          "name": "Black",
+          "holeYardages": [
+            532,
+            426,
+            190,
+            423,
+            598,
+            364,
+            192,
+            328,
+            449,
+            526,
+            352,
+            336,
+            183,
+            340,
+            414,
+            447,
+            207,
+            552
+          ],
+          "holeParsOverride": null,
+          "slope": 133,
+          "rating": 73.2
+        },
+        {
+          "id": "tee_mthhiz6t_103g5v",
+          "name": "Blue",
+          "holeYardages": [
+            518,
+            393,
+            161,
+            418,
+            581,
+            333,
+            168,
+            304,
+            410,
+            491,
+            324,
+            323,
+            163,
+            320,
+            388,
+            422,
+            189,
+            501
+          ],
+          "holeParsOverride": null,
+          "slope": 132,
+          "rating": 70.7
+        },
+        {
+          "id": "tee_mthhiz6t_qfmcc4",
           "name": "Gold",
           "holeYardages": [
             471,
@@ -677,16 +731,43 @@
             158,
             315,
             364,
-            387,
+            397,
             174,
             471
           ],
           "holeParsOverride": null,
           "slope": 127,
           "rating": 68.6
+        },
+        {
+          "id": "tee_mthhiz6t_dsinu4",
+          "name": "White",
+          "holeYardages": [
+            429,
+            320,
+            120,
+            293,
+            464,
+            266,
+            135,
+            261,
+            365,
+            411,
+            238,
+            212,
+            142,
+            271,
+            335,
+            349,
+            145,
+            416
+          ],
+          "holeParsOverride": null,
+          "slope": 123,
+          "rating": 69.6
         }
       ],
-      "defaultTeeSetId": "tee_mtf4usqb_8q8g93",
+      "defaultTeeSetId": "tee_mthhiz6t_qfmcc4",
       "verified": false
     }
   ],
@@ -2259,7 +2340,7 @@
       "date": "2026-08-29",
       "type": "practice",
       "courseId": "course_mt946ryc_6rzsad",
-      "teeSetId": "tee_mt94aa0u_rvepqb",
+      "teeSetId": null,
       "side": "front",
       "inlineHolePars": null,
       "holeScores": [
@@ -2297,6 +2378,98 @@
         6
       ],
       "putts": 19,
+      "matchId": null
+    },
+    {
+      "id": "round_mthlnf8e_mt5502",
+      "playerId": "player_19fa8e6d69e_q6e747",
+      "date": "2026-08-31",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        7,
+        6,
+        8,
+        6,
+        10,
+        8,
+        8,
+        5
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mthlozp7_gc56xt",
+      "playerId": "player_ms5eijsb_i5k4ou",
+      "date": "2026-08-30",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        6,
+        3,
+        5,
+        6,
+        7,
+        5,
+        4,
+        5
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mthlq1aj_dww35s",
+      "playerId": "player_19fa8e6d69e_joly3g",
+      "date": "2026-08-30",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        5,
+        5,
+        5,
+        5,
+        7,
+        8,
+        5,
+        6
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mthlu9pw_lfvn0m",
+      "playerId": "player_19fa8e6d69e_dye45a",
+      "date": "2026-08-30",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        7,
+        4,
+        6,
+        6,
+        10,
+        8,
+        8,
+        5
+      ],
+      "putts": null,
       "matchId": null
     }
   ],
@@ -3056,6 +3229,31 @@
               "roundId": null
             }
           ]
+        }
+      ]
+    },
+    {
+      "id": "match_mthkrszk_jeikbj",
+      "date": "2026-08-31",
+      "location": "Away",
+      "courseId": "course_mthhiz6t_a7xmr1",
+      "teeSetId": "tee_mthhiz6t_qfmcc4",
+      "side": "front",
+      "inlineHolePars": null,
+      "teams": [
+        {
+          "id": "team_mthkrszk_tg5ov9",
+          "name": "Dempsey",
+          "isOwnTeam": true,
+          "scoringMode": "byHole",
+          "players": []
+        },
+        {
+          "id": "team_mthkrszk_df5mqm",
+          "name": "Big Walnut",
+          "isOwnTeam": false,
+          "scoringMode": "byHole",
+          "players": []
         }
       ]
     }

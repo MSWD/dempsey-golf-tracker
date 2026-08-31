@@ -284,7 +284,8 @@ function renderRoundsView(warningMessage, editingRoundId) {
             </div>
             ${r.type === 'match'
               ? '<p class="muted admin-only">Derived from a match — edit scores on the Matches page.</p>'
-              : `<button class="admin-only btn-edit-round" data-round-id="${escapeHtml(r.id)}">Edit</button>`}
+              : `<button class="admin-only btn-edit-round" data-round-id="${escapeHtml(r.id)}">Edit</button>
+                 <button class="admin-only btn-delete-round" data-round-id="${escapeHtml(r.id)}" style="margin-left:0.5rem;color:#c0392b;">Delete</button>`}
           </td>
         </tr>
       `;
@@ -292,6 +293,19 @@ function renderRoundsView(warningMessage, editingRoundId) {
   }
 
   rows.addEventListener('click', (e) => {
+    const delBtn = e.target.closest('.btn-delete-round');
+    if (delBtn) {
+      e.stopPropagation();
+      const roundId = delBtn.dataset.roundId;
+      const round = DataStore.getById('rounds', roundId);
+      if (!round) return;
+      const player = DataStore.getById('players', round.playerId);
+      const name = player ? `${player.firstName} ${player.lastName}` : 'Unknown';
+      if (!confirm(`Delete this ${round.type} round for ${name} on ${round.date}?`)) return;
+      DataStore.remove('rounds', roundId);
+      renderFilteredRows();
+      return;
+    }
     const editBtn = e.target.closest('.btn-edit-round');
     if (editBtn) {
       e.stopPropagation();

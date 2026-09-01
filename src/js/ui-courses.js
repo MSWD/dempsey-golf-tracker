@@ -87,8 +87,28 @@ function renderCoursesView(editingCourseId, editingTeeSet) {
     Array.from(el.querySelectorAll('tr.tee-sets-row')).filter((tr) => tr.querySelector('details')?.open).map((tr) => tr.dataset.id)
   );
   if (editingTeeSet) previouslyOpenIds.add(editingTeeSet.courseId);
+  const courseImportWasOpen = el.querySelector('#course-import-details')?.open ?? false;
 
   el.innerHTML = `
+    <details id="course-import-details" class="card admin-only" ${courseImportWasOpen ? 'open' : ''}>
+      <summary class="section-heading">Import a course from a scorecard</summary>
+      <p class="muted">
+        Copy the prompt below into a chat assistant you already have (Gemini, Claude, ChatGPT,
+        Copilot, Grok, ...) along with a photo of the scorecard, then paste the JSON it gives you
+        back in here.
+      </p>
+      <details>
+        <summary>Show prompt</summary>
+        <textarea id="course-import-prompt" class="full-width course-import-textarea" rows="8" readonly>${escapeHtml(SCORECARD_TO_COURSE_PROMPT)}</textarea>
+        <button type="button" id="btn-copy-course-prompt">Copy prompt</button>
+      </details>
+      <div class="form-row">
+        <input type="text" id="course-import-name" placeholder="Course name">
+      </div>
+      <textarea id="course-import-json" class="full-width course-import-textarea" rows="10" placeholder="Paste the JSON your assistant gave you here"></textarea>
+      <button type="button" id="btn-check-course-import">Check scorecard JSON</button>
+      <div id="course-import-preview"></div>
+    </details>
     <div class="card admin-only">
       <h2>${editingCourse ? 'Edit course' : 'Add course'}</h2>
       <div class="form-row">
@@ -347,5 +367,97 @@ function renderCoursesView(editingCourseId, editingTeeSet) {
       DataStore.add('courses', newCourse({ name, holePars, verified: false }));
     }
     renderCoursesView();
+  });
+
+  // --- Import a course from a scorecard (course-import.js) -----------------------------------
+  // `checkedCourse`/`checkedExistingId` hold the result of the last successful "Check" click in
+  // this render's closure, for the "Save" button below to act on — same reason the rest of this
+  // view reads form fields straight off the DOM instead of a persisted state object, but here the
+  // built-and-validated course object itself is worth keeping rather than re-deriving on save.
+  let checkedCourse = null;
+  let checkedExistingId = null;
+
+  el.querySelector('#btn-copy-course-prompt').addEventListener('click', async () => {
+    const btn = el.querySelector('#btn-copy-course-prompt');
+    try {
+      await navigator.clipboard.writeText(SCORECARD_TO_COURSE_PROMPT);
+      btn.textContent = 'Copied!';
+    } catch {
+      btn.textContent = 'Copy failed — select the text above manually';
+    }
+    setTimeout(() => { btn.textContent = 'Copy prompt'; }, 2000);
+  });
+
+  el.querySelector('#btn-check-course-import').addEventListener('click', () => {
+    const preview = el.querySelector('#course-import-preview');
+    const nameInput = el.querySelector('#course-import-name');
+    checkedCourse = null;
+    checkedExistingId = null;
+
+    let draft;
+    try {
+      draft = parseCourseDraft(el.querySelector('#course-import-json').value);
+    } catch (err) {
+      preview.innerHTML = `<p class="card notice">${escapeHtml(err.message)}</p>`;
+      return;
+    }
+
+    if (!nameInput.value.trim() && draft.name) nameInput.value = draft.name;
+
+    let course;
+    try {
+      course = buildCourseFromDraft(draft, { name: nameInput.value });
+    } catch (err) {
+      preview.innerHTML = `<p class="card notice">${escapeHtml(err.message)}</p>`;
+      return;
+    }
+
+    const warnings = checkDraftTotals(draft);
+    const conflict = courses.find((c) => c.name.trim().toLowerCase() === course.name.trim().toLowerCase());
+
+    const noticeItems = [...warnings, ...(draft.notes ? [`Assistant's note: ${draft.notes}`] : [])];
+    const noticeHtml = noticeItems.length
+      ? `<div class="card notice"><h3>Double-check before saving</h3><ul>${noticeItems.map((w) => `<li>${escapeHtml(w)}</li>`).join('')}</ul></div>`
+      : '';
+
+    const teeRowsHtml = course.teeSets.length
+      ? course.teeSets.map((t) => `<li>${escapeHtml(t.name)} — ${teeSetYardageSummary(course, t)}${t.rating != null ? `, rating ${t.rating}` : ''}${t.slope != null ? `, slope ${t.slope}` : ''}</li>`).join('')
+      : '<li class="muted">No tee sets</li>';
+
+    const conflictHtml = conflict
+      ? `
+        <div class="card notice">
+          <h3>A course named "${escapeHtml(conflict.name)}" already exists</h3>
+          <label><input type="radio" name="course-import-conflict" value="replace" checked> Replace it (keeps existing rounds/matches linked)</label><br>
+          <label><input type="radio" name="course-import-conflict" value="new"> Add as a separate new course</label>
+        </div>
+      `
+      : '';
+
+    preview.innerHTML = `
+      <div class="card">
+        <h3>${escapeHtml(course.name)}</h3>
+        <p>${courseParSummary(course)}</p>
+        <ul>${teeRowsHtml}</ul>
+        ${noticeHtml}
+        ${conflictHtml}
+        <button type="button" class="primary" id="btn-save-course-import">Save course</button>
+      </div>
+    `;
+    checkedCourse = course;
+    checkedExistingId = conflict ? conflict.id : null;
+
+    preview.querySelector('#btn-save-course-import').addEventListener('click', () => {
+      const chosen = preview.querySelector('input[name="course-import-conflict"]:checked')?.value ?? null;
+      const existingId = chosen === 'replace' ? checkedExistingId : null;
+      DataStore._snapshot('before-course-import');
+      if (existingId) {
+        checkedCourse.id = existingId;
+        DataStore.update('courses', existingId, checkedCourse);
+      } else {
+        DataStore.add('courses', checkedCourse);
+      }
+      renderCoursesView();
+    });
   });
 }

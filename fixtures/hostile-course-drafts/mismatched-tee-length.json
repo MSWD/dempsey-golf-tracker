@@ -1,0 +1,10 @@
+{
+  "name": "Mismatched Tee Length",
+  "holePars": [5,4,3,4,5,4,3,4,4,5,4,4,3,4,4,4,3,5],
+  "teeSets": [
+    { "name": "Gold", "holeYardages": [471,369,151,383,557,323,158,283,396,454,299,281,158,315,364,397,174],
+      "rating": 68.6, "slope": 127 }
+  ],
+  "defaultTeeSetName": null,
+  "notes": ""
+}

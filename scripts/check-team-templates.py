@@ -23,6 +23,21 @@ CANONICAL_SHARED_SCRIPTS = ["report-viewer.js", "match-render.js", "match-viewer
 VENDORED_CHART_SCRIPT = '<script src="../../assets/vendor/chart.min.js"></script>'
 CSP_META_PATTERN = re.compile(r'<meta http-equiv="Content-Security-Policy"')
 THIRD_PARTY_SCRIPT_PATTERN = re.compile(r'<script[^>]+src=["\']https?://', re.IGNORECASE)
+LOCAL_SCRIPT_SRC_PATTERN = re.compile(r'<script src="([^"]+)"></script>')
+
+# The app's own src/js/*.js files should be identical, in the same order, across every team's
+# index.html (each is a plain global <script> tag, no modules/build step — see
+# docs/architecture.md). Nothing re-applies scripts/add-team.py's INDEX_HTML_TEMPLATE after a team
+# is scaffolded, so a script added to one team's page (or the template) but not the others would
+# otherwise silently break that team's app with no CI signal — this check catches that drift.
+CANONICAL_APP_SCRIPTS = [
+    "team-config.js", "../../version.js", "../../js/html-utils.js", "../../js/models.js",
+    "../../js/scoring-engine.js", "../../js/data-store.js", "../../js/ui-roster.js",
+    "../../js/course-import.js", "../../js/ui-courses.js", "../../js/ui-rounds.js",
+    "../../js/ui-charts.js", "../../js/ui-matches.js", "../../js/ui-help.js",
+    "../../js/ui-maintenance.js", "../../js/google-auth.js", "../../js/github-publish.js",
+    "../../js/app.js",
+]
 
 
 def check_html(path: Path, mismatches: list, require_vendored_chart: bool):
@@ -38,6 +53,18 @@ def check_html(path: Path, mismatches: list, require_vendored_chart: bool):
         mismatches.append(f"{path} does not reference the vendored {VENDORED_CHART_SCRIPT}")
 
 
+def check_app_script_list(path: Path, mismatches: list):
+    if not path.exists():
+        return
+    text = path.read_text()
+    found = [m for m in LOCAL_SCRIPT_SRC_PATTERN.findall(text) if m in CANONICAL_APP_SCRIPTS or m.startswith("../../js/")]
+    if found != CANONICAL_APP_SCRIPTS:
+        mismatches.append(
+            f"{path} script list {found} does not match the canonical app script list {CANONICAL_APP_SCRIPTS} "
+            "(a src/js/*.js file was added/removed/reordered on one team's page but not applied everywhere)"
+        )
+
+
 def main():
     teams = json.loads((SRC / "teams.json").read_text())
     canonical_scripts = {
@@ -48,6 +75,7 @@ def main():
     for slug in teams:
         team_dir = SRC / "teams" / slug
         check_html(team_dir / "index.html", mismatches, require_vendored_chart=True)
+        check_app_script_list(team_dir / "index.html", mismatches)
         check_html(team_dir / "reports" / "index.html", mismatches, require_vendored_chart=False)
         check_html(team_dir / "reports" / "match.html", mismatches, require_vendored_chart=False)
 

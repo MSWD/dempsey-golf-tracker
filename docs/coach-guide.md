@@ -106,6 +106,21 @@ if it has one) whenever you log a new round, saving you a couple of clicks. Use 
 to go back to requiring an explicit choice every time. This is season data, so it travels with
 export/import, not something you set once in code.
 
+#### Adding a course from a scorecard photo
+
+Typing in every hole's par and yardage for every tee by hand is tedious, so there's a shortcut at
+the top of the Courses tab: "Import a course from a scorecard." Open it, click "Show prompt" and
+"Copy prompt," then paste that prompt into a chat assistant you already have (Gemini, Claude,
+ChatGPT, Copilot, Grok, or similar) along with a photo of the scorecard. The assistant reads the
+card and gives back JSON — paste that into the box under "Course name," give the course a name if
+it isn't already filled in, and click "Check scorecard JSON." You'll see a preview of what it
+found (par, yardages, tee sets) before anything is saved. If a tee's yardages don't add up to the
+totals printed on the card itself, you'll see a warning — worth a second look before saving, but
+it won't stop you if you're confident it's fine. If a course with that name already exists, you'll
+be asked whether to replace it (existing rounds and matches for it stay linked) or add it as a
+separate course. Nothing leaves your browser except what you copy/paste into the assistant
+yourself — this app never calls out to an AI service directly.
+
 ### Rounds
 
 Log tryout or practice rounds hole-by-hole. A couple of rules apply automatically:

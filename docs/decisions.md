@@ -323,6 +323,28 @@ compare, so no highlight rather than a premature or misleading one. This is sepa
 existing medalist badge, which is an individual (not team) stroke-play award computed across every
 player in the match regardless of team or starter status.
 
+## Why scorecard import is copy-paste, not an API call
+
+Adding a course by hand means typing every hole's par and yardage for every tee — for a full
+18-hole, 4-tee scorecard that's roughly 90 numbers off a photo, the most tedious and error-prone
+data entry in the app. Chat assistants read scorecard photos well, so the Courses tab now has an
+"Import a course from a scorecard" section: a copy-pasteable prompt (`course-import.js`'s
+`SCORECARD_TO_COURSE_PROMPT`, mirrored in `prompts/scorecard-to-course.md`) that a coach runs
+against their scorecard photo in whatever assistant they already have, pasting the resulting JSON
+back in. The app then builds the course through the same `newCourse`/`newTeeSet` constructors and
+`validateCourse` validation every other course-creation path uses (`course-import.js`), previews it,
+cross-checks the transcribed yardages against the totals printed on the card itself, and asks about
+conflicts before saving — see `docs/coach-guide.md`'s Courses section for the full workflow.
+
+Deliberately not a direct API call to a vision model. Every team page ships a strict CSP
+(`connect-src 'self' <auth worker>` — see "Why Chart.js is vendored and every page carries a CSP"
+above); calling an LLM API from the browser would mean loosening that CSP and asking each coach to
+supply and store their own API key. The copy-paste design needs neither, and it works with whatever
+assistant a coach already has an account for rather than locking the feature to one vendor — Gemini
+is the first one actually verified end-to-end, since the app already targets Google-account users
+for login, but the prompt is written to be vendor-neutral. This replaces the older "Scorecard photo
+scan (stretch)" backlog item below, which had assumed the API-call approach.
+
 ## Backlog / deliberately deferred
 
 - **Exact minimum-holes-for-valid-round number.** Currently `5` in `scoring-engine.js`
@@ -331,9 +353,8 @@ player in the match regardless of team or starter status.
 - **Tournament mode (Phase 3).** Up to ~20 teams, boys/girls flights, team + individual rankings,
   flight medalists. Explicitly deferred until the coach supplies exact rules — see
   `prompts/PROJECT_BRIEF.md`.
-- **Scorecard photo scan (stretch).** Auto-fill a Course's hole pars/yardages/slope/rating by
-  calling Claude's vision API from the browser, with the coach supplying his own API key stored
-  only in localStorage. Not started.
+- **Scorecard photo scan.** Done, but as a copy-paste-to-external-assistant flow rather than a
+  direct in-browser API call — see "Why scorecard import is copy-paste, not an API call" above.
 - **Putts stat skewed by picked-up holes — needs design.** `Round.putts` is a single total for the
   whole round (see `models.js`/`ui-rounds.js`), not per-hole. Once a player hits the double-par cap
   on a hole they often pick up rather than finish holing out, so the true putt count for that hole

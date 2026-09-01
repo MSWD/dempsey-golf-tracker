@@ -208,12 +208,26 @@ th, td {
 
 th { color: var(--color-muted); font-weight: 600; }
 
-input[type="text"], input[type="number"], input[type="date"], select {
+input[type="text"], input[type="number"], input[type="date"], select, textarea {
   font: inherit;
   padding: 5px 8px;
   border: 1px solid var(--color-border);
   border-radius: 4px;
   max-width: 100%;
+}
+
+.course-import-textarea {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  resize: vertical;
+}
+
+.section-heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* Safari (incl. iPadOS) gives flex items a default min-width: auto, which can force a

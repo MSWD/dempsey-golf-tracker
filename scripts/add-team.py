@@ -79,6 +79,7 @@ INDEX_HTML_TEMPLATE = """<!doctype html>
   <script src="../../js/scoring-engine.js"></script>
   <script src="../../js/data-store.js"></script>
   <script src="../../js/ui-roster.js"></script>
+  <script src="../../js/course-import.js"></script>
   <script src="../../js/ui-courses.js"></script>
   <script src="../../js/ui-rounds.js"></script>
   <script src="../../js/ui-charts.js"></script>

@@ -3,7 +3,7 @@ function holeInputs({ length, className, prefix, min = null, max = null, values 
     const minAttr = min == null ? '' : ` min="${min}"`;
     const maxAttr = max == null ? '' : ` max="${max}"`;
     const valueAttr = values[i] == null ? '' : ` value="${values[i]}"`;
-    return `<input type="number" class="${className}" data-hole="${offset + i}" placeholder="${prefix}${offset + i + 1}"${minAttr}${maxAttr}${valueAttr}>`;
+    return `<input type="text" inputmode="numeric" class="${className}" data-hole="${offset + i}" placeholder="${prefix}${offset + i + 1}"${minAttr}${maxAttr}${valueAttr}>`;
   }).join('');
 }
 
@@ -146,6 +146,7 @@ function renderCoursesView(editingCourseId, editingTeeSet) {
       max: 6,
       values: editingCourse ? editingCourse.holePars : [],
     });
+    wireSelectOnFocus(courseParsEl);
   }
   renderCoursePars();
   if (courseHoleCountSelect) courseHoleCountSelect.addEventListener('change', renderCoursePars);
@@ -233,6 +234,8 @@ function renderCoursesView(editingCourseId, editingTeeSet) {
       </td>
     </tr>
   `).join('');
+
+  wireSelectOnFocus(rows);
 
   rows.querySelectorAll('.btn-edit-course').forEach((span) => {
     span.addEventListener('click', () => {

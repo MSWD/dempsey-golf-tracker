@@ -345,6 +345,54 @@ is the first one actually verified end-to-end, since the app already targets Goo
 for login, but the prompt is written to be vendor-neutral. This replaces the older "Scorecard photo
 scan (stretch)" backlog item below, which had assumed the API-call approach.
 
+## Why score-entry fields are `type="text" inputmode="numeric"`, not `type="number"`
+
+The per-hole data-entry flow — coach tabbing field to field while a player reads scores aloud —
+is much smoother if each field's existing value is *selected* on focus, so the next keystroke
+replaces it instead of appending to a pre-filled default (holes default to par or double-par;
+course par grids default to the course's current pars). Implementing that surfaced a hard
+constraint: `select()` and `setSelectionRange()` **do not apply to `<input type="number">`** per
+the HTML spec — verified doing nothing in Chrome. The field has to actually be `type="text"` at
+the moment of selection.
+
+An intermediate version swapped `type` number→text on focus and back on blur (so it was only ever
+text while being edited). It worked, and was verified in Chrome and in Safari including on a real
+iPad. But it left a "mutate the type of a focused element" in the interaction hot path and forced
+CSS selectors (`.stepper input`, `#round-holes input`) that couldn't key on `[type="number"]`.
+Since the custom `+`/`−` steppers (issue #33) are already the increment affordance and the app
+uses **no** constraint validation anywhere (`checkValidity`, `:invalid`, `valueAsNumber`,
+`stepUp`/`stepDown` — none appear in the codebase), `type="number"` was carrying almost nothing
+here. So the fields are now permanently `type="text" inputmode="numeric"` and the swap is gone.
+
+Kept: `inputmode="numeric"` gives the numeric on-screen keypad on phones/tablets; `input.min`
+still reflects the `min` content attribute on a text input, so `wireStepperButtons`' decrement
+clamp is unaffected; every submit path already coerces with `Number()`.
+
+Given up, and why it's acceptable:
+
+- **Native desktop spin buttons, and scroll-wheel / arrow-key value nudging.** The steppers now
+  cover increment/decrement on every platform (desktop previously had the native spinner as a
+  redundant second path). Scroll-wheel silently changing a score while the coach scrolls the page
+  was a hazard, not a feature.
+- **The browser no longer blocks non-digit keystrokes as you type.** `inputmode="numeric"` makes
+  non-digits impossible on the touch keyboards coaches actually use; the "Add course" handler
+  already rejects non-numeric pars with an alert; hole-score submit runs `Number()`, and
+  `JSON.stringify` turns any stray `NaN` into `null` (a blank hole) on persist. A keystroke
+  digit-filter is the easy hardening step if this ever bites in practice — deliberately not added
+  now.
+- **Screen readers announce an idle field as a text input, not a spin button.** The `+`/`−`
+  buttons keep their own `aria-label`s.
+
+Scope: hole scores, total score, and putts (`renderStepperInput` and the raw putts inputs), plus
+the course par and tee-set yardage/par grids (`holeInputs` in `ui-courses.js`). Tee-set
+**slope/rating** stay `type="number"` — entered once per tee, a single value each, and rating is
+decimal; not worth the same treatment. The shared helper is `wireSelectOnFocus` in
+`html-utils.js`.
+
+This is also the Safari-on-iPad verification pass the "iPad and Pixel 10 layout pass" entry above
+deferred — the select-on-focus behavior and the steppers were checked on real Safari, desktop and
+iPad.
+
 ## Backlog / deliberately deferred
 
 - **Exact minimum-holes-for-valid-round number.** Currently `5` in `scoring-engine.js`

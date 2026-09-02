@@ -322,7 +322,7 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
             min: 1,
           })}
         `}
-        <input type="number" class="putts-input input-narrow" placeholder="Putts" value="${editingEntry && editingEntry.putts != null ? editingEntry.putts : ''}">
+        <input type="text" inputmode="numeric" class="putts-input input-narrow" placeholder="Putts" value="${editingEntry && editingEntry.putts != null ? editingEntry.putts : ''}">
         <button class="btn-add-team-player">${editingEntry ? 'Update score' : 'Add score'}</button>
         ${editingEntry ? '<button class="btn-cancel-entry-edit">Cancel</button>' : ''}
       </div>
@@ -361,6 +361,7 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
 
 function wireMatchCard(match, card) {
   wireStepperButtons(card);
+  wireSelectOnFocus(card);
 
   // Copies the URL this match *will* live at on the published static report (reports/match.html,
   // see src/teams/<team>/reports/match-viewer.js) — not a guarantee it's live yet. The coach

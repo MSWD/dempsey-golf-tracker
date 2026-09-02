@@ -359,8 +359,9 @@ body.admin-mode .viewer-only { display: none; }
 #icon-sprite { display: none; }
 .hole-input { width: 56px; }
 
-/* +/- buttons flanking a number input — the only increment/decrement affordance on iOS/iPadOS
-   browsers, which never show a native spinner on <input type="number"> (see GitHub issue #33).
+/* +/- buttons flanking a numeric-entry input. Since those fields are type="text" now (see
+   docs/decisions.md), these are the only increment/decrement affordance on every platform — not
+   just iOS/iPadOS, where the native <input type="number"> spinner was already absent (issue #33).
    The group is one inline-flex unit so .form-row's flex-wrap wraps whole hole/putts groups onto a
    new line together, never splitting a button from its input. */
 .stepper {
@@ -369,7 +370,10 @@ body.admin-mode .viewer-only { display: none; }
   white-space: nowrap;
 }
 
-.stepper input[type="number"] {
+/* `.stepper input`, not `input[type="number"]` — the stepper's field is type="text"
+   inputmode="numeric" now (see docs/decisions.md, "Why score-entry fields are type=text
+   inputmode=numeric"). A `.stepper` only ever wraps this one input. */
+.stepper input {
   border-radius: 0;
   border-left: none;
   border-right: none;
@@ -394,7 +398,9 @@ body.admin-mode .viewer-only { display: none; }
 /* Bigger, easier-to-read entry fields on the round-log row specifically — scoped to #round-holes
    so it doesn't spill onto the match-entry row (ui-matches.js) or any table cell that happens to
    share .hole-input/.input-narrow elsewhere. */
-#round-holes input[type="number"] {
+/* `#round-holes input` covers the hole steppers and #round-putts — all type="text"
+   inputmode="numeric" now (see the .stepper input note above); no <select> lives in this row. */
+#round-holes input {
   font-size: 1.2rem;
   padding: 8px 6px;
 }

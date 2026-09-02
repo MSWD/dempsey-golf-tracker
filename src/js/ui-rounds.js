@@ -92,7 +92,7 @@ function renderRoundsView(warningMessage, editingRoundId) {
             value: editingRound && editingRound.holeScores[i] != null ? editingRound.holeScores[i] : '', min: 1,
           })).join('')}
         </div>
-        <input type="number" id="round-putts" class="input-narrow" placeholder="Putts" value="${editingRound && editingRound.putts != null ? editingRound.putts : ''}">
+        <input type="text" inputmode="numeric" id="round-putts" class="input-narrow" placeholder="Putts" value="${editingRound && editingRound.putts != null ? editingRound.putts : ''}">
       </div>
       <button class="primary" id="btn-add-round">${editingRound ? 'Update round' : 'Save round'}</button>
       ${editingRound ? '<button id="btn-cancel-edit">Cancel</button>' : ''}
@@ -130,6 +130,7 @@ function renderRoundsView(warningMessage, editingRoundId) {
   `;
 
   wireStepperButtons(el.querySelector('#round-holes'));
+  wireSelectOnFocus(el.querySelector('#round-holes'));
 
   const roundCourseSelect = el.querySelector('#round-course');
   const roundSideSelect = el.querySelector('#round-side');

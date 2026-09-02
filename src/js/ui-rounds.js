@@ -37,9 +37,20 @@ function selectedSideForCourse(course, sideValue) {
   return normalizeSide(course, sideValue || 'front');
 }
 
-function updateHolePlaceholders(container, side) {
+// Keeps each hole-input's placeholder and the scorecard-style reference block above it (Hole
+// numbers + Par row, desktop/iPad-landscape only — see .scorecard-row in styles.css) in sync with
+// the current course/side/tee selection. `side` drives hole numbering (front vs back nine) for
+// both; `holePars` is null before a course is picked, which blanks the Par row rather than leaving
+// stale pars behind from a since-abandoned selection.
+function updateHoleReferenceRow(container, side, holePars) {
   container.querySelectorAll('.hole-input').forEach((input, i) => {
     input.placeholder = `H${sideHoleNumber(i, side)}`;
+  });
+  container.querySelectorAll('.hole-number-cell').forEach((cell, i) => {
+    cell.textContent = sideHoleNumber(i, side);
+  });
+  container.querySelectorAll('.hole-par-cell').forEach((cell, i) => {
+    cell.textContent = holePars ? holePars[i] : '';
   });
 }
 
@@ -70,6 +81,7 @@ function renderRoundsView(warningMessage, editingRoundId) {
       <h2>${editingRound ? 'Edit a round' : 'Log a round'}</h2>
       <div class="form-row">
         <select id="round-player">
+          <option value="">— select a player —</option>
           ${players.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
         </select>
         <select id="round-type">
@@ -84,19 +96,34 @@ function renderRoundsView(warningMessage, editingRoundId) {
         <select id="round-tee-set"></select>
         <input type="date" id="round-date" value="${editingRound ? escapeHtml(editingRound.date) : new Date().toISOString().slice(0, 10)}">
       </div>
-      <div class="muted" id="round-tee-info"></div>
-      <div class="form-row" id="round-holes">
-        <div class="hole-scores">
-          ${Array.from({ length: 9 }, (_, i) => renderStepperInput({
-            className: 'hole-input', dataAttrs: `data-hole="${i}"`, placeholder: `H${i + 1}`,
-            value: editingRound && editingRound.holeScores[i] != null ? editingRound.holeScores[i] : '', min: 1,
-          })).join('')}
+      <div id="round-entry-fields" class="${editingRound ? '' : 'hidden'}">
+        <div class="muted" id="round-tee-info"></div>
+        <div class="form-row" id="round-holes">
+          <div class="hole-entry-group">
+            <div class="scorecard-row scorecard-hole-row">
+              <span class="scorecard-cell scorecard-label-cell">Hole</span>
+              ${Array.from({ length: 9 }, (_, i) => `<span class="scorecard-cell hole-number-cell">${i + 1}</span>`).join('')}
+            </div>
+            <div class="scorecard-row scorecard-par-row">
+              <span class="scorecard-cell scorecard-label-cell">Par</span>
+              ${Array.from({ length: 9 }, () => `<span class="scorecard-cell hole-par-cell"></span>`).join('')}
+            </div>
+            <div class="scorecard-row scorecard-score-row">
+              <span class="scorecard-cell scorecard-label-cell">Score</span>
+              <div class="hole-scores">
+                ${Array.from({ length: 9 }, (_, i) => renderStepperInput({
+                  className: 'hole-input', dataAttrs: `data-hole="${i}"`, placeholder: `H${i + 1}`,
+                  value: editingRound && editingRound.holeScores[i] != null ? editingRound.holeScores[i] : '', min: 1,
+                })).join('')}
+              </div>
+            </div>
+          </div>
+          <input type="text" inputmode="numeric" id="round-putts" class="input-narrow" placeholder="Putts" value="${editingRound && editingRound.putts != null ? editingRound.putts : ''}">
         </div>
-        <input type="number" id="round-putts" class="input-narrow" placeholder="Putts" value="${editingRound && editingRound.putts != null ? editingRound.putts : ''}">
+        <button class="primary" id="btn-add-round">${editingRound ? 'Update round' : 'Save round'}</button>
+        ${editingRound ? '<button id="btn-cancel-edit">Cancel</button>' : ''}
+        <div class="muted" id="round-warning">${warningMessage ?? ''}</div>
       </div>
-      <button class="primary" id="btn-add-round">${editingRound ? 'Update round' : 'Save round'}</button>
-      ${editingRound ? '<button id="btn-cancel-edit">Cancel</button>' : ''}
-      <div class="muted" id="round-warning">${warningMessage ?? ''}</div>
     </div>
     <p class="muted">Click a row to see hole-by-hole detail<span class="admin-only"> and edit</span>.</p>
     <div class="form-row" id="rounds-filter">
@@ -130,7 +157,10 @@ function renderRoundsView(warningMessage, editingRoundId) {
   `;
 
   wireStepperButtons(el.querySelector('#round-holes'));
+  wireSelectOnFocus(el.querySelector('#round-holes'));
 
+  const roundPlayerSelect = el.querySelector('#round-player');
+  const roundEntryFields = el.querySelector('#round-entry-fields');
   const roundCourseSelect = el.querySelector('#round-course');
   const roundSideSelect = el.querySelector('#round-side');
   const roundTeeSelect = el.querySelector('#round-tee-set');
@@ -139,14 +169,14 @@ function renderRoundsView(warningMessage, editingRoundId) {
     const teeSet = findTeeSet(course, roundTeeSelect.value);
     const side = selectedSideForCourse(course, roundSideSelect.value);
     const info = el.querySelector('#round-tee-info');
-    if (!course) { info.textContent = ''; return; }
+    if (!course) { info.textContent = ''; updateHoleReferenceRow(el.querySelector('#round-holes'), 'front', null); return; }
     const par = teeSetTotalPar(course, teeSet, side);
     const yards = teeSet ? teeSetTotalYardage(teeSet, side) : null;
     const sideText = isEighteenHoleCourse(course) ? `${sideLabel(side)} · ` : '';
     info.textContent = teeSet
       ? `${sideText}Par ${par}${yards != null ? `, ${yards} yds` : ''}${teeSet.holeParsOverride ? ' (par differs on this tee)' : ''}`
       : `${sideText}Par ${teeSetTotalPar(course, null, side)} (course default)`;
-    updateHolePlaceholders(el.querySelector('#round-holes'), side);
+    updateHoleReferenceRow(el.querySelector('#round-holes'), side, teeSetEffectiveHolePars(course, teeSet, side));
   }
 
   // New rounds default every hole to par so the coach can nudge the spinner up/down for a
@@ -182,6 +212,16 @@ function renderRoundsView(warningMessage, editingRoundId) {
   let priorCourseId = roundCourseSelect.value;
   let priorSide = roundSideSelect.value;
   let priorTeeSetId = roundTeeSelect.value;
+
+  // The entry section (tee info, hole scores, Save) stays hidden until a real player is chosen —
+  // an unattributed round is a mistake waiting to happen (easy to fill in 9 holes' worth of scores
+  // against whichever player the browser happened to default-select), and hiding the section is a
+  // stronger nudge than just leaving the picker blank. Editing an existing round always shows it
+  // immediately (roundEntryFields' initial class, above) since the player is already fixed then —
+  // this listener only matters for logging a brand-new round.
+  roundPlayerSelect.addEventListener('change', () => {
+    roundEntryFields.classList.toggle('hidden', !roundPlayerSelect.value);
+  });
 
   // Shared by all three selects below: ask before resetting (skipped on the very first course
   // pick, since there's nothing on the form yet to lose), apply-and-reset on OK, or run `revert`

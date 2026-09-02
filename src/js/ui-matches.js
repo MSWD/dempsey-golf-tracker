@@ -289,32 +289,55 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
       <div class="form-row add-player-row admin-only" data-match-id="${escapeHtml(match.id)}" data-team-id="${escapeHtml(team.id)}">
         ${team.isOwnTeam ? `
           <select class="player-select">
+            <option value="">— select a player —</option>
             ${players.map((p) => `<option value="${escapeHtml(p.id)}" ${editingEntry && editingEntry.playerId === p.id ? 'selected' : ''}>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`).join('')}
           </select>
         ` : `
           <input type="text" class="displayname-input" placeholder="Player name" value="${editingEntry ? escapeHtml(editingEntry.displayName) : ''}">
         `}
+        <div class="match-entry-fields${team.isOwnTeam && !editingEntry ? ' hidden' : ''}">
         <label class="muted"><input type="checkbox" class="starter-checkbox" ${editingEntry ? (editingEntry.isStarter ? 'checked' : '') : 'checked'}> Starter</label>
         <span class="row-break"></span>
-        ${formMode === 'byHole' ? `
-          <div class="hole-scores">
-            ${Array.from({ length: 9 }, (_, i) => {
-              // New entries default each hole to double par (the same cap capAllHoleScores enforces
-              // on submit, see scoring-engine.js) rather than par. A par default reads as a real score
-              // at a glance, so leftover/pre-round defaults were getting mixed in with actual match
-              // scores; double par is unambiguously a placeholder the coach must overwrite as they
-              // enter real scores. Editing an existing entry always shows what was actually recorded,
-              // never a default fallback.
-              const value = editingEntry
-                ? (editingEntry.holeScores[i] != null ? editingEntry.holeScores[i] : '')
-                : (holePars ? holePars[i] * 2 : '');
-              return renderStepperInput({
-                className: 'hole-input', dataAttrs: `data-hole="${i}"`,
-                placeholder: `H${sideHoleNumber(i, side)}`, value, min: 1,
-              });
-            }).join('')}
-          </div>
-        ` : `
+        ${formMode === 'byHole' ? (() => {
+          // New entries default each hole to par, same as ui-rounds.js's own hole entry — lets the
+          // coach nudge the stepper up/down for a bogey/birdie instead of typing every score.
+          // Previously defaulted to double par (the same cap capAllHoleScores enforces on submit,
+          // see scoring-engine.js) specifically so a leftover/un-entered default couldn't be
+          // mistaken for a real recorded score at a glance — reverted per coach feedback: that
+          // traded away the far more common case (nudging from a realistic starting point) for a
+          // rarer mistake it didn't meaningfully prevent in practice anyway. Editing an existing
+          // entry always shows what was actually recorded, never a default fallback.
+          const holeInputsHtml = Array.from({ length: 9 }, (_, i) => {
+            const value = editingEntry
+              ? (editingEntry.holeScores[i] != null ? editingEntry.holeScores[i] : '')
+              : (holePars ? holePars[i] : '');
+            return renderStepperInput({
+              className: 'hole-input', dataAttrs: `data-hole="${i}"`,
+              placeholder: `H${sideHoleNumber(i, side)}`, value, min: 1,
+            });
+          }).join('');
+          // Without a resolvable course (holePars null — "Course unavailable" above), there's
+          // nothing to put in a Par row, so the scorecard-style block is skipped entirely in favor
+          // of the plain unbordered entry row rather than showing it missing its Par reference.
+          return holePars ? `
+            <div class="hole-entry-group">
+              <div class="scorecard-row scorecard-hole-row">
+                <span class="scorecard-cell scorecard-label-cell">Hole</span>
+                ${Array.from({ length: 9 }, (_, i) => `<span class="scorecard-cell hole-number-cell">${sideHoleNumber(i, side)}</span>`).join('')}
+              </div>
+              <div class="scorecard-row scorecard-par-row">
+                <span class="scorecard-cell scorecard-label-cell">Par</span>
+                ${holePars.map((par) => `<span class="scorecard-cell hole-par-cell">${par}</span>`).join('')}
+              </div>
+              <div class="scorecard-row scorecard-score-row">
+                <span class="scorecard-cell scorecard-label-cell">Score</span>
+                <div class="hole-scores">${holeInputsHtml}</div>
+              </div>
+            </div>
+          ` : `
+            <div class="hole-scores">${holeInputsHtml}</div>
+          `;
+        })() : `
           ${renderStepperInput({
             className: 'total-score-input',
             placeholder: 'Score',
@@ -325,6 +348,7 @@ function renderTeamBlock(match, team, holePars, side, score, isWinner, medalistS
         <input type="text" inputmode="numeric" class="putts-input input-narrow" placeholder="Putts" value="${editingEntry && editingEntry.putts != null ? editingEntry.putts : ''}">
         <button class="btn-add-team-player">${editingEntry ? 'Update score' : 'Add score'}</button>
         ${editingEntry ? '<button class="btn-cancel-entry-edit">Cancel</button>' : ''}
+        </div>
       </div>
       <div class="table-wrap">
         <table>
@@ -384,6 +408,18 @@ function wireMatchCard(match, card) {
 
   card.querySelectorAll('.add-player-row').forEach((row) => {
     const teamId = row.dataset.teamId;
+    // Own-team rows only — opponent/guest entries use a free-text name input, nothing to "select".
+    // Mirrors #round-entry-fields in ui-rounds.js: keeps the rest of the row (Starter, score
+    // fields, Putts, the button) hidden until a real player is chosen, so a fresh "Add score" can't
+    // silently attribute a full 9 holes to whichever roster player the select happened to default
+    // to. Editing an existing entry always starts visible (the player is already fixed then) — see
+    // .match-entry-fields' initial class, above.
+    const playerSelect = row.querySelector('.player-select');
+    if (playerSelect) {
+      playerSelect.addEventListener('change', () => {
+        row.querySelector('.match-entry-fields').classList.toggle('hidden', !playerSelect.value);
+      });
+    }
     row.querySelector('.btn-add-team-player').addEventListener('click', () => {
       const team = match.teams.find((t) => t.id === teamId);
       const isStarter = row.querySelector('.starter-checkbox').checked;
@@ -392,6 +428,10 @@ function wireMatchCard(match, card) {
       let displayName;
       if (team.isOwnTeam) {
         playerId = row.querySelector('.player-select').value;
+        if (!playerId) {
+          alert('Select a player.');
+          return;
+        }
         const player = DataStore.getById('players', playerId);
         displayName = `${player.firstName} ${player.lastName}`;
       } else {

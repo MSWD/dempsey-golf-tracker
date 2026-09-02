@@ -412,17 +412,22 @@ body.admin-mode .viewer-only { display: none; }
    Matches' hole-score row shares its card's width budget with a longer preceding row (name +
    Starter). This is also the value inherited below the 1100px grid-wrap breakpoint (phones and
    portrait tablets), where the exact width doesn't affect scrolling — grid wrap always fits 3 per
-   row regardless — so no separate narrow-width value is needed there. */
-#round-holes .hole-input { width: 53px; }
-.add-player-row .hole-input { width: 49px; }
+   row regardless — so no separate narrow-width value is needed there.
+   Trimmed a further 7px from each of these (and their ≥1101px overrides below) once type="number"
+   was retired for good (see "Why score-entry fields are type=text inputmode=numeric" in
+   docs/decisions.md) — that native spinner is what these widths used to leave headroom for; a
+   plain text input showing at most 2 digits doesn't need it, and the on-one-line fit these were
+   already tuned for can now only be easier, never at risk, since every value here only shrank. */
+#round-holes .hole-input { width: 46px; }
+.add-player-row .hole-input { width: 42px; }
 
 /* Above the grid-wrap breakpoint, some iPads in landscape (Air 11", Pro 11", Pro 12.9" — all
    1180px+) share this single-line layout with desktop Chrome, so the iPad-tuned width above and
    desktop's own narrower need can't both be a single unscoped value — desktop Chrome needed these
    3-4px narrower to avoid scrolling at its own measured width. */
 @media (min-width: 1101px) {
-  #round-holes .hole-input { width: 50px; }
-  .add-player-row .hole-input { width: 47px; }
+  #round-holes .hole-input { width: 44px; }
+  .add-player-row .hole-input { width: 41px; }
 }
 
 /* Forces the match-entry row's flex-wrap to start a new line here, right after the Starter
@@ -431,6 +436,23 @@ body.admin-mode .viewer-only { display: none; }
 .row-break {
   flex-basis: 100%;
   height: 0;
+}
+
+/* Everything past the player picker in an own-team "Add score" row (Starter, .row-break, the
+   score fields, Putts, the button) — kept as its own flex/wrap context (mirrors .form-row) so
+   .row-break above still forces score entry onto its own line within it. Hidden until a real
+   player is chosen (ui-matches.js toggles this on .player-select's change) — an unattributed
+   score is a mistake waiting to happen, same reasoning as #round-entry-fields in ui-rounds.js.
+   The .hidden pairing is written explicitly (not left to rely on .hidden's own later position in
+   this file) since this rule, unlike most .hidden targets, sets its own `display` too. */
+.match-entry-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.match-entry-fields.hidden {
+  display: none;
 }
 
 /* All 9 hole-score fields stay together on one line — entering a round/match hole-by-hole reads
@@ -446,6 +468,96 @@ body.admin-mode .viewer-only { display: none; }
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 2px;
+}
+
+/* Wraps the scorecard-style Hole/Par reference rows directly above .hole-scores so the whole
+   group stacks as one flex item within #round-holes / .add-player-row — same trick .hole-scores
+   itself relies on, so the surrounding row's own flex-wrap still drops Putts/Add-score to the next
+   line as a whole, never splitting mid-group. gap: 0 is deliberate — the scorecard rows below are
+   meant to look like one continuous bordered grid, with no daylight between them. */
+.hole-entry-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+/* Below 1101px .hole-scores already claims the full line itself (flex-basis: 100%, further down)
+   once .scorecard-score-row promotes it via display: contents, which drags .hole-entry-group along
+   with it. Above 1101px nothing forced that until now — .hole-entry-group just shrank to its own
+   content width (~952px for Rounds), which happened to leave enough room beside it for the 70px
+   Putts field to squeeze onto the same line rather than wrap below, at exactly the window widths
+   where main/.card's own padding is tightened (601–1366px, see that rule further up) — an iPad in
+   landscape, concretely. Forcing the full line here removes that pixel-luck dependency instead of
+   relying on it staying just barely too tight everywhere else. */
+@media (min-width: 1101px) {
+  .hole-entry-group {
+    flex-basis: 100%;
+  }
+}
+
+/* Traditional-scorecard-style reference block: a "Hole" row (actual hole numbers, side-aware) and
+   a "Par" row sit directly above the live score-entry row, styled as one bordered grid — see
+   GitHub issue discussion, "par row above hole entry". Desktop/iPad-landscape only (hidden below in
+   the same max-width: 1100px switch .hole-scores makes to its 3-per-row grid, where a row of 9
+   cells above no longer lines up with anything).
+
+   Border technique: every cell carries its own right+bottom border; only the first row adds a top
+   border and only the label column adds a left one — adjoining cells' shared edges are then a
+   single 1px line rather than doubling up (the usual `border-collapse` trick, done by hand since
+   this is flexbox, not a <table>). Value-cell widths mirror .hole-input's own ≥1101px width plus
+   its two flanking 28px stepper buttons, so each header/par label centers directly over the score
+   field for that hole. */
+.scorecard-row {
+  display: flex;
+}
+.scorecard-cell {
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 0;
+  font-size: 0.8rem;
+}
+.scorecard-label-cell {
+  border-left: 1px solid var(--color-border);
+  justify-content: flex-start;
+  padding-left: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.scorecard-hole-row .scorecard-cell { border-top: 1px solid var(--color-border); }
+.scorecard-par-row .scorecard-cell { background: var(--color-bg); font-weight: 700; }
+#round-holes .scorecard-cell:not(.scorecard-label-cell) { width: calc(44px + 56px); }
+.add-player-row .scorecard-cell:not(.scorecard-label-cell) { width: calc(41px + 56px); }
+.scorecard-label-cell { width: 52px; }
+/* .hole-scores' own gap: 8px (further up) is still exactly what the mobile 3-per-row grid wants
+   below 1101px (see the max-width: 1100px block below, which doesn't touch gap) — but in this
+   bordered desktop layout it would widen the Score row 8px per column beyond the Hole/Par rows'
+   butted-together cells above it, drifting further off with every hole (worst by hole 9) since
+   nothing closes that gap back up column to column. Scoped to ≥1101px so mobile keeps its gap.
+
+   The border+width rule just below is scoped here for the same reason, and for a second one: every
+   .scorecard-cell above has an *explicit* width, so box-sizing: border-box (global, see :root)
+   absorbs its border into that width with no change to the rendered box. .stepper has no width of
+   its own — it auto-sizes to its 3 children (28+28+.hole-input) — so a border added to it the same
+   way would sit *on top of* that auto width instead of being absorbed, overshooting the matching
+   header cell by 1px per column (worst by hole 9 again, just far more subtle than the gap bug
+   above). Giving it the same explicit width as its header cell fixes that the same way. */
+@media (min-width: 1101px) {
+  .scorecard-score-row .hole-scores {
+    gap: 0;
+  }
+  #round-holes .scorecard-score-row .hole-scores .stepper {
+    width: calc(44px + 56px);
+  }
+  .add-player-row .scorecard-score-row .hole-scores .stepper {
+    width: calc(41px + 56px);
+  }
+  .scorecard-score-row .hole-scores .stepper {
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
 }
 
 /* Below ~1100px there isn't room for all 9 fields plus surrounding chrome even with the narrowed
@@ -465,6 +577,24 @@ body.admin-mode .viewer-only { display: none; }
        left beside the grid, vertically centered next to one of its rows instead of below all of
        them. */
     flex-basis: 100%;
+  }
+  /* Doesn't line up with the 3-per-row grid above, so the Hole/Par reference rows are hidden
+     rather than shown mismatched — this is the "screen formats large enough" cutoff for the
+     scorecard block (computer/iPad landscape). .scorecard-score-row drops out via display: contents
+     rather than display: none so its child .hole-scores still renders — see the .hole-entry-group
+     comment above for why that specific display value matters here. */
+  .scorecard-hole-row,
+  .scorecard-par-row {
+    display: none;
+  }
+  .scorecard-score-row {
+    display: contents;
+  }
+  /* display: contents removes .scorecard-score-row's own box, but its "Score" label child is still
+     one of the elements it was hiding for — without this it'd leak out as a stray flex item
+     alongside the promoted .hole-scores grid. */
+  .scorecard-score-row .scorecard-label-cell {
+    display: none;
   }
 }
 

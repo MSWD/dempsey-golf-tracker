@@ -3069,6 +3069,75 @@
       ],
       "putts": 18,
       "matchId": null
+    },
+    {
+      "id": "round_mtrt9daj_gnysko",
+      "playerId": "player_19fa8e6d69e_hucr9l",
+      "date": "2026-09-05",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        5,
+        4,
+        5,
+        6,
+        5,
+        5,
+        4,
+        5
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mtrtccf7_r42jkl",
+      "playerId": "player_19fa8e6d69e_mtda4r",
+      "date": "2026-09-07",
+      "type": "practice",
+      "courseId": "course_mszaalhm_mdzscc",
+      "teeSetId": "tee_mszahvw2_innigv",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        5,
+        5,
+        4,
+        6,
+        6,
+        5,
+        5,
+        4,
+        4
+      ],
+      "putts": 17,
+      "matchId": null
+    },
+    {
+      "id": "round_mtrtda9l_q2ppai",
+      "playerId": "player_19fa8e6d69e_mtda4r",
+      "date": "2026-09-07",
+      "type": "practice",
+      "courseId": "course_mszaalhm_mdzscc",
+      "teeSetId": "tee_mszahvw2_innigv",
+      "side": "back",
+      "inlineHolePars": null,
+      "holeScores": [
+        4,
+        5,
+        4,
+        5,
+        4,
+        6,
+        4,
+        3,
+        4
+      ],
+      "putts": 17,
+      "matchId": null
     }
   ],
   "matches": [

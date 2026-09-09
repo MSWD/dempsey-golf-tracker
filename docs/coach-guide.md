@@ -106,6 +106,21 @@ if it has one) whenever you log a new round, saving you a couple of clicks. Use 
 to go back to requiring an explicit choice every time. This is season data, so it travels with
 export/import, not something you set once in code.
 
+#### Adding a course from a scorecard photo
+
+Typing in every hole's par and yardage for every tee by hand is tedious, so there's a shortcut at
+the top of the Courses tab: "Import a course from a scorecard." Open it, click "Show prompt" and
+"Copy prompt," then paste that prompt into a chat assistant you already have (Gemini, Claude,
+ChatGPT, Copilot, Grok, or similar) along with a photo of the scorecard. The assistant reads the
+card and gives back JSON — paste that into the box under "Course name," give the course a name if
+it isn't already filled in, and click "Check scorecard JSON." You'll see a preview of what it
+found (par, yardages, tee sets) before anything is saved. If a tee's yardages don't add up to the
+totals printed on the card itself, you'll see a warning — worth a second look before saving, but
+it won't stop you if you're confident it's fine. If a course with that name already exists, you'll
+be asked whether to replace it (existing rounds and matches for it stay linked) or add it as a
+separate course. Nothing leaves your browser except what you copy/paste into the assistant
+yourself — this app never calls out to an AI service directly.
+
 ### Rounds
 
 Log tryout or practice rounds hole-by-hole. A couple of rules apply automatically:
@@ -188,6 +203,14 @@ lowest-scoring team in a match is highlighted with a "Winner" badge once at leas
 complete score. The player (or players, if tied) with the lowest individual score across every
 team in the match gets a 🏆 medalist badge.
 
+Each opponent team has a **Scoring** mode: **By Hole** (the default, described above) or **Score
+Only**, which swaps the 9 hole-score fields for a single total — useful when you only know an
+opponent's final score, not their hole-by-hole card. A Score Only player's Front3/Mid3/Back3
+columns show "—" since there's no per-hole data, but their score still counts toward team score
+and medalist exactly like a By Hole entry. Switching the mode only changes what the entry form
+offers going forward — scores already entered keep whichever form they were entered with. Your own
+team is always By Hole, since those scores also feed player rankings on the Rank page.
+
 The "Season record" shown at the top counts a 3-team match as two separate results — one against
 each opponent — since your team might beat one and lose to the other in the same match. A result
 only counts once both teams being compared have a complete score.
@@ -240,6 +263,10 @@ mistaken import can be undone — see the "Restore" button next to each snapshot
 
 ### Privacy — this data can become public
 
+*This is about published **season data** — roster, scores, match results. For what's collected
+when you **sign in with Google**, see the ["Privacy Policy"](#privacy-policy) section at the end of
+this guide instead — the two are separate concerns.*
+
 This app's code and published reports live in a public GitHub repository, so anything that gets
 **published** is visible to anyone on the internet, not just people you share a link with. Roster
 names are abbreviated automatically when you publish (first name + last initial, e.g. "Graham B" —
@@ -282,3 +309,18 @@ stale or incomplete data.
 
 Feedback and bug reports go through GitHub Issues:
 [github.com/MSWD/dempsey-golf-tracker/issues](https://github.com/MSWD/dempsey-golf-tracker/issues)
+
+## Privacy Policy
+
+The Privacy Policy — what's collected when you sign in with Google, why, and how to request
+removal — now lives on the site itself, so it's hosted on the app's own domain rather than only
+here on GitHub (Google's OAuth verification requires the linked privacy policy to be on a
+qualified domain, not a third-party host):
+
+**[middle-school-golf-tracker.mswd.us/privacy.html](https://middle-school-golf-tracker.mswd.us/privacy.html)**
+
+That page is the canonical, current version — kept here as a pointer rather than a second copy, so
+there's one place to update instead of two that can drift out of sync. For how **published report
+data** (roster, scores, match results) becomes public once a coach publishes it, see "Privacy —
+this data can become public" earlier in this guide instead; that's a separate concern from the
+Google sign-in privacy page linked above.

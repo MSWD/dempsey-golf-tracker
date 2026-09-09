@@ -66,15 +66,22 @@ function newMatch({ date, location, courseId = null, teeSetId = null, side = 'fr
     teeSetId,
     side,
     inlineHolePars,
-    teams, // [{ id, name, isOwnTeam, players: [{ playerId?, displayName, holeScores[9], putts }] }]
+    teams, // [{ id, name, isOwnTeam, scoringMode, players: [{ playerId?, displayName,
+           //   holeScores[9]|null, totalScore|null, putts, isStarter }] }]
   };
 }
 
-function newMatchTeam({ name, isOwnTeam = false, players = [] }) {
+// scoringMode: 'byHole' (default, the original hole-by-hole entry) or 'scoreOnly' (a single total
+// per player, no per-hole detail — see scoring-engine.js's entryRawScore/entryIsValid). Only
+// meaningful for opponent teams: the own team's entries feed player rankings via syncMatchRounds
+// in ui-matches.js, which needs real hole-by-hole data, so the UI never offers this toggle for
+// isOwnTeam.
+function newMatchTeam({ name, isOwnTeam = false, scoringMode = 'byHole', players = [] }) {
   return {
     id: makeId('team'),
     name,
     isOwnTeam,
+    scoringMode,
     players,
   };
 }

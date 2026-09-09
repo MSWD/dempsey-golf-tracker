@@ -1,0 +1,10 @@
+{
+  "name": "<img src=x onerror=alert(1)> Muni",
+  "holePars": [4, 4, 3, 5, 4, 3, 4, 5, 4],
+  "teeSets": [
+    { "name": "\"><script>alert(2)</script>", "holeYardages": [350, 310, 140, 480, 360, 150, 320, 470, 340],
+      "rating": null, "slope": null }
+  ],
+  "defaultTeeSetName": null,
+  "notes": ""
+}

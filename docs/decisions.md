@@ -205,6 +205,26 @@ just to play — those scores should never count toward team score (rule 5) even
 recorded. `isStarter` (default true, toggle-able per player added to a match team) makes that
 distinction explicit instead of inferring it from array position.
 
+## Why match teams got a `scoringMode` toggle instead of a global "entry style" setting
+
+Coaches don't always have an opponent's hole-by-hole card — sometimes the only number they get
+after a match is a final total. Forcing hole-by-hole entry in that case meant either inventing 9
+numbers that summed to the real total (misleading Front3/Mid3/Back3 splits) or not recording the
+opponent's score at all. `scoringMode: 'byHole' | 'scoreOnly'` lives on the match *team*, not the
+match or a global setting, because the need is per-opponent: a 3-team match could have one
+opponent whose card the coach filled in hole-by-hole and another they only got a final score from.
+It's set at the team level rather than per-entry so the add-score form only asks for what the
+coach can actually supply, without a mode selector cluttering every single player row.
+
+`entryRawScore`/`entryIsValid` (`scoring-engine.js`) read whichever shape (`holeScores` or
+`totalScore`) an entry actually has, so team score, medalist, and to-par all work identically
+regardless of which mode produced a given score — the fixed scoring rules (see "Why scoring rules
+aren't part of the white-label team-config" above) are untouched, this only changes what a coach
+has to type in to invoke them. This is deliberately opt-in per opponent and never available for
+the own team: own-roster entries feed player rankings through `syncMatchRounds`' mirrored `Round`
+records, which need real hole-level data (`isValidRound`'s minimum-holes check, `Charts`), so
+allowing Score Only there would silently break rank/charts for anyone the coach entered that way.
+
 ## Why player names are abbreviated to first name + last initial before anything public
 
 Making the repo public (required for GitHub Pages on this org's free plan — see the private-repo
@@ -303,6 +323,76 @@ compare, so no highlight rather than a premature or misleading one. This is sepa
 existing medalist badge, which is an individual (not team) stroke-play award computed across every
 player in the match regardless of team or starter status.
 
+## Why scorecard import is copy-paste, not an API call
+
+Adding a course by hand means typing every hole's par and yardage for every tee — for a full
+18-hole, 4-tee scorecard that's roughly 90 numbers off a photo, the most tedious and error-prone
+data entry in the app. Chat assistants read scorecard photos well, so the Courses tab now has an
+"Import a course from a scorecard" section: a copy-pasteable prompt (`course-import.js`'s
+`SCORECARD_TO_COURSE_PROMPT`, mirrored in `prompts/scorecard-to-course.md`) that a coach runs
+against their scorecard photo in whatever assistant they already have, pasting the resulting JSON
+back in. The app then builds the course through the same `newCourse`/`newTeeSet` constructors and
+`validateCourse` validation every other course-creation path uses (`course-import.js`), previews it,
+cross-checks the transcribed yardages against the totals printed on the card itself, and asks about
+conflicts before saving — see `docs/coach-guide.md`'s Courses section for the full workflow.
+
+Deliberately not a direct API call to a vision model. Every team page ships a strict CSP
+(`connect-src 'self' <auth worker>` — see "Why Chart.js is vendored and every page carries a CSP"
+above); calling an LLM API from the browser would mean loosening that CSP and asking each coach to
+supply and store their own API key. The copy-paste design needs neither, and it works with whatever
+assistant a coach already has an account for rather than locking the feature to one vendor — Gemini
+is the first one actually verified end-to-end, since the app already targets Google-account users
+for login, but the prompt is written to be vendor-neutral. This replaces the older "Scorecard photo
+scan (stretch)" backlog item below, which had assumed the API-call approach.
+
+## Why score-entry fields are `type="text" inputmode="numeric"`, not `type="number"`
+
+The per-hole data-entry flow — coach tabbing field to field while a player reads scores aloud —
+is much smoother if each field's existing value is *selected* on focus, so the next keystroke
+replaces it instead of appending to a pre-filled default (holes default to par or double-par;
+course par grids default to the course's current pars). Implementing that surfaced a hard
+constraint: `select()` and `setSelectionRange()` **do not apply to `<input type="number">`** per
+the HTML spec — verified doing nothing in Chrome. The field has to actually be `type="text"` at
+the moment of selection.
+
+An intermediate version swapped `type` number→text on focus and back on blur (so it was only ever
+text while being edited). It worked, and was verified in Chrome and in Safari including on a real
+iPad. But it left a "mutate the type of a focused element" in the interaction hot path and forced
+CSS selectors (`.stepper input`, `#round-holes input`) that couldn't key on `[type="number"]`.
+Since the custom `+`/`−` steppers (issue #33) are already the increment affordance and the app
+uses **no** constraint validation anywhere (`checkValidity`, `:invalid`, `valueAsNumber`,
+`stepUp`/`stepDown` — none appear in the codebase), `type="number"` was carrying almost nothing
+here. So the fields are now permanently `type="text" inputmode="numeric"` and the swap is gone.
+
+Kept: `inputmode="numeric"` gives the numeric on-screen keypad on phones/tablets; `input.min`
+still reflects the `min` content attribute on a text input, so `wireStepperButtons`' decrement
+clamp is unaffected; every submit path already coerces with `Number()`.
+
+Given up, and why it's acceptable:
+
+- **Native desktop spin buttons, and scroll-wheel / arrow-key value nudging.** The steppers now
+  cover increment/decrement on every platform (desktop previously had the native spinner as a
+  redundant second path). Scroll-wheel silently changing a score while the coach scrolls the page
+  was a hazard, not a feature.
+- **The browser no longer blocks non-digit keystrokes as you type.** `inputmode="numeric"` makes
+  non-digits impossible on the touch keyboards coaches actually use; the "Add course" handler
+  already rejects non-numeric pars with an alert; hole-score submit runs `Number()`, and
+  `JSON.stringify` turns any stray `NaN` into `null` (a blank hole) on persist. A keystroke
+  digit-filter is the easy hardening step if this ever bites in practice — deliberately not added
+  now.
+- **Screen readers announce an idle field as a text input, not a spin button.** The `+`/`−`
+  buttons keep their own `aria-label`s.
+
+Scope: hole scores, total score, and putts (`renderStepperInput` and the raw putts inputs), plus
+the course par and tee-set yardage/par grids (`holeInputs` in `ui-courses.js`). Tee-set
+**slope/rating** stay `type="number"` — entered once per tee, a single value each, and rating is
+decimal; not worth the same treatment. The shared helper is `wireSelectOnFocus` in
+`html-utils.js`.
+
+This is also the Safari-on-iPad verification pass the "iPad and Pixel 10 layout pass" entry above
+deferred — the select-on-focus behavior and the steppers were checked on real Safari, desktop and
+iPad.
+
 ## Backlog / deliberately deferred
 
 - **Exact minimum-holes-for-valid-round number.** Currently `5` in `scoring-engine.js`
@@ -311,9 +401,8 @@ player in the match regardless of team or starter status.
 - **Tournament mode (Phase 3).** Up to ~20 teams, boys/girls flights, team + individual rankings,
   flight medalists. Explicitly deferred until the coach supplies exact rules — see
   `prompts/PROJECT_BRIEF.md`.
-- **Scorecard photo scan (stretch).** Auto-fill a Course's hole pars/yardages/slope/rating by
-  calling Claude's vision API from the browser, with the coach supplying his own API key stored
-  only in localStorage. Not started.
+- **Scorecard photo scan.** Done, but as a copy-paste-to-external-assistant flow rather than a
+  direct in-browser API call — see "Why scorecard import is copy-paste, not an API call" above.
 - **Putts stat skewed by picked-up holes — needs design.** `Round.putts` is a single total for the
   whole round (see `models.js`/`ui-rounds.js`), not per-hole. Once a player hits the double-par cap
   on a hole they often pick up rather than finish holing out, so the true putt count for that hole

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
+  <title>Privacy Policy — School Golf Tracker</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <img class="logo" src="assets/favicon.svg" alt="">
+    <h1>School Golf Tracker</h1>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Privacy Policy</h2>
+      <p class="muted">Last updated: 2026-08-18.</p>
+
+      <p>
+        This page is specifically about signing in with <strong>Google</strong> on this site. For
+        how <strong>published team reports</strong> (roster, scores, match results) become public
+        once a coach chooses to publish them, see the
+        <a href="https://github.com/MSWD/dempsey-golf-tracker/blob/main/docs/coach-guide.md#privacy--this-data-can-become-public" target="_blank" rel="noopener">"Privacy — this data can become public"</a>
+        section of the Coach Guide instead — the two are separate concerns.
+      </p>
+
+      <h3>What's collected, and why</h3>
+      <p>
+        When you click <strong>"Login with Google"</strong> and sign in, this app receives your
+        <strong>verified Google account email address</strong> — nothing else. That email is
+        checked, on every page load, against the specific team's admin list to decide whether you
+        get <strong>admin</strong> access (editing roster/rounds/matches, publishing reports) or
+        stay in read-only <strong>viewer</strong> mode for the team you're currently viewing.
+        That's the only reason this app asks for anything at all: to answer one question — "is
+        this Google account an admin for this team?"
+      </p>
+
+      <h3>What's NOT collected or accessed</h3>
+      <ul>
+        <li>
+          <strong>No access to Google Drive, Calendar, Contacts, or any Workspace directory.</strong>
+          Signing in only requests basic identity (<code>openid</code>, <code>email</code>,
+          <code>profile</code> — Google's own "non-sensitive" scope category), never access to your
+          actual Google data.
+        </li>
+        <li>
+          <strong>No roster, round, or match data is sent anywhere by signing in.</strong> That
+          data lives only in your own browser's local storage, whether or not you're signed in.
+          Signing in only unlocks the <em>ability</em> to edit and publish — it doesn't change
+          where your data lives or send anything extra to a server.
+        </li>
+        <li>
+          <strong>No password is ever seen or stored by this app.</strong> Sign-in happens
+          entirely on Google's own login screen; this app never sees your Google password.
+        </li>
+      </ul>
+
+      <h3>Where the admin list lives</h3>
+      <p>
+        The list of which Google account emails are admins for which team is a plain-text file
+        (<code>teams.json</code>) in this project's public, open-source GitHub repository,
+        editable only by the platform operator directly via git — no code in this app or its
+        Cloudflare Worker relay ever writes to it. Your email stays on that list for as long as
+        you're an active admin for your team; sign-ins themselves aren't separately logged or
+        stored anywhere beyond that.
+      </p>
+
+      <h3>Requesting removal</h3>
+      <p>
+        Email <strong>Kendal Montgomery</strong> at
+        <strong>montgoke1@delawarecityschools.net</strong> to be removed from a team's admin list
+        at any time — for example, if you're no longer coaching. Once removed, that Google account
+        reverts to ordinary read-only viewer access, same as anyone else.
+      </p>
+
+      <h3>Contact</h3>
+      <p>
+        Questions about this policy or how sign-in works: <strong>Kendal Montgomery</strong>,
+        <strong>montgoke1@delawarecityschools.net</strong>.
+      </p>
+
+      <p class="muted">
+        <a href="index.html">&larr; Back to the team directory</a>
+      </p>
+    </div>
+  </main>
+
+  <footer id="app-footer" class="app-footer"></footer>
+
+  <script src="version.js"></script>
+  <script src="js/privacy.js"></script>
+</body>
+</html>

@@ -26,20 +26,21 @@ function renderFooter() {
 function computeTeamScore(team) {
   const starterRaws = team.players
     .filter((p) => p.isStarter)
-    .map((p) => (isValidRound(p.holeScores) ? rawScoreOrNull(p.holeScores) : null));
+    .map((p) => (entryIsValid(p) ? entryRawScore(p) : null));
   return teamScore(starterRaws);
 }
 
 // The lowest individual valid raw score across every player in the match, regardless of team or
 // starter status — medalist is an individual stroke-play award, separate from the team-score
 // mechanic (which only counts starters). Ties are co-medalists: every player at that score gets
-// the badge, not just the first found.
+// the badge, not just the first found. Score Only entries (entryRawScore/entryIsValid,
+// scoring-engine.js) are just as eligible as By Hole ones.
 function computeMedalistScore(match) {
   let lowest = null;
   match.teams.forEach((team) => {
     team.players.forEach((p) => {
-      if (!isValidRound(p.holeScores)) return;
-      const raw = rawScoreOrNull(p.holeScores);
+      if (!entryIsValid(p)) return;
+      const raw = entryRawScore(p);
       if (raw == null) return;
       if (lowest == null || raw < lowest) lowest = raw;
     });
@@ -78,6 +79,7 @@ function renderTeamBlock(team, holePars, score, isWinner, medalistScore) {
       <div class="form-row">
         <strong>${escapeHtml(team.name)}</strong>
         ${team.isOwnTeam ? '<span class="badge">own team</span>' : ''}
+        ${!team.isOwnTeam && team.scoringMode === 'scoreOnly' ? '<span class="badge">score only</span>' : ''}
         ${isWinner ? '<span class="badge win">Winner</span>' : ''}
       </div>
       <div class="table-wrap">
@@ -85,10 +87,10 @@ function renderTeamBlock(team, holePars, score, isWinner, medalistScore) {
           <thead><tr><th>Player</th><th>Starter</th><th>Score</th><th>Putts</th><th>Front3</th><th>Mid3</th><th>Back3</th><th>To Par</th></tr></thead>
           <tbody>
             ${team.players.map((p) => {
-              const raw = rawScoreOrNull(p.holeScores);
-              const splits = holeSplits(p.holeScores);
+              const raw = entryRawScore(p);
+              const splits = p.holeScores ? holeSplits(p.holeScores) : { front3: null, mid3: null, back3: null };
               const par = holePars && raw != null ? toPar(raw, roundTotalPar(holePars)) : null;
-              const valid = isValidRound(p.holeScores);
+              const valid = entryIsValid(p);
               const isMedalist = valid && raw != null && medalistScore != null && raw === medalistScore;
               return `<tr>
                 <td>${escapeHtml(p.displayName)}${isMedalist ? ' <span class="badge medalist" title="Match medalist">🏆</span>' : ''}</td>

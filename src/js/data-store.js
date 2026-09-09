@@ -108,7 +108,14 @@ function validateMatchPlayerEntry(entry, path) {
   if (typeof entry !== 'object' || entry === null) fail(path, 'must be an object');
   if (entry.playerId != null && !isPlainString(entry.playerId)) fail(path, 'playerId must be null or a string');
   if (!isPlainString(entry.displayName)) fail(path, 'displayName must be a non-empty string');
-  if (!isHoleScoresArray(entry.holeScores)) fail(path, 'holeScores must be an array of 9 numbers-or-null');
+  // Score Only entries (MatchTeam.scoringMode) carry a single totalScore instead of 9 holeScores —
+  // exactly one of the two is present, never both, never neither.
+  if (entry.holeScores != null) {
+    if (!isHoleScoresArray(entry.holeScores)) fail(path, 'holeScores must be an array of 9 numbers-or-null');
+    if (entry.totalScore != null) fail(path, 'totalScore must be null when holeScores is set');
+  } else if (!isFiniteNumber(entry.totalScore)) {
+    fail(path, 'must have either holeScores (array of 9 numbers-or-null) or a numeric totalScore');
+  }
   if (entry.putts != null && !isFiniteNumber(entry.putts)) fail(path, 'putts must be null or a number');
   if (typeof entry.isStarter !== 'boolean') fail(path, 'isStarter must be a boolean');
 }
@@ -119,6 +126,11 @@ function validateMatchTeam(team, matchPath, ti) {
   if (!isPlainString(team.id)) fail(path, 'id must be a non-empty string');
   if (!isPlainString(team.name)) fail(path, 'name must be a non-empty string');
   if (typeof team.isOwnTeam !== 'boolean') fail(path, 'isOwnTeam must be a boolean');
+  // Older exports predate scoringMode entirely — treated as "byHole" at read time (see
+  // renderTeamBlock), so it's optional here rather than required.
+  if (team.scoringMode != null && !['byHole', 'scoreOnly'].includes(team.scoringMode)) {
+    fail(path, 'scoringMode must be null, "byHole", or "scoreOnly"');
+  }
   if (!Array.isArray(team.players)) fail(path, 'players must be an array');
   team.players.forEach((entry, pi) => validateMatchPlayerEntry(entry, `${path}.players[${pi}]`));
 }
@@ -178,6 +190,18 @@ const DataStore = {
         };
       } catch (err) {
         console.error('Stored data failed validation — resetting to empty. Re-import a backup, or use "Reset local data" on the Help page.', err);
+        // Preserve the rejected data as a snapshot before discarding it. Without this, a
+        // validation failure here — even a transient one, like briefly loading a stale cached
+        // bundle whose older validator rejects newer-but-valid data — permanently destroys the
+        // only copy, with no snapshot to restore from (see issue where exactly this happened).
+        // The snapshot itself skips validation (unlike _snapshot(), which assumes this._data
+        // already passed it): raw is whatever was in storage, invalid by definition here.
+        try {
+          this._data = JSON.parse(raw);
+          this._snapshot('load-validation-failed');
+        } catch {
+          // raw wasn't even valid JSON — nothing structured to snapshot.
+        }
         this._data = emptyData();
         this._save();
       }
@@ -264,8 +288,11 @@ const DataStore = {
     if (!found) throw new Error('Snapshot not found.');
     // Capture `found` before snapshotting — _snapshot() below does its own independent
     // load/evict/save cycle and could otherwise evict this exact entry if the list is already at
-    // SNAPSHOT_CAP. found.data needs no re-validation: it can only have entered the list already
-    // having passed validateImportData() at some earlier point.
+    // SNAPSHOT_CAP. found.data isn't re-validated here: it almost always already passed
+    // validateImportData() at some earlier point, the one exception being a 'load-validation-failed'
+    // snapshot (see init()) — restoring one of those just puts the invalid data back in place for
+    // inspection/re-export rather than losing it, so init()'s same catch-and-reset runs again next
+    // load if it isn't fixed first.
     this._snapshot('before-restore');
     this._data = found.data;
     this._save();

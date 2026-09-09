@@ -26,4 +26,16 @@ const TEAM_CONFIG = {
   },
 
   domain: 'https://middle-school-golf-tracker.mswd.us/teams/test-team',
+
+  // Optional — highlights the top N ranked players on the rankings screen. Omit this field for
+  // teams that don't want the highlight.
+  rankHighlightCount: 3,
+
+  // Optional — extra rankings columns (tryout avg, personal best, 9-hole HCP) plus red/yellow/
+  // green shading on the rounds-played count. Omit this field (or set enabled: false) for teams
+  // that don't want it.
+  extendedRankingStats: {
+    enabled: true,
+    roundsThresholds: { yellow: 4, green: 6 }, // red below yellow, yellow up to (not incl.) green
+  },
 };

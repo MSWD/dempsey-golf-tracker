@@ -13,11 +13,12 @@ function escapeHtml(str) {
   }[c]));
 }
 
-// Wraps a number input with +/- stepper buttons. iOS/iPadOS browsers — "Chrome" for iOS included,
-// since Apple requires every iOS browser to run on WebKit under the hood — never render the native
-// spin-button UI on <input type="number"> the way desktop Chromium does, so on those devices these
-// custom buttons are the *only* increment/decrement affordance; on desktop they're simply
-// redundant with the native spinner. See GitHub issue #33.
+// Wraps a numeric-entry input with +/- stepper buttons. The input is `type="text"
+// inputmode="numeric"`, not `type="number"` — see "Why score-entry fields are type=text
+// inputmode=numeric" in docs/decisions.md (short version: it lets wireSelectOnFocus select the
+// field's contents on focus, which type=number forbids). That makes these buttons the *only*
+// increment/decrement affordance on every platform now, not just on iOS/iPadOS WebKit where the
+// native spinner was already absent (GitHub issue #33).
 //
 // Shared by ui-matches.js (hole scores + putts) and ui-rounds.js (same) rather than duplicated in
 // both, since the duplication of the plain <input> markup between those two files was exactly what
@@ -26,7 +27,9 @@ function escapeHtml(str) {
 // `min` only bounds the stepper's own decrement (so "-" can't produce a negative score/putts
 // count); it's deliberately not enforced as an upper bound here — the existing double-par cap
 // (scoring-engine.js) already handles that at submit time, with its own warning, and this input
-// still accepts direct typing/pasting above it same as before.
+// still accepts direct typing/pasting above it same as before. `input.min` reflects the `min`
+// content attribute on a text input just as it does on a number one, so wireStepperButtons reads
+// it the same way.
 // Non-admin ("viewer") fallback for any tab whose primary content is this browser's own local
 // DataStore data. Originated in renderRankView (ui-rounds.js) and generalized here for the other
 // local-data tabs (Roster, Courses, Rounds, Charts, Matches) — see GitHub issue #39. Only the
@@ -45,7 +48,7 @@ function renderStepperInput({ className = '', dataAttrs = '', placeholder = '', 
   return `
     <span class="stepper">
       <button type="button" class="stepper-btn stepper-minus" tabindex="-1" aria-label="Decrease ${escapeHtml(placeholder) || 'value'}">&minus;</button>
-      <input type="number" inputmode="numeric" class="${className}" ${dataAttrs} placeholder="${escapeHtml(placeholder)}" value="${escapeHtml(value)}" min="${min}">
+      <input type="text" inputmode="numeric" class="${className}" ${dataAttrs} placeholder="${escapeHtml(placeholder)}" value="${escapeHtml(value)}" min="${min}">
       <button type="button" class="stepper-btn stepper-plus" tabindex="-1" aria-label="Increase ${escapeHtml(placeholder) || 'value'}">+</button>
     </span>
   `;
@@ -73,8 +76,55 @@ function wireStepperButtons(container) {
       }
       input.dispatchEvent(new Event('input', { bubbles: true }));
       input.dispatchEvent(new Event('change', { bubbles: true }));
+      // If the field was already focused when its stepper was tapped, leave the new value selected
+      // so the next keystroke replaces it — same tab-through flow wireSelectOnFocus gives on focus.
+      // Guarded on the field itself having focus, never forcing it: on desktop a "+"/"-" click
+      // lands focus on the tabindex="-1" button (so this is a no-op there), and force-focusing the
+      // input would pop the on-screen keyboard on iPad, which is what the steppers exist to avoid.
+      // Where it does fire — a focused field on iPad — select() works because the field is text.
+      if (document.activeElement === input) input.select();
     };
     stepper.querySelector('.stepper-minus').addEventListener('click', () => nudge(-1));
     stepper.querySelector('.stepper-plus').addEventListener('click', () => nudge(1));
+  });
+}
+
+// Selects an input's existing contents whenever it takes focus, so tabbing (or tapping) from field
+// to field lets the coach immediately type the new number over the old one. Both score-entry forms
+// and the course par/yardage grids pre-fill every box with a default (par, double par, the course's
+// current pars), so without this every field has to be manually cleared first — clunky when a
+// player is reading scores aloud. Call once, right after the markup is inserted (re-querying per
+// render is cheap; no already-wired flag needed).
+//
+// Targets `input[inputmode="numeric"]` — every field renderStepperInput / holeInputs emits, and
+// the raw putts inputs, but not the name/date/text fields that share these containers. This only
+// works because those fields are `type="text"`, not `type="number"`: `select()` is a no-op on a
+// number input by spec. See "Why score-entry fields are type=text inputmode=numeric" in
+// docs/decisions.md for the full rationale and what that trade-off gives up.
+//
+// Two browser quirks handled:
+//  - iOS/iPadOS WebKit tends to discard a selection made synchronously inside the focus handler, so
+//    it's re-asserted once on the next frame (guarded on the field still being focused; a no-op on
+//    desktop, where the first select already stuck).
+//  - A mouse click focuses the field first and then places the caret on mouseup, which would undo
+//    the select. preventDefault on that first post-focus mouseup keeps the selection; later clicks
+//    inside an already-focused field still position the caret normally.
+function wireSelectOnFocus(container, selector = 'input[inputmode="numeric"]') {
+  container.querySelectorAll(selector).forEach((input) => {
+    let selectPending = false;
+    input.addEventListener('focus', () => {
+      selectPending = true;
+      input.select();
+      requestAnimationFrame(() => {
+        if (document.activeElement === input) input.select();
+      });
+    });
+    input.addEventListener('mouseup', (e) => {
+      if (selectPending) {
+        e.preventDefault();
+        selectPending = false;
+      }
+    });
+    input.addEventListener('blur', () => { selectPending = false; });
   });
 }

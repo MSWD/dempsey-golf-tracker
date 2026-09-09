@@ -1,0 +1,17 @@
+Sure, here's the JSON for that scorecard:
+
+```json
+{
+  "name": "Fence Test Nine",
+  "holePars": [4, 4, 3, 5, 4, 3, 4, 5, 4],
+  "printedParTotals": { "out": 36, "in": null, "total": 36 },
+  "teeSets": [
+    { "name": "Gold", "holeYardages": [350, 310, 140, 480, 360, 150, 320, 470, 340],
+      "rating": 34.2, "slope": 118, "printedTotals": { "out": 2920, "in": null, "total": 2920 } }
+  ],
+  "defaultTeeSetName": null,
+  "notes": ""
+}
+```
+
+Let me know if you'd like anything else transcribed from the card!

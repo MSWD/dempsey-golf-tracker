@@ -1,0 +1,11 @@
+{
+  "name": "Mismatched Totals Course",
+  "holePars": [4, 4, 3, 5, 4, 3, 4, 5, 4],
+  "printedParTotals": { "out": 99, "in": null, "total": 99 },
+  "teeSets": [
+    { "name": "Gold", "holeYardages": [350, 310, 140, 480, 360, 150, 320, 470, 340],
+      "rating": 34.2, "slope": 118, "printedTotals": { "out": 5000, "in": null, "total": 5000 } }
+  ],
+  "defaultTeeSetName": null,
+  "notes": "Hole 6 yardage on the White tee was smudged and unreadable."
+}

@@ -58,21 +58,31 @@ function clearSession() {
 // per-account/client cap, or explicit revocation instead) — refreshTokenExpiresAt stays null unless
 // a future response actually includes that field.
 //
-// `previousIdToken` is a defensive fallback, not the expected path — confirmed via live testing
-// (issue #26) that Google's refresh_token grant does reissue a fresh id_token every time, so this
-// only matters if that ever changes: keep reusing the last known-good idToken rather than wiping
-// out session identity if a future refresh response ever omits one.
-function buildSessionFromTokenResponse(tokenData, previousIdToken = null) {
+// `previous` carries forward fields a refresh_token-grant response legitimately omits, so rebuilding
+// the session from that response doesn't null them out:
+//   - refreshToken: Google's refresh_token grant does NOT return a refresh_token (token rotation is
+//     not enabled for this client — the original stays valid indefinitely). Without carrying it
+//     forward, the first silent refresh writes refreshToken:null and the NEXT access-token expiry
+//     has nothing to refresh with, forcing a full re-login roughly an hour later. This is the whole
+//     reason a session used to die after ~one refresh.
+//   - idToken: a belt-and-braces fallback. Live testing (issue #26) showed Google's refresh grant
+//     does reissue a fresh id_token every time, so this only matters if that ever changes.
+//   - refreshTokenExpiresAt: Google never sends refresh_token_expires_in today, so this is null
+//     either way; carried forward anyway in case a future response starts including it.
+// On the initial device-flow login there's no previous session and the real refresh_token is
+// present in the response, so passing {} is correct there.
+function buildSessionFromTokenResponse(tokenData, previous = {}) {
   const now = Date.now();
   return {
     accessToken: tokenData.access_token,
-    idToken: typeof tokenData.id_token === 'string' ? tokenData.id_token : previousIdToken,
+    idToken: typeof tokenData.id_token === 'string' ? tokenData.id_token : previous.idToken ?? null,
     expiresAt: typeof tokenData.expires_in === 'number' ? now + tokenData.expires_in * 1000 : null,
-    refreshToken: typeof tokenData.refresh_token === 'string' ? tokenData.refresh_token : null,
+    refreshToken:
+      typeof tokenData.refresh_token === 'string' ? tokenData.refresh_token : previous.refreshToken ?? null,
     refreshTokenExpiresAt:
       typeof tokenData.refresh_token_expires_in === 'number'
         ? now + tokenData.refresh_token_expires_in * 1000
-        : null,
+        : previous.refreshTokenExpiresAt ?? null,
   };
 }
 
@@ -82,17 +92,23 @@ function buildSessionFromTokenResponse(tokenData, previousIdToken = null) {
 // reach the network" (session should be left alone so a later call can retry) from "Google itself
 // rejected the refresh token" (session really is dead) — treating a flaky-wifi moment the same as an
 // actually-invalid refresh token would force a full re-login over what might just be a blip.
-async function requestRefresh(refreshToken, previousIdToken) {
+async function requestRefresh(previousSession) {
   const { clientId, deviceFlowWorkerUrl } = TEAM_CONFIG.googleAuth;
   try {
     const res = await fetch(`${deviceFlowWorkerUrl}/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_id: clientId, grant_type: 'refresh_token', refresh_token: refreshToken }),
+      body: JSON.stringify({
+        client_id: clientId,
+        grant_type: 'refresh_token',
+        refresh_token: previousSession.refreshToken,
+      }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.access_token) return { session: null, transient: false };
-    return { session: buildSessionFromTokenResponse(data, previousIdToken), transient: false };
+    // Pass the whole previous session so buildSessionFromTokenResponse can carry forward the
+    // refresh_token (Google's refresh grant never returns one) and, defensively, the idToken.
+    return { session: buildSessionFromTokenResponse(data, previousSession), transient: false };
   } catch (err) {
     console.warn('Google token refresh failed (network error) — leaving session as-is to retry later.', err);
     return { session: null, transient: true };
@@ -105,9 +121,9 @@ async function requestRefresh(refreshToken, previousIdToken) {
 // so two parallel exchanges could otherwise race and the loser would wipe out the session the winner
 // just wrote.
 let _refreshInFlight = null;
-function refreshOnce(refreshToken, previousIdToken) {
+function refreshOnce(previousSession) {
   if (!_refreshInFlight) {
-    _refreshInFlight = requestRefresh(refreshToken, previousIdToken).finally(() => {
+    _refreshInFlight = requestRefresh(previousSession).finally(() => {
       _refreshInFlight = null;
     });
   }
@@ -171,7 +187,7 @@ const GoogleAuth = {
     const refreshUsable =
       session.refreshToken && (session.refreshTokenExpiresAt === null || session.refreshTokenExpiresAt > now);
     if (refreshUsable) {
-      const { session: refreshed, transient } = await refreshOnce(session.refreshToken, session.idToken);
+      const { session: refreshed, transient } = await refreshOnce(session);
       if (refreshed) {
         writeSession(refreshed);
         this.sessionExpired = false;

@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-09-16",
+  "publishedAt": "2026-09-20",
   "seasonName": "2026 Dempsey Golf Season",
   "players": [
     {
@@ -3827,6 +3827,213 @@
         6
       ],
       "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mu93kmch_vo78kw",
+      "playerId": "player_19fa8e6d69e_rt2fhl",
+      "date": "2026-09-19",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        8,
+        8,
+        4,
+        5,
+        5,
+        10,
+        6,
+        8,
+        4
+      ],
+      "putts": 18,
+      "matchId": null
+    },
+    {
+      "id": "round_mu93lowy_8cp5mp",
+      "playerId": "player_19fa8e6d69e_hucr9l",
+      "date": "2026-09-17",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        5,
+        5,
+        3,
+        5,
+        4,
+        5,
+        4,
+        5,
+        4
+      ],
+      "putts": 16,
+      "matchId": null
+    },
+    {
+      "id": "round_mu93ny9o_r9his4",
+      "playerId": "player_19fa8e6d69e_b3x0gc",
+      "date": "2026-09-17",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        7,
+        5,
+        3,
+        5,
+        5,
+        4,
+        5,
+        5,
+        5
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mu93ppfq_k5maqn",
+      "playerId": "player_19fa8e6d69e_q6e747",
+      "date": "2026-09-17",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        10,
+        5,
+        5,
+        6,
+        6,
+        7,
+        6,
+        6,
+        4
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mu93rru2_d7f2w6",
+      "playerId": "player_19fa8e6d69e_joly3g",
+      "date": "2026-09-17",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        5,
+        6,
+        4,
+        4,
+        6,
+        6,
+        5,
+        6,
+        3
+      ],
+      "putts": 19,
+      "matchId": null
+    },
+    {
+      "id": "round_mu93slgp_5ob1k3",
+      "playerId": "player_19fa8e6d69e_dye45a",
+      "date": "2026-09-17",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        9,
+        6,
+        6,
+        6,
+        6,
+        9,
+        6,
+        8,
+        6
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mu93ujqd_la6rjf",
+      "playerId": "player_ms5eijsb_i5k4ou",
+      "date": "2026-09-17",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        6,
+        4,
+        4,
+        4,
+        5,
+        6,
+        4,
+        4
+      ],
+      "putts": 16,
+      "matchId": null
+    },
+    {
+      "id": "round_mu93wdln_12nngt",
+      "playerId": "player_19fa8e6d69e_mtda4r",
+      "date": "2026-09-17",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        5,
+        4,
+        4,
+        5,
+        5,
+        6,
+        4,
+        4,
+        5
+      ],
+      "putts": null,
+      "matchId": null
+    },
+    {
+      "id": "round_mu93xlfy_cqsjdw",
+      "playerId": "player_19fa8e6d69e_mtda4r",
+      "date": "2026-09-19",
+      "type": "practice",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        5,
+        4,
+        4,
+        4,
+        4,
+        6,
+        4,
+        5,
+        3
+      ],
+      "putts": 18,
       "matchId": null
     }
   ],

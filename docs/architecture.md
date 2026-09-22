@@ -104,11 +104,18 @@ defaults to the current 9-hole/front behavior.
   par-36 baseline. Rolling average and rank always use adjusted scores, never raw.
 - **Double-par cap**: a hole score can never exceed 2x that hole's par. Capped at entry time; the
   UI warns when this happens.
-- **Minimum holes for a valid round**: a round/match score needs at least `MIN_HOLES_FOR_VALID_ROUND`
-  holes actually completed (currently `5`, in `scoring-engine.js`) to count toward rolling average
-  or team score at all.
-- **Rolling average** = best 4 of the player's last 6 valid rounds (chronologically; tryouts count
-  as the earliest entries), using adjusted scores. Fewer than 6 → average whatever exists.
+- **Minimum holes for a valid match score**: a round/match score needs at least
+  `MIN_HOLES_FOR_MATCH_SCORE` holes actually completed (currently `6`, in `scoring-engine.js`,
+  matching the local middle-school rule for an official match) to count toward team score at all.
+- **Minimum holes for the season rolling average**: separately, a round only feeds a player's
+  rolling average, personal best, or rounds-played count if all `HOLES_FOR_COMPLETE_ROUND` (`9`)
+  holes were played. A 6-hole round counts toward that day's team score but not toward the
+  season average — its adjusted score isn't comparable to a full 9-hole round. `rollingAverage()`
+  filters these out before taking the last 6, so the window transparently reaches further back to
+  find six complete rounds.
+- **Rolling average** = best 4 of the player's last 6 complete (full 9-hole) rounds
+  (chronologically; tryouts count as the earliest entries), using adjusted scores. Fewer than 6 →
+  average whatever exists.
 - **Rank** = ascending sort on rolling average. Reference/suggestion only — the coach always
   manually sets the full lineup order.
 - **Team score** = sum of the 4 lowest raw scores among the 6 starters (not alternates) who posted

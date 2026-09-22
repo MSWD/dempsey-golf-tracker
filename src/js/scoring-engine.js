@@ -2,20 +2,36 @@
 // so both the live app and the static report viewer can run the exact same logic against
 // different data sources (live localStorage vs. a fetched snapshot JSON).
 
-// Minimum holes a player must actually complete for a round/match score to count at all — per
-// local OHSAA rule. Coach is confirming the exact number (5 vs 6); change this one constant once
-// confirmed rather than hunting for the number elsewhere.
-const MIN_HOLES_FOR_VALID_ROUND = 5;
+// Minimum holes a player must actually complete for a round/match score to count toward the
+// match/team score at all — per local middle-school rule: 6 holes makes it an official match.
+// Distinct from HOLES_FOR_COMPLETE_ROUND below — a 6-hole match round counts for the match, but
+// not toward a player's season rolling average, personal best, or rounds-played count, since it
+// can't be compared fairly against a full 9-hole card (see isCompleteRound).
+const MIN_HOLES_FOR_MATCH_SCORE = 6;
+
+// A round/match feeds the season rolling average / personal best / rounds-played count only if
+// the full 9 holes were played. A partial round's adjusted score (which normalizes to a 9-hole
+// par baseline) isn't comparable to a real 9-hole score, so it's excluded rather than distorting
+// the average — see docs/architecture.md.
+const HOLES_FOR_COMPLETE_ROUND = 9;
 
 function holesPlayedCount(holeScores) {
   return holeScores.filter((s) => s != null).length;
 }
 
-// A round/match score with fewer holes played than the minimum doesn't count toward rolling
-// average or team score — distinct from the double-par cap, which caps a single hole's value but
-// doesn't invalidate the round.
+// A round/match score with fewer holes played than the minimum doesn't count toward team score at
+// all — distinct from the double-par cap, which caps a single hole's value but doesn't invalidate
+// the round. See isCompleteRound for the separate, stricter bar for the season rolling average.
 function isValidRound(holeScores) {
-  return holesPlayedCount(holeScores) >= MIN_HOLES_FOR_VALID_ROUND;
+  return holesPlayedCount(holeScores) >= MIN_HOLES_FOR_MATCH_SCORE;
+}
+
+// Whether a round has all 9 holes played — the bar for counting toward the season rolling
+// average, personal best, and rounds-played stat (see playerRankingStats). A round can be
+// isValidRound() (counts for the match) without being isCompleteRound() (doesn't count toward the
+// average).
+function isCompleteRound(holeScores) {
+  return holesPlayedCount(holeScores) === HOLES_FOR_COMPLETE_ROUND;
 }
 
 function roundTotalPar(holePars) {
@@ -182,16 +198,19 @@ function rollingAverage(chronologicalAdjustedScores) {
 }
 
 // Everything the Rankings/Published-report table needs for one player, derived from that
-// player's own rounds. Valid-round filtering matches rollingAverage's own filtering exactly, so
-// "rounds counted" and "score used in the average" never disagree.
+// player's own rounds. Complete-round filtering matches rollingAverage's own filtering exactly,
+// so "rounds counted" and "score used in the average" never disagree. Uses isCompleteRound (all 9
+// holes), not isValidRound (>= MIN_HOLES_FOR_MATCH_SCORE) — a 6-hole match round is a real match
+// score, but its adjusted score isn't comparable to a full 9-hole round, so it's excluded here
+// even though it still counted toward the match itself.
 function playerRankingStats(rounds, getCourseById) {
   const chrono = rounds
     .slice()
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .map((r) => {
       const holePars = resolveHolePars(r, getCourseById);
-      const valid = holePars && isValidRound(r.holeScores);
-      return { type: r.type, adjustedScore: valid ? adjustedScore(r.holeScores, holePars) : null };
+      const complete = holePars && isCompleteRound(r.holeScores);
+      return { type: r.type, adjustedScore: complete ? adjustedScore(r.holeScores, holePars) : null };
     });
 
   const allScores = chrono.map((c) => c.adjustedScore);

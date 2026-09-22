@@ -300,8 +300,8 @@ function renderRoundsView(warningMessage, editingRoundId) {
       const holePars = resolveHolePars(r, getCourseById);
       const raw = rawScoreOrNull(r.holeScores);
       const holesPlayed = holesPlayedCount(r.holeScores);
-      const valid = isValidRound(r.holeScores);
-      const adj = holePars && valid ? adjustedScore(r.holeScores, holePars) : null;
+      const complete = isCompleteRound(r.holeScores);
+      const adj = holePars && complete ? adjustedScore(r.holeScores, holePars) : null;
       const detailCells = holePars
         ? r.holeScores.map((s, i) => `<td>H${sideHoleNumber(i, side)}<br>${s ?? '—'}</td>`).join('')
         : r.holeScores.map((s) => `<td>${s ?? '—'}</td>`).join('');
@@ -313,7 +313,7 @@ function renderRoundsView(warningMessage, editingRoundId) {
           <td>${course ? escapeHtml(course.name) : '—'}</td>
           <td>${course && isEighteenHoleCourse(course) ? sideLabel(side) : '—'}</td>
           <td>${teeSet ? escapeHtml(teeSet.name) : '—'}</td>
-          <td>${holesPlayed}${!valid ? ' <span class="badge warn">incomplete</span>' : ''}</td>
+          <td>${holesPlayed}${!complete ? ' <span class="badge warn" title="Won\'t count toward season rolling average — only full 9-hole rounds do.">not full 9</span>' : ''}</td>
           <td>${raw ?? '—'}</td>
           <td>${adj != null ? adj.toFixed(1) : '—'}</td>
         </tr>

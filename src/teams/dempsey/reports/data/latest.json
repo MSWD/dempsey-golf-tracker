@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-09-21",
+  "publishedAt": "2026-09-22",
   "seasonName": "2026 Dempsey Golf Season",
   "players": [
     {
@@ -4173,6 +4173,98 @@
       ],
       "putts": null,
       "matchId": "match_mubtsp64_usxheb"
+    },
+    {
+      "id": "round_mud7irgl_ov3aev",
+      "playerId": "player_19fa8e6d69e_b3x0gc",
+      "date": "2026-09-22",
+      "type": "match",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        5,
+        2,
+        5,
+        5,
+        5,
+        5,
+        7,
+        4
+      ],
+      "putts": 15,
+      "matchId": "match_mud7eujn_gv426c"
+    },
+    {
+      "id": "round_mud7kbi4_w326hk",
+      "playerId": "player_19fa8e6d69e_mtda4r",
+      "date": "2026-09-22",
+      "type": "match",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        6,
+        3,
+        5,
+        5,
+        7,
+        6,
+        5,
+        5
+      ],
+      "putts": 17,
+      "matchId": "match_mud7eujn_gv426c"
+    },
+    {
+      "id": "round_mud7sopa_sg43un",
+      "playerId": "player_19fa8e6d69e_q6e747",
+      "date": "2026-09-22",
+      "type": "match",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        7,
+        6,
+        5,
+        6,
+        6,
+        7,
+        7,
+        6,
+        4
+      ],
+      "putts": null,
+      "matchId": "match_mud7eujn_gv426c"
+    },
+    {
+      "id": "round_mud7tr4n_eps3sa",
+      "playerId": "player_19fa8e6d69e_hucr9l",
+      "date": "2026-09-22",
+      "type": "match",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "holeScores": [
+        6,
+        7,
+        4,
+        8,
+        5,
+        7,
+        6,
+        8,
+        4
+      ],
+      "putts": 19,
+      "matchId": "match_mud7eujn_gv426c"
     }
   ],
   "matches": [
@@ -6943,6 +7035,185 @@
                 6,
                 5,
                 7
+              ],
+              "totalScore": null,
+              "putts": null,
+              "isStarter": true,
+              "roundId": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "match_mud7eujn_gv426c",
+      "date": "2026-09-22",
+      "location": "Home",
+      "courseId": "course_ms6k4cqm_w8kuld",
+      "teeSetId": "tee_ms6k8jhu_a1q4yc",
+      "side": "front",
+      "inlineHolePars": null,
+      "teams": [
+        {
+          "id": "team_mud7eujn_2wa7bc",
+          "name": "Dempsey",
+          "isOwnTeam": true,
+          "scoringMode": "byHole",
+          "players": [
+            {
+              "playerId": "player_19fa8e6d69e_b3x0gc",
+              "displayName": "Nicholas M",
+              "holeScores": [
+                6,
+                5,
+                2,
+                5,
+                5,
+                5,
+                5,
+                7,
+                4
+              ],
+              "totalScore": null,
+              "putts": 15,
+              "isStarter": true,
+              "roundId": "round_mud7irgl_ov3aev"
+            },
+            {
+              "playerId": "player_19fa8e6d69e_mtda4r",
+              "displayName": "Grady L",
+              "holeScores": [
+                6,
+                6,
+                3,
+                5,
+                5,
+                7,
+                6,
+                5,
+                5
+              ],
+              "totalScore": null,
+              "putts": 17,
+              "isStarter": true,
+              "roundId": "round_mud7kbi4_w326hk"
+            },
+            {
+              "playerId": "player_19fa8e6d69e_q6e747",
+              "displayName": "Jensen B",
+              "holeScores": [
+                7,
+                6,
+                5,
+                6,
+                6,
+                7,
+                7,
+                6,
+                4
+              ],
+              "totalScore": null,
+              "putts": null,
+              "isStarter": true,
+              "roundId": "round_mud7sopa_sg43un"
+            },
+            {
+              "playerId": "player_19fa8e6d69e_hucr9l",
+              "displayName": "Liam C",
+              "holeScores": [
+                6,
+                7,
+                4,
+                8,
+                5,
+                7,
+                6,
+                8,
+                4
+              ],
+              "totalScore": null,
+              "putts": 19,
+              "isStarter": true,
+              "roundId": "round_mud7tr4n_eps3sa"
+            }
+          ]
+        },
+        {
+          "id": "team_mud7eujn_w789nk",
+          "name": "Big Walnut",
+          "isOwnTeam": false,
+          "scoringMode": "byHole",
+          "players": [
+            {
+              "playerId": null,
+              "displayName": "Cash",
+              "holeScores": [
+                6,
+                6,
+                3,
+                5,
+                5,
+                7,
+                5,
+                4,
+                3
+              ],
+              "totalScore": null,
+              "putts": null,
+              "isStarter": true,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Brady",
+              "holeScores": [
+                5,
+                5,
+                4,
+                4,
+                5,
+                4,
+                5,
+                5,
+                3
+              ],
+              "totalScore": null,
+              "putts": null,
+              "isStarter": true,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Dylan",
+              "holeScores": [
+                6,
+                6,
+                3,
+                5,
+                6,
+                5,
+                5,
+                4,
+                3
+              ],
+              "totalScore": null,
+              "putts": null,
+              "isStarter": true,
+              "roundId": null
+            },
+            {
+              "playerId": null,
+              "displayName": "Miles",
+              "holeScores": [
+                5,
+                5,
+                3,
+                4,
+                5,
+                7,
+                5,
+                4,
+                4
               ],
               "totalScore": null,
               "putts": null,
